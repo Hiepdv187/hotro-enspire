@@ -1,0 +1,680 @@
+<title>Chi tiết trường</title>
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% load humanize %}
+
+{% block content %}
+{% load static %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<style>
+    html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-image: url('/static/media/pexels-eberhard-grossgasteiger-2310713.jpg/');
+            background-size: cover;
+            background-repeat: repeat;
+            width: 100%;
+        }
+    .avatar {
+        max-width: 50px;
+        max-height: 35px;
+        width: 50px;
+        height: 35px;
+        border-radius: 10%; 
+    }
+    a.active_assets{
+        text-decoration: none;
+        color: darkgreen;
+    }
+    a.broken_assets{
+        text-decoration: none;
+        color: red;
+    }
+    a.all_assets{
+        text-decoration: none;
+        color:black;
+    }
+    #FallBack
+    {   
+        max-width: 100px;
+        position:fixed;
+        bottom: 70px;
+        left: 50px;
+        z-index: 9999;
+    }
+    #addNewButton {
+        position:fixed;
+        bottom: 70px;
+        right: 50px;
+        z-index: 99999;
+    }
+    .search-container {
+        position:relative;
+        display:flex;
+        margin-bottom: 30px;
+    }
+    @media (max-width: 768px) {
+        .col {
+            width: 100%;
+            max-width: 100%;
+        }
+        .p-5 {
+            padding: 20px !important; /* Giảm padding */
+        }
+    }
+#loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+.dropdown-item:hover {
+        background-color: #080a91;
+        color: #ffffff; /* Màu nền bạn muốn thay đổi khi di chuột qua */
+    }
+.dropdown-item.delete-item:hover {
+        background-color: #ffffff; /* Màu nền khi di chuột qua */
+        color: #ffffff; /* Màu chữ khi di chuột qua */
+    }
+</style>
+<div id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+    <div id="content" style="display:none;">
+<center>
+    <div class="search-container">
+    <input class="form-control" id="myInput" type="text" placeholder="Tìm kiếm" style="width: 1020px; height: 40px;"><button class="btn btn-primary">Tìm kiếm</button>
+    </div>
+</center>
+<a href="{% url 'district_detail' department.id district.id %}" class="btn btn-success" >Quay lại trang trước</a>
+<p></p>
+<div id="search-results"></div>
+<div class="card">
+    <div class="card-body">
+        <center><h1>{{ school.name }}</h1></center>
+        {% if not school.school_location and not school.school_address %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Tiểu học Dịch Vọng A' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir/21.047609,105.7938072/Ti%E1%BB%83u+h%E1%BB%8Dc+D%E1%BB%8Bch+V%E1%BB%8Dng+A/@21.0360034,105.7817257,17.5z/data=!4m9!4m8!1m1!4e1!1m5!1m1!1s0x3135ab4aec09d629:0x8746feff494f2c76!2m2!1d105.7836524!2d21.0352022?entry=ttu" target="_blank">Số 9B, ngõ 181 đường Xuân Thuỷ, Cầu Giấy, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Mầm non Hoa Mai' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//2RM2%2BM5G+Tr%C6%B0%E1%BB%9Dng+m%E1%BA%A7m+non+Hoa+Mai,+D%C6%B0%C6%A1ng+Qu%E1%BA%A3ng+H%C3%A0m,+Quan+Hoa,+C%E1%BA%A7u+Gi%E1%BA%A5y,+H%C3%A0+N%E1%BB%99i/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135ab474c8b7f93:0xf876f53db05b95d1?sa=X&ved=1t:57443&ictx=111" target="_blank">ngõ 72 Dương Quảng Hàm, Quan Hoa, Cầu Giấy, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Mầm non Ánh Sao' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/place/Tr%C6%B0%E1%BB%9Dng+M%E1%BA%A7m+Non+%C3%81nh+Sao/@21.0438167,105.7956295,15z/data=!4m2!3m1!1s0x0:0xacf33dd19a4c4826?sa=X&ved=1t:2428&ictx=111" target="_blank">Khu tập thể Nghĩa Tân, Cầu Giấy, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Mầm non Nghĩa Đô' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//Ng.+28+%C4%90.+V%C3%B5+Ch%C3%AD+C%C3%B4ng,+Ngh%C4%A9a+%C4%90%C3%B4,+C%E1%BA%A7u+Gi%E1%BA%A5y,+H%C3%A0+N%E1%BB%99i/@21.0484962,105.8052685,17z/data=!4m18!1m8!3m7!1s0x3135ab229b8034ad:0x8c56d6edcca7fbdb!2zTmcuIDI4IMSQLiBWw7UgQ2jDrSBDw7RuZywgTmdoxKlhIMSQw7QsIEPhuqd1IEdp4bqleSwgSMOgIE7hu5lp!3b1!8m2!3d21.0484962!4d105.8052685!16s%2Fg%2F11hdl5bnky!4m8!1m0!1m5!1m1!1s0x3135ab229b8034ad:0x8c56d6edcca7fbdb!2m2!1d105.8052685!2d21.0484962!3e0?entry=ttu" target="_blank">Ngõ 28, Đường Võ Chí Công, Nghĩa Đô, Cầu Giấy, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Mầm non Hoa Hồng' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir/20.978057,105.7938072/Tr%C6%B0%E1%BB%9Dng+M%E1%BA%A7m+Non+Hoa+H%E1%BB%93ng+truong+cu,+6+P.+Tr%E1%BA%A7n+T%E1%BB%AD+B%C3%ACnh,+Ngh%C4%A9a+T%C3%A2n,+C%E1%BA%A7u+Gi%E1%BA%A5y,+H%C3%A0+N%E1%BB%99i/@21.0092067,105.7499039,13z/data=!3m1!4b1!4m9!4m8!1m1!4e1!1m5!1m1!1s0x3135ab30c837ce1b:0xb357be78beede243!2m2!1d105.7921609!2d21.0426744?entry=ttu" target="_blank">6 P. Trần Tử Bình, Nghĩa Tân, Cầu Giấy, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Mầm non CLC Mai Dịch' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIICAEQABgWGB4yCggCEAAYogQYiQUyCggDEAAYgAQYogQyCggEEAAYgAQYogTSAQc1NDFqMGo0qAIAsAIA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KR_YF7TOVDQxMcE0A6ZNBzWo&daddr=243+P.+Mai+D%E1%BB%8Bch,+Mai+D%E1%BB%8Bch,+C%E1%BA%A7u+Gi%E1%BA%A5y,+H%C3%A0+N%E1%BB%99i" target="_blank">243 P. Mai Dịch, Mai Dịch, Cầu Giấy, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Mầm non Trung Hòa' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir/20.978057,105.7938072/M%E1%BA%A7m+non+Trung+H%C3%B2a/@20.9945494,105.7734914,14z/data=!3m1!4b1!4m9!4m8!1m1!4e1!1m5!1m1!1s0x3135aca006b750a3:0x9defafa7657ecbe7!2m2!1d105.8050311!2d21.0114894?entry=ttu" target="_blank">Ngõ 35 P. Nguyễn Thị Định, Trung Hoà, Cầu Giấy, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Mầm non Dịch Vọng Hậu' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?sca_esv=71f266223ad35985&sca_upv=1&sxsrf=ACQVn08IqLHDupFHxS8pbEYC-dt9JQJKfg:1712745472236&uact=5&gs_lp=Egxnd3Mtd2l6LXNlcnAiHU3huqdtIG5vbiBE4buLY2ggVuG7jW5nIEjhuq11Mg4QLhiABBjHARivARiOBTIGEAAYFhgeMgYQABgWGB4yBhAAGBYYHjIGEAAYFhgeMgYQABgWGB4yBhAAGBYYHjIGEAAYFhgeMgYQABgWGB4yBhAAGBYYHjIdEC4YgAQYxwEYrwEYjgUYlwUY3AQY3gQY4ATYAQFI6AFQAFgAcAB4AJABAJgBZKABZKoBAzAuMbgBA8gBAPgBAvgBAZgCAaACbJgDALoGBggBEAEYFJIHAzAuMaAHmAw&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KWFMJ00xqzUxMQppBNty4-rL&daddr=2+P.+Tr%E1%BA%A7n+Qu%E1%BB%91c+Ho%C3%A0n,+D%E1%BB%8Bch+V%E1%BB%8Dng+H%E1%BA%ADu,+C%E1%BA%A7u+Gi%E1%BA%A5y,+H%C3%A0+N%E1%BB%99i" target="_blank">2 P. Trần Quốc Hoàn, Dịch Vọng Hậu, Cầu Giấy, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Mầm non Yên Hòa' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+Y%C3%AAn+H%C3%B2a/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135ab5a700b5307:0xf3bf4af71a53df52?sa=X&ved=1t:3061&ictx=111" target="_blank">số 106 Hạ Yên Quyết-Phường Yên Hòa-Quận Cầu Giấy-Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Mầm non Thực Hành Hoa Thủy Tiên' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?sca_esv=71f266223ad35985&sca_upv=1&sxsrf=ACQVn0_y9cvuv7aONczXF5vrn9SXx7OQ4g:1712745710695&uact=5&gs_lp=Egxnd3Mtd2l6LXNlcnAiNG3huqdtIG5vbiB0aOG7sWMgSMOgbmggSG9hIFRo4buneSBUacOqbiBj4bqndSBnaeG6pXkyCBAAGIAEGKIEMggQABiJBRiiBDIIEAAYgAQYogRIzCNQjwhYwSJwCXgBkAEDmAF1oAHOC6oBAzkuN7gBA8gBAPgBAZgCFaAC5gjCAgoQABhHGNYEGLADwgIEECMYJ8ICBxAjGLACGCfCAgoQIRgKGKABGMMEwgIIECEYoAEYwwTCAgQQIRgKwgIMECEYChigARjDBBgKmAMAiAYBkAYGkgcEMTcuNKAHuTw&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=Keecr1swqzUxMZ4QsPy6cbZj&daddr=2QWR%2B4M5,+%C4%90%C6%B0%E1%BB%9Dng+trong,+khu+t%E1%BA%ADp+th%E1%BB%83,+C%E1%BA%A7u+Gi%E1%BA%A5y,+H%C3%A0+N%E1%BB%99i" target="_blank">387 Hoàng Quốc Việt - Cầu Giấy - Hà Nội.</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Mầm non Tuổi Hoa' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/place/Tr%C6%B0%E1%BB%9Dng+M%E1%BA%ABu+gi%C3%A1o+Tu%E1%BB%95i+Hoa,+Ngh%C4%A9a+%C4%90%C3%B4,+C%E1%BA%A7u+Gi%E1%BA%A5y,+H%C3%A0+N%E1%BB%99i/data=!4m2!3m1!1s0x3135ab256cab4e0b:0xb6074f1c4be51412?sa=X&ved=1t:242&ictx=111" target="_blank">Phố Nghĩa Đô, phường Nghĩa Đô, quận Cầu Giấy, thành phố Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Mầm non Hoa Hướng Dương' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIHCAEQIRigATIHCAIQIRigATIHCAMQIRigATIHCAQQIRigAdIBCDIzODhqMGo0qAIAsAIA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KRFEYHRJqzUxMSE-UomU6DND&daddr=Ng%C3%B5+3+T%C3%B4n+Th%E1%BA%A5t+Thuy%E1%BA%BFt,+D%E1%BB%8Bch+V%E1%BB%8Dng+H%E1%BA%ADu,+C%E1%BA%A7u+Gi%E1%BA%A5y,+H%C3%A0+N%E1%BB%99i" target="_blank">Ngõ 3 Tôn Thất Thuyết, Dịch Vọng Hậu, Cầu Giấy, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Mầm non Hoa Sen' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?s=web&lqi=Ch5t4bqnbSBub24gaG9hIHNlbiBj4bqndSBnaeG6pXlIloqQ4dG2gIAIWkAQABABEAIQAxgAGAEYAhgDGAQYBSIebeG6p20gbm9uIGhvYSBzZW4gY-G6p3UgZ2nhuqV5KgoIAhAAEAEQAhADkgEJcHJlc2Nob29sqgFHEAEyHxABIhtzZxFpHaAqtH1ObIptdPUdQPkOKfO_7FpgUp8yIhACIh5t4bqnbSBub24gaG9hIHNlbiBj4bqndSBnaeG6pXk&vet=12ahUKEwiJ16bnu7eFAxW8hVYBHZA4Bh0Q1YkKegQIIRAB..i&cs=0&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KV-kUT5PrTUxMWMzadRb_Wzg&daddr=3+P.+Nguy%E1%BB%85n+Xu%C3%A2n+Linh,+Trung+Ho%C3%A0,+C%E1%BA%A7u+Gi%E1%BA%A5y,+H%C3%A0+N%E1%BB%99i" target="_blank">Số 03 Nguyễn Xuân Linh, Trung Hòa, Cầu Giấy, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Mầm non Nam Trung Yên' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUqDAgAEEUYOxjjAhiABDIMCAAQRRg7GOMCGIAEMhAIARAuGK8BGMcBGIAEGI4FMggIAhAAGBYYHjIICAMQABgWGB4yCAgEEAAYFhgeMggIBRAAGBYYHjIICAYQABgWGB4yCAgHEAAYFhgeMggICBAAGBYYHjIICAkQABgWGB6oAgCwAgA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KTsrnB-3rTUxMQhNfk-G1F50&daddr=T%C3%A2ng+1,+S%E1%BB%91+6,+C4+-+L%C3%B4+2,+Khu+%C4%91%C3%B4+th%E1%BB%8B+Nam+Trung+Y%C3%AAn,+C%E1%BA%A7u+Gi%E1%BA%A5y,+H%C3%A0+N%E1%BB%99i" target="_blank"> Số 6, C4 - Lô 2, Khu đô thị Nam Trung Yên, Cầu Giấy, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Mầm non tư thục Bông Mai' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?sca_esv=71f266223ad35985&sca_upv=1&sxsrf=ACQVn09aq1JZCgtJtJpkiqU06h8BYC6ZSg:1712746041728&uact=5&gs_lp=Egxnd3Mtd2l6LXNlcnAiK03huqdtIG5vbiB0xrAgdGjhu6VjIELDtG5nIE1haSBj4bqndSBnaeG6pXkyBRAhGKABSKcMUI0BWJ0LcAh4AJABBpgBjQGgAbMNqgEENS4xMrgBA8gBAPgBAZgCE6AC2QnCAgkQABgHGB4YsAPCAgsQABiABBiiBBiwA8ICBhAAGBYYHsICCBAAGIAEGKIEwgIEECEYFcICBxAhGAoYoAHCAgUQIRifBZgDAIgGAZAGA5IHBDkuMTCgB-E4&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KW-fem8wqzUxMR3CVwKtouMI&daddr=3-A26,+385+Ho%C3%A0ng+Qu%E1%BB%91c+Vi%E1%BB%87t,+Ngh%C4%A9a+T%C3%A2n,+C%E1%BA%A7u+Gi%E1%BA%A5y,+H%C3%A0+N%E1%BB%99i+100000" target="_blank">385 Hoàng Quốc Việt, Nghĩa Tân, Cầu Giấy, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Mầm non Tuổi Thơ' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUqBwgDEAAYgAQyCQgAEEUYORiABDIMCAEQIxgnGIAEGIoFMgYIAhAjGCcyBwgDEAAYgAQyBwgEEAAYgAQyBwgFEAAYgAQyDQgGEC4YrwEYxwEYgAQyDQgHEC4YrwEYxwEYgAQyBwgIEAAYgAQyBwgJEAAYgATSAQgxNDY3ajBqN6gCCLACAQ&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KU9Bev_YrTUxMTe541PtpV8E&daddr=2Q6R%2BR3X,+Trung+Ho%C3%A0,+C%E1%BA%A7u+Gi%E1%BA%A5y,+H%C3%A0+N%E1%BB%99i" target="_blank">Lô đất B9 KĐT Nam Trung Yên,. - Phường Trung Hoà - Quận Cầu Giấy - Hà Nội.</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Cầu Giấy' and school.name ==  'Mầm non Quan Hoa' %}
+        <center><h4>Địa chỉ:    CS1: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyDggAEEUYJxg5GIAEGIoFMgYIARAjGCcyEAgCEC4YrwEYxwEYgAQYjgUyCAgDEAAYFhgeMggIBBAAGBYYHjIGCAUQRRg8MgYIBhBFGDwyBggHEEUYPNIBBzE2NWowajSoAgCwAgA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KVVVVRU_qzUxMTC2lTKrplsC&daddr=8+%C4%90.+Nguy%E1%BB%85n+Kh%C3%A1nh+To%C3%A0n,+Quan+Hoa,+C%E1%BA%A7u+Gi%E1%BA%A5y,+H%C3%A0+N%E1%BB%99i" target="_blank">8 Đ. Nguyễn Khánh Toàn, Quan Hoa, Cầu Giấy, Hà Nội</a></h4></center>
+                            <center><h4>CS2:  <a href="https://www.google.com/maps/dir//1+Ng.+59+P.+Quan+Hoa,+Quan+Hoa,+C%E1%BA%A7u+Gi%E1%BA%A5y,+H%C3%A0+N%E1%BB%99i/@21.0327658,105.8023007,17z/data=!4m9!4m8!1m0!1m5!1m1!1s0x3135ab40f967d3f5:0x624eb6250080136a!2m2!1d105.8023007!2d21.0327658!3e0?entry=ttu" target="_blank">Số 1 - Ngõ 59 phố Quan Hoa- Cầu Giấy - HN</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Long Biên' and school.name ==  'Mầm non Chim Én' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+Chim+%C3%89n/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135a97e90989ccf:0x3b31796ad7caedb2?sa=X&ved=1t:3061&ictx=111" target="_blank">113 P. Nguyễn Sơn, Ngọc Lâm, Long Biên, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Long Biên' and school.name ==  'Mầm non CLC Đô Thị Sài Đồng' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIHCAEQIRigAdIBBzc5MWowajSoAgCwAgA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KR9s_yoQqTUxMdn5NGXLBD35&daddr=P.+Nguy%E1%BB%85n+Minh+Ch%C3%A2u+C14,+Ph%C3%BAc+%C4%90%E1%BB%93ng,+Long+Bi%C3%AAn,+H%C3%A0+N%E1%BB%99i" target="_blank">P. Nguyễn Minh Châu C14, Phúc Đồng, Long Biên, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Long Biên' and school.name ==  'Mầm non CLC Đô Thị Việt Hưng' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIHCAEQIRigAdIBBzczOGowajSoAgCwAgE&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KQ39Cei8qTUxMbWCmyYkL9TP&daddr=ph%E1%BB%91+Th%C3%A9p+M%E1%BB%9Bi,+Khu+%C4%91%C3%B4+th%E1%BB%8B+Vi%E1%BB%87t+H%C6%B0ng,+Long+Bi%C3%AAn,+H%C3%A0+N%E1%BB%99i" target="_blank">phố Thép Mới, Khu đô thị Việt Hưng, Long Biên, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Long Biên' and school.name ==  'Mầm non Hoa Anh Đào' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?sca_esv=71f266223ad35985&sca_upv=1&sxsrf=ACQVn09T_r9iOmKH-jhbtuVf_quaWB9-Rg:1712746719399&uact=5&gs_lp=Egxnd3Mtd2l6LXNlcnAiIk3huqdtIG5vbiBIb2EgQW5oIMSQw6BvIGxvbmcgYmnDqm4yDhAuGIAEGMcBGK8BGI4FMgYQABgWGB4yAhAmMggQABiJBRiiBDIIEAAYgAQYogQyCBAAGIAEGKIEMggQABiABBiiBDIIEAAYgAQYogQyHRAuGIAEGMcBGK8BGI4FGJcFGNwEGN4EGOAE2AEBSIoOUNYDWMEMcAN4AZABApgBlgGgAd0LqgEEMS4xMrgBA8gBAPgBAZgCDqACrArCAgoQABhHGNYEGLADwgILEC4YgAQYxwEYrwHCAgUQABiABMICGhAuGIAEGMcBGK8BGJcFGNwEGN4EGOAE2AEBmAMAiAYBkAYGugYGCAEQARgUkgcEMy4xMaAH34UB&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KREWHMDmqTUxMW7t6Pk6mW3D&daddr=23/16/531+%C4%90.+B%C3%A1t+Kh%E1%BB%91i,+T%E1%BB%95+8,+Long+Bi%C3%AAn,+H%C3%A0+N%E1%BB%99i" target="_blank">23/16/531 Đ. Bát Khối, Tổ 8, Long Biên, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Long Biên' and school.name ==  'Mầm non tư thục Hoa Thủy Tinh' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir/?api=1&destination=21.038698023841%2C105.8812&fbclid=IwAR2rfWt5jIPTzjcUUmEXY67Pizf1uJCzZ4FkGE8aLWJsdZV8xiyGeFJfyOo_aem_AUc6yYRZ-sO9fsBbG6lanIlyv0b0Ms1f7XkA3CZhh-XlNCs7gPW5nQo3f-nBCBzpHH5P12fFxqf38gr5Cuw9cGR2" target="_blank">135 Hoàng Như Tiếp-Bồ đề-Long biên, Hanoi, Vietnam</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Long Biên' and school.name ==  'Mầm non Phúc Đồng' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+Ph%C3%BAc+%C4%90%E1%BB%93ng/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135a90d8924a6e9:0x4322801742189012?sa=X&ved=1t:3061&ictx=111" target="_blank">Ng. 46 P. Chu Huy Mân, Phúc Đồng, Long Biên, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Long Biên' and school.name ==  'Mầm non Gia Thụy' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?s=web&lqi=ChRN4bqnbSBub24gR2lhIFRo4buleZIBCXByZXNjaG9vbKoBTBABKg0iCW3huqdtIG5vbihCMh8QASIbqlPAfhj7MiH7kX89IYAZJLLeiqOMXuTkBX5pMhgQAiIUbeG6p20gbm9uIGdpYSB0aOG7pXk&vet=12ahUKEwjZ4uf2v7eFAxVsiFYBHeaZCdIQ1YkKegQIHxAB..i&cs=0&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KcWrdhEAqTUxMUpvGt5eHfXz&daddr=3V2Q%2BMCG,+Gia+Th%E1%BB%A5y,+Long+Bi%C3%AAn,+H%C3%A0+N%E1%BB%99i" target="_blank">Số 16/640/21 Nguyễn Văn Cừ - Tổ 13 – P. Gia Thụy – Q. Long Biên - Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Long Biên' and school.name ==  'Mầm non Thạch Bàn' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDIQCAEQLhivARjHARiABBiOBTIICAIQABgWGB4yCAgDEAAYFhgeMggIBBAAGBYYHjIICAUQABgWGB4yCAgGEAAYFhgeMggIBxAAGBYYHjIICAgQABgWGB4yCAgJEAAYFhgeqAIAsAIA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KaUM4asmqTUxMdpn0nvIjEWS&daddr=Ng%C3%B5+187/39+%C4%91%C6%B0%E1%BB%9Dng,+Th%E1%BA%A1ch+B%C3%A0n,+Long+Bi%C3%AAn,+H%C3%A0+N%E1%BB%99i" target="_blank">Ngõ 187/39 đường, Thạch Bàn, Long Biên, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Long Biên' and school.name ==  'Mầm non Hoa Hướng Dương' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+Hoa+H%C6%B0%E1%BB%9Bng+D%C6%B0%C6%A1ng+long+bi%C3%AAn/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135a9a47a71f0f3:0x762f272d0feeb579?sa=X&ved=1t:3061&ictx=111" target="_blank">88 P. Kim Quan Thượng, Việt Hưng, Long Biên, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Long Biên' and school.name ==  'Mầm non Hoa Sen' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/place/27+P.+%C4%90%E1%BB%A9c+Giang,+%C4%90%E1%BB%A9c+Giang,+Long+Bi%C3%AAn,+H%C3%A0+N%E1%BB%99i,+Vi%E1%BB%87t+Nam/@21.0640706,105.8921094,17z/data=!3m1!4b1!4m6!3m5!1s0x3135a99718981813:0x205b3cb84a4a0355!8m2!3d21.0640656!4d105.8946843!16s%2Fg%2F11c5lyj2dz?entry=ttu" target="_blank">Tổ 27, Phường Đức Giang, Quận Long Biên, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Long Biên' and school.name ==  'Mầm non Hoa Thủy Tiên' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//m%E1%BA%A7m+non+hoa+th%E1%BB%A7y+ti%C3%AAn+long+bi%C3%AAn+l%E1%BB%87+m%E1%BA%ADt/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135a9a033fb5093:0x12e6c0077acf0476?sa=X&ved=1t:3061&ictx=111" target="_blank">Tổ 8 - Việt Hưng - Long Biên - Hà Nội.</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Long Biên' and school.name ==  'Mầm non Thạch Cầu' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+Th%E1%BA%A1ch+C%E1%BA%A7u/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135a95f214d4c21:0xac828317a4b9f094?sa=X&ved=1t:3061&ictx=111" target="_blank">Ngõ 70 - Tổ 2 – Phố Thạch Cầu - Phường Long Biên - Quận Long Biên - Thành Phố Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Long Biên' and school.name ==  'Mầm non Hà Nội Osaka' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDIQCAEQLhivARjHARiABBiOBTIKCAIQABiABBiiBDIKCAMQABiABBiiBDIKCAQQABiiBBiJBdIBBzIyNmowajSoAgCwAgA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=Kff_vLZLqTUxMbH6ZbfReMgS&daddr=190+P.+S%C3%A0i+%C4%90%E1%BB%93ng,+TT.+S%C3%A0i+%C4%90%E1%BB%93ng,+Long+Bi%C3%AAn,+H%C3%A0+N%E1%BB%99i+100000" target="_blank">190 P. Sài Đồng, TT. Sài Đồng, Long Biên, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Long Biên' and school.name ==  'Mầm non Bồ Đề' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+B%E1%BB%93+%C4%90%E1%BB%81/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135abd9c33b0e01:0xe640d715dcace8cb?sa=X&ved=1t:3061&ictx=111" target="_blank">Ngõ 160 P. Ái Mộ, Bồ Đề, Long Biên, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Thanh Xuân' and school.name ==  'Mầm non Bình Minh' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?s=web&sca_esv=71f266223ad35985&sca_upv=1&lqi=CiBN4bqnbSBub24gQsOsbmggTWluaCB0aGFuaCB4dcOibkj77-zXka-AgAhaRhAAEAEQAhADEAQQBRgAGAEYAhgDGAQYBSIgbeG6p20gbm9uIGLDrG5oIG1pbmggdGhhbmggeHXDom4qCggCEAAQARACEAOSAQZzY2hvb2yqAUoQATIgEAEiHHLk40vsm88JagJZqWO9C993G7319zHmYXRBeREyJBACIiBt4bqnbSBub24gYsOsbmggbWluaCB0aGFuaCB4dcOibg&vet=12ahUKEwiupo2Mw7eFAxX7lFYBHZVbDIEQ1YkKegQIFxAB..i&cs=0&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KS0e65ovrTUxMYMgnibc2_DW&daddr=Ng%C3%B5+90+%C4%90.+Nguy%E1%BB%85n+Tu%C3%A2n,+Thanh+Xu%C3%A2n+Trung,+Thanh+Xu%C3%A2n,+H%C3%A0+N%E1%BB%99i" target="_blank">Ngõ 90 Đ. Nguyễn Tuân, Thanh Xuân Trung, Thanh Xuân, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Thanh Xuân' and school.name ==  'Mầm non Thanh Xuân Bắc' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyBggAEEUYOdIBBzExNWowajSoAgCwAgA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KW-VWtu-rDUxMVYZFqqAs9IW&daddr=B11+Khu%E1%BA%A5t+Duy+Ti%E1%BA%BFn,+Thanh+Xu%C3%A2n+B%E1%BA%AFc,+Thanh+Xu%C3%A2n,+H%C3%A0+N%E1%BB%99i" target="_blank">B11 Khuất Duy Tiến, Thanh Xuân Bắc, Thanh Xuân, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Thanh Xuân' and school.name ==  'Mầm non Tràng An' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?s=web&lqi=ChNN4bqnbSBub24gVHLDoG5nIEFuSMTul8PlgICACFolEAAQARACEAMYABgBGAIYAyITbeG6p20gbm9uIHRyw6BuZyBhbpIBCXByZXNjaG9vbKoBPBABMh8QASIbbcdYVhUBt9SRn-66efH9mMFC7_7yAFbr-DHBMhcQAiITbeG6p20gbm9uIHRyw6BuZyBhbg&vet=12ahUKEwjG5c6vw7eFAxVKhlYBHRNYD80Q1YkKegQIHxAB..i&cs=0&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KW_dhiO_rDUxMagkG87m0wNB&daddr=C19+Nguy%E1%BB%85n+Qu%C3%BD+%C4%90%E1%BB%A9c,+Thanh+Xu%C3%A2n+B%E1%BA%AFc,+Thanh+Xu%C3%A2n,+H%C3%A0+N%E1%BB%99i" target="_blank">C19 Nguyễn Quý Đức, Thanh Xuân Bắc, Thanh Xuân, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Thanh Xuân' and school.name ==  'Mầm non Thanh Xuân Nam' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyBggAEEUYOdIBBzEwMGowajSoAgCwAgA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KUvwJXe_rDUxMfzj5Mi75mtE&daddr=Ng%C3%B5+469+%C4%90.+Nguy%E1%BB%85n+Tr%C3%A3i,+Thanh+Xu%C3%A2n+Nam,+Thanh+Xu%C3%A2n,+H%C3%A0+N%E1%BB%99i" target="_blank"> Ngõ 469 Đ. Nguyễn Trãi, Thanh Xuân Nam, Thanh Xuân, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Thanh Xuân' and school.name ==  'Mầm non Thăng Long' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?sca_esv=71f266223ad35985&sca_upv=1&sxsrf=ACQVn0-o1LbyAQ3W-BGhLJGHX3h8bJr5-Q:1712748063614&uact=5&gs_lp=Egxnd3Mtd2l6LXNlcnAiIU3huqdtIG5vbiBUaMSDbmcgTG9uZyB0aGFuaCB4dcOibjIFECEYoAFI0xFQtQFYhxBwAngBkAEDmAGOAaAB9AuqAQQxLjEzuAEDyAEA-AEBmAINoAL-CcICChAAGEcY1gQYsAPCAgUQABiABMICDhAuGIAEGMcBGK8BGI4FwgIGEAAYFhgewgICECbCAggQABiABBiiBMICBxAhGAoYoAGYAwCIBgGQBgOSBwQyLjExoAfMUQ&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=Kb1Ea3yQrDUxMSkvIjk1bsZI&daddr=133+%C4%90.+Nguy%E1%BB%85n+Tr%C3%A3i,+Th%C6%B0%E1%BB%A3ng+%C4%90%C3%ACnh,+Thanh+Xu%C3%A2n,+H%C3%A0+N%E1%BB%99i" target="_blank">133 Đ. Nguyễn Trãi, Thượng Đình, Thanh Xuân, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Thanh Xuân' and school.name ==  'Mầm non Sơn Ca' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?s=web&sca_esv=71f266223ad35985&sca_upv=1&lqi=Ch1t4bqnbSBub24gc8ahbiBjYSB0aGFuaCB4dcOibkj95L6M5oCAgAhaQxAAEAEQAhADEAQQBRgAGAEYAhgDGAQYBSIdbeG6p20gbm9uIHPGoW4gY2EgdGhhbmggeHXDom4qCggCEAAQARACEAOSAQlwcmVzY2hvb2yqAUYQATIfEAEiG20S9LUOc6NAxplHrmHa_EPbEu0bHd64YdADXjIhEAIiHW3huqdtIG5vbiBzxqFuIGNhIHRoYW5oIHh1w6Ju&vet=12ahUKEwjKr6z2w7eFAxWOqVYBHQu6DtIQ1YkKegQIGxAB..i&cs=0&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KccXYxbsrDUxMZFatgWfaN1D&daddr=82+P.+Ho%C3%A0ng+%C4%90%E1%BA%A1o+Th%C3%A0nh,+Kim+Giang,+Thanh+Xu%C3%A2n,+H%C3%A0+N%E1%BB%99i" target="_blank">82 P. Hoàng Đạo Thành, Kim Giang, Thanh Xuân, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Thanh Xuân' and school.name ==  'Mầm non Nguyễn Tuân' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//Ng.+47+Nguy%E1%BB%85n+Tu%C3%A2n,+Thanh+Xu%C3%A2n+Trung,+Thanh+Xu%C3%A2n,+H%C3%A0+N%E1%BB%99i/@20.9949241,105.8051586,17z/data=!4m9!4m8!1m0!1m5!1m1!1s0x3135acbde63a9607:0xa8ab7439062b414f!2m2!1d105.8051586!2d20.9949241!3e0?entry=ttu" target="_blank">Số 47 Nguyễn Tuân, P Thanh Xuân Trung, Q Thanh Xuân, TP Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Thanh Xuân' and school.name ==  'Mầm non Sao Sáng' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+Sao+S%C3%A1ng+thanh+xu%C3%A2n/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135acec1ab062d1:0x11ebdb237853dbed?sa=X&ved=1t:3061&ictx=111" target="_blank">Ngõ 58, Phố, P. Hoàng Đạo Thành, Kim Giang, Thanh Xuân, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Thanh Xuân' and school.name ==  'Mầm non Hoa Hồng' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+Hoa+H%E1%BB%93ng+thanh+xu%C3%A2n/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135adaa54cf2623:0x50c553be9c2bc55?sa=X&ved=1t:3061&ictx=111" target="_blank">Ngõ 27 Đ. Lê Văn Lương, Nhân Chính, Thanh Xuân, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Thanh Xuân' and school.name ==  'Mầm non Tuổi Hoa' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?sca_esv=71f266223ad35985&sca_upv=1&sxsrf=ACQVn0-J3ZbYOTZq_iOkZeHKJymoCNyobQ:1712748508344&uact=5&gs_lp=Egxnd3Mtd2l6LXNlcnAiIE3huqdtIG5vbiBUdeG7lWkgSG9hIHRoYW5oIHh1w6JuMgUQABiABDIGEAAYFhgeMgIQJjIIEAAYgAQYogQyCBAAGIAEGKIEMggQABiABBiiBEjyDlDMBFiyDXADeAGQAQKYAXugAdwMqgEEMC4xNLgBA8gBAPgBAZgCD6ACzQvCAgcQIxiwAxgnwgIKEAAYRxjWBBiwA8ICFhAuGIAEGIoFGEMYxwEYrwEYsAMYjgXCAgoQIxiABBiKBRgnwgIOEC4YgAQYxwEYrwEYjgXCAgsQLhiABBjHARivAZgDAIgGAZAGCpIHBDMuMTKgB8mCAQ&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KVtAzfzArDUxMao_lawR3tOJ&daddr=XRP2%2BRHR,+Ngh.+214/20+%C4%90%C6%B0%E1%BB%9Dng+Nguy%E1%BB%85n+Xi%E1%BB%83n,+T%C3%A2n+Tri%E1%BB%81u,+Thanh+Xu%C3%A2n,+H%C3%A0+N%E1%BB%99i" target="_blank">214/20 Đường Nguyễn Xiển, Tân Triều, Thanh Xuân, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Thanh Xuân' and school.name ==  'Mầm non Khương Trung' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyCQgAEEUYORiABDIICAEQABgWGB4yCAgCEAAYFhgeMgoIAxAAGIAEGKIEMgoIBBAAGIAEGKIEqAIIsAIB&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=Kbc4wt2RrDUxMW7AeIjcQJdR&daddr=25+Ng.+162+P.+Kh%C6%B0%C6%A1ng+Trung,+Kh%C6%B0%C6%A1ng+Trung,+Thanh+Xu%C3%A2n,+H%C3%A0+N%E1%BB%99i" target="_blank">25 Ng. 162 P. Khương Trung, Khương Trung, Thanh Xuân, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Thanh Xuân' and school.name ==  'Mầm non Khương Đình' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDIQCAEQLhivARjHARiABBiOBTIICAIQABgWGB4yCAgDEAAYFhgeMggIBBAAGBYYHjIICAUQABgWGB4yCAgGEAAYFhgeMggIBxAAGBYYHjIKCAgQABiABBiiBDIKCAkQABiABBiiBKgCCLACAQ&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KSWcVW6SrDUxMUH9VkOSPMws&daddr=29+P.+Kh%C6%B0%C6%A1ng+H%E1%BA%A1,+Kh%C6%B0%C6%A1ng+%C4%90%C3%ACnh,+Thanh+Xu%C3%A2n,+H%C3%A0+N%E1%BB%99i" target="_blank">29 P. Khương Hạ, Khương Đình, Thanh Xuân, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Tây Hồ' and school.name ==  'Mầm non Quảng An' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIHCAEQABiABDIICAIQABgWGB4yCAgDEAAYFhgeMgoIBBAAGKIEGIkFMgYIBRBFGDwyBggGEEUYPDIGCAcQRRg80gEHMTc0ajBqN6gCCLACAQ&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KfkqDAo3qzUxMQ0jPDIFIQRm&daddr=2+Ng.+67+%C4%90.+T%C3%B4+Ng%E1%BB%8Dc+V%C3%A2n,+Qu%E1%BA%A3ng+An,+T%C3%A2y+H%E1%BB%93,+H%C3%A0+N%E1%BB%99i" target="_blank">2 Ng. 67 Đ. Tô Ngọc Vân, Quảng An, Tây Hồ, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Tây Hồ' and school.name ==  'Mầm non Xuân La' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDINCAEQLhivARjHARiABDIICAIQABgWGB4yCAgDEAAYFhgeMggIBBAAGBYYHjIKCAUQABgPGBYYHjIICAYQABgWGB4yCAgHEAAYFhgeMggICBAAGBYYHjIICAkQABgWGB6oAgCwAgA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KU_P_g_nqjUxMZdhaWu5x7KG&daddr=Ng%C3%B5+28+%C4%90.+Xu%C3%A2n+La,+Xu%C3%A2n+La,+T%C3%A2y+H%E1%BB%93,+H%C3%A0+N%E1%BB%99i" target="_blank">Ngõ 28 Đ. Xuân La, Xuân La, Tây Hồ, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Tây Hồ' and school.name ==  'Mầm non An Dương' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyCQgAEEUYORiABDIICAEQABgWGB4yCAgCEAAYFhgeMggIAxAAGBYYHjIICAQQABgWGB4yBggFEEUYPDIGCAYQRRg8MgYIBxBFGDyoAgCwAgA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KV1nEF2tqzUxMS7Zm3n6hLXt&daddr=75+P.+An+D%C6%B0%C6%A1ng,+Y%C3%AAn+Ph%E1%BB%A5,+T%C3%A2y+H%E1%BB%93,+H%C3%A0+N%E1%BB%99i" target="_blank">75 P. An Dương, Yên Phụ, Tây Hồ, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Tây Hồ' and school.name ==  'Mầm non Tứ Liên' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+T%E1%BB%A9+Li%C3%AAn/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x11560875de7e1303:0xcdc9c963ff33540?sa=X&ved=1t:3061&ictx=111" target="_blank">Số 111, P. Tứ Liên, Tứ Liên, Tây Hồ, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Tây Hồ' and school.name ==  'Mầm non Đoàn Thị Điểm' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+%C4%90o%C3%A0n+Th%E1%BB%8B+%C4%90i%E1%BB%83m/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135ab8ffcf16f01:0xae8660d63f0813d8?sa=X&ved=1t:3061&ictx=111" target="_blank"> 63 Ng. 209 An D. Vương, Phú Xá, Tây Hồ, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Tây Hồ' and school.name ==  'Mầm non Nhật Tân' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?s=web&lqi=ChVN4bqnbSBub24gTmjhuq10IFTDom5I9rbr7eWAgIAIWicQABABEAIQAxgAGAEYAhgDIhVt4bqnbSBub24gbmjhuq10IHTDom6SAQlwcmVzY2hvb2yqAU0QASoNIglt4bqnbSBub24oQjIfEAEiG6pTw7KnE1iJVx_3jREL1uL9HPWgtdoREmXCPzIZEAIiFW3huqdtIG5vbiBuaOG6rXQgdMOibg&vet=12ahUKEwjV1bPqxreFAxXKffUHHSI5DzAQ1YkKegQIHhAB..i&cs=0&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=Kauqqqr1qjUxMZFtZH6S5cli&daddr=31+Ng.+399+%C4%90.+%C3%82u+C%C6%A1,+Nh%E1%BA%ADt+T%C3%A2n,+T%C3%A2y+H%E1%BB%93,+H%C3%A0+N%E1%BB%99i" target="_blank">31 Ng. 399 Đ. Âu Cơ, Nhật Tân, Tây Hồ, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Tây Hồ' and school.name ==  'Mầm non Phú Thượng' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDINCAEQLhivARjHARiABDIICAIQABgWGB4yCAgDEAAYFhgeMggIBBAAGBYYHjIICAUQABgWGB4yCggGEAAYogQYiQUyCggHEAAYgAQYogQyCggIEAAYgAQYogSoAgCwAgE&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KU_4p6qWqjUxMdDJBPgd8u48&daddr=soo18,ng%C3%B5,+P.+Ph%C3%BA+Gia,+Ph%C3%BA+Th%C6%B0%E1%BB%A3ng,+T%C3%A2y+H%E1%BB%93,+H%C3%A0+N%E1%BB%99i" target="_blank">18,ngõ, P. Phú Gia, Phú Thượng, Tây Hồ, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Tây Hồ' and school.name ==  'Mầm non Bình Minh' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUqCggAEAAY4wIYgAQyCggAEAAY4wIYgAQyDQgBEC4YrwEYxwEYgAQyBggCEEUYOTIICAMQABgWGB4yCggEEAAYgAQYogQyCggFEAAYogQYiQUyCggGEAAYgAQYogSoAgCwAgA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KVdHr9oeqzUxMbuLN2IhE_2s&daddr=196+%C4%90.+L%E1%BA%A1c+Long+Qu%C3%A2n,+B%C6%B0%E1%BB%9Fi,+T%C3%A2y+H%E1%BB%93,+H%C3%A0+N%E1%BB%99i" target="_blank">196 Đ. Lạc Long Quân, Bưởi, Tây Hồ, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Tây Hồ' and school.name ==  'Mầm non Tây Hồ' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDINCAEQLhivARjHARiABDIICAIQABgWGB4yCAgDEAAYFhgeMgoIBBAAGA8YFhgeMggIBRAAGBYYHjIICAYQABgWGB4yCAgHEAAYFhgeMggICBAAGBYYHjIICAkQABgWGB6oAgiwAgE&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KVkzow1oqzUxMTMuHaExwddP&daddr=3R45%2B9WQ,+P.+Tr%C3%ADch+S%C3%A0i,+B%C6%B0%E1%BB%9Fi,+T%C3%A2y+H%E1%BB%93,+H%C3%A0+N%E1%BB%99i" target="_blank">275A Trích Sài, Phường Bưởi, Tây Hồ, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Tây Hồ' and school.name ==  'Mầm non Chu Văn An' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+Chu+V%C4%83n+An/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135aba7b994ae43:0xf7d4953a1f7b12f3?sa=X&ved=1t:3061&ictx=111" target="_blank">17 Đ. Thụy Khuê, Thuỵ Khuê, Tây Hồ, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Đống Đa' and school.name ==  'Tiểu học Phương Mai' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?rlz=1C1CHBF_enVN1043VN1043&gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDINCAEQLhivARjHARiABDIICAIQABgWGB4yCAgDEAAYFhgeMggIBBAAGBYYHjIICAUQABgWGB4yCAgGEAAYFhgeMggIBxAAGBYYHjIICAgQABgWGB6oAgCwAgA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KS_9q9h5rDUxMebxtGP1wxrM&daddr=6,+Alley+4,+Phuong+Mai+Street,+Phuong+Mai+Ward,+Dong+Da+District,+8+Ng.+4+P.+Ph%C6%B0%C6%A1ng+Mai,+Ph%C6%B0%C6%A1ng+Mai,+%C4%90%E1%BB%91ng+%C4%90a,+H%C3%A0+N%E1%BB%99i" target="_blank"> 8 Ng. 4 P. Phương Mai, Phương Mai, Đống Đa, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Đống Đa' and school.name ==  'Mầm non Đống Đa' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?s=web&lqi=ChVN4bqnbSBub24gxJDhu5FuZyDEkGFIuJmO--qAgIAIWiMQABABGAAYARgCGAMiFW3huqdtIG5vbiDEkeG7kW5nIMSRYZIBCXByZXNjaG9vbKoBThABKg0iCW3huqdtIG5vbihCMiAQASIcbcdP2pumjHM9Jxk0mRWWbYtdtXjG-m8eRUm_GDIZEAIiFW3huqdtIG5vbiDEkeG7kW5nIMSRYQ&vet=12ahUKEwis9YihyLeFAxVur1YBHfWvAnsQ1YkKegQIHxAB..i&cs=0&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KXemnAf6qjUxMcM8rdb5rOR7&daddr=1+P.+%C4%90%C3%A0o+Duy+Anh,+Kim+Li%C3%AAn,+%C4%90%E1%BB%91ng+%C4%90a,+H%C3%A0+N%E1%BB%99i" target="_blank"> 1 P. Đào Duy Anh, Kim Liên, Đống Đa, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Đống Đa' and school.name ==  'Mầm non Hoa Sữa' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUqDQgBEC4YrwEYxwEYgAQyCQgAEEUYORiABDINCAEQLhivARjHARiABDINCAIQLhivARjHARiABDIQCAMQLhivARjHARiABBiOBTIICAQQABgWGB4yCAgFEAAYFhgeMggIBhAAGBYYHjIICAcQABgWGB4yCAgIEAAYFhgeMggICRAAGBYYHtIBCDE1NjNqMGo3qAIIsAIB&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KS1_4yR5rDUxMfoEqrXMLl6n&daddr=27+P.+L%C6%B0%C6%A1ng+%C4%90%E1%BB%8Bnh+C%E1%BB%A7a,+%C4%90%C3%B4ng+T%C3%A1c,+%C4%90%E1%BB%91ng+%C4%90a,+H%C3%A0+N%E1%BB%99i" target="_blank">27 P. Lương Định Của, Đông Tác, Đống Đa, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Đống Đa' and school.name ==  'Mầm non Tư Thục Minh Hải' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIICAEQABgWGB4yCggCEAAYgAQYogQyCggDEAAYgAQYogQyCggEEAAYgAQYogQyCggFEAAYogQYiQXSAQcxMjVqMGo3qAIIsAIB&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KS_ju9V-qzUxMXs2S1-ykFP0&daddr=Ng.+19+P.+Tr%E1%BA%A7n+Quang+Di%E1%BB%87u,+Ch%E1%BB%A3+D%E1%BB%ABa,+%C4%90%E1%BB%91ng+%C4%90a,+H%C3%A0+N%E1%BB%99i" target="_blank">Ng. 19 P. Trần Quang Diệu, Chợ Dừa, Đống Đa, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Đống Đa' and school.name ==  'Mầm non Hoa Mai' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?s=web&sca_esv=361d108b9e725553&sca_upv=1&lqi=Ch1N4bqnbSBub24gSG9hIE1haSDEkeG7kW5nIMSRYUjz4Neil7CAgAhaMxAAEAEQAhADGAAYARgCGAMYBBgFIh1t4bqnbSBub24gaG9hIG1haSDEkeG7kW5nIMSRYZIBBnNjaG9vbKoBXhABKhUiEW3huqdtIG5vbiBob2EgbWFpKEIyIBABIhxymh5PFWUn1RxfXBkZie4oe9ROZWEp7AHIBlpWMiEQAiIdbeG6p20gbm9uIGhvYSBtYWkgxJHhu5FuZyDEkWE&vet=12ahUKEwjh7PnbyLeFAxWRqFYBHZxID28Q1YkKegQIHRAB..i&cs=0&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KbvDweEQqzUxMQALFNbvbtdw&daddr=82B+Ng%C3%B5+Th%E1%BB%8Bnh+H%C3%A0o+1,+P.+T%C3%B4n+%C4%90%E1%BB%A9c+Th%E1%BA%AFng,+H%C3%A0ng+B%E1%BB%99t,+%C4%90%E1%BB%91ng+%C4%90a,+H%C3%A0+N%E1%BB%99i" target="_blank">82B Ngõ Thịnh Hào 1, P. Tôn Đức Thắng, Hàng Bột, Đống Đa, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Đống Đa' and school.name ==  'Mầm non Ngã Tư Sở' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDIQCAEQLhivARjHARiABBiOBTIICAIQABgWGB4yCAgDEAAYFhgeMggIBBAAGBYYHjIICAUQABgWGB4yCAgGEAAYFhgeMggIBxAAGBYYHjIICAgQABgWGB4yCAgJEAAYFhgeqAIAsAIA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KfvBWBWBrDUxMZecCyfJgZac&daddr=229+P.+T%C3%A2y+S%C6%A1n,+Ng%C3%A3+T%C6%B0+S%E1%BB%9F,+%C4%90%E1%BB%91ng+%C4%90a,+H%C3%A0+N%E1%BB%99i" target="_blank">229 P. Tây Sơn, Ngã Tư Sở, Đống Đa, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Đống Đa' and school.name ==  'Mầm non Trung Tự' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/place/Tr%C6%B0%E1%BB%9Dng+M%E1%BA%A7m+non+Trung+T%E1%BB%B1,+S%E1%BB%91+4+P.+%C4%90%E1%BA%B7ng+V%C4%83n+Ng%E1%BB%AF,+Trung+T%E1%BB%B1,+%C4%90%E1%BB%91ng+%C4%90a,+H%C3%A0+N%E1%BB%99i/@21.0084506,105.83266,17z/data=!3m1!4b1!4m6!3m5!1s0x3135ac7f76951e4f:0xcf14b98d03d4aa65!8m2!3d21.008503!4d105.832791!16s%2Fg%2F11bvtk7lft?entry=ttu" target="_blank">Số 4 Đặng Văn Ngữ, Đống Đa Hà Nội.</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Đống Đa' and school.name ==  'Mầm non Thực Nghiệm Hoa Hồng' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyBggAEEUYOdIBBjc4ajBqN6gCCLACAQ&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KUUq2AuDrDUxMVAvJLiWx_CO&daddr=111+P.+V%C4%A9nh+H%E1%BB%93,+Th%E1%BB%8Bnh+Quang,+%C4%90%E1%BB%91ng+%C4%90a,+H%C3%A0+N%E1%BB%99i" target="_blank">111 P. Vĩnh Hồ, Thịnh Quang, Đống Đa, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Đống Đa' and school.name ==  'Mầm non Kim Liên' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyEQgAEEUYJxg5GOMCGIAEGIoFMhUIARAuGCcYrwEYxwEYgAQYigUYjgUyCAgCEAAYFhgeMggIAxAAGBYYHjIICAQQABgWGB4yCAgFEAAYFhgeMggIBhAAGBYYHjIICAcQABgWGB4yCAgIEAAYFhgeMgoICRAAGKIEGIkFqAIIsAIB&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=Kb8Enst4rDUxMSB4YUVpHLX4&daddr=19+P.+Ho%C3%A0ng+T%C3%ADch+Tr%C3%AD,+Kim+Li%C3%AAn,+%C4%90%E1%BB%91ng+%C4%90a,+H%C3%A0+N%E1%BB%99i" target="_blank">19 P. Hoàng Tích Trí, Kim Liên, Đống Đa, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Đống Đa' and school.name ==  'Mầm non Hoa Hồng (Yên Lãng)' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+Hoa+H%E1%BB%93ng+(Y%C3%AAn+L%C3%A3ng)/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135ac9d6097b4f5:0x57a9b6c39d707459?sa=X&ved=1t:3061&ictx=111" target="_blank">104 P.Yên Lãng, Thịnh Quang, Đống Đa, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hoàng Mai' and school.name ==  'Mầm non Hoa Hồng' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+Hoa+H%E1%BB%93ng+ho%C3%A0ng+mai/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135ac6a1baad483:0x1be311c8a4f34554?sa=X&ved=1t:3061&ictx=111" target="_blank">Số 1 tổ 4 ngõ 389 Trương Định, phường Tân Mai, quận Hoàng Mai, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hoàng Mai' and school.name ==  'Mầm non Linh Đàm' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?s=web&lqi=ChRN4bqnbSBub24gTGluaCDEkMOgbUjm-ZTywY-AgAhaJhAAEAEQAhADGAAYARgCGAMiFG3huqdtIG5vbiBsaW5oIMSRw6BtkgEJcHJlc2Nob29sqgFMEAEqDSIJbeG6p20gbm9uKEIyHxABIhttx06xEDQ16pS-2XQO4W5OlUTyBOJDdOcP_uMyGBACIhRt4bqnbSBub24gbGluaCDEkcOgbQ&vet=12ahUKEwjN6u6lyreFAxUTs1YBHeF7BW4Q1YkKegQIIxAB..i&cs=0&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KQuiwqL4rDUxMTuaBpyHezOa&daddr=XRCH%2B39X,+%C4%90%E1%BA%A1i+Kim,+Ho%C3%A0ng+Mai,+H%C3%A0+N%E1%BB%99i" target="_blank">Khu Đô Thị Mới Bắc Linh Đàm, Phường Đại Kim, Quận Hoàng Mai, TP Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hoàng Mai' and school.name ==  'Mầm non Tuổi Thơ' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDINCAEQLhivARjHARiABDIKCAIQABiiBBiJBTIKCAMQABiiBBiJBTIKCAQQABiABBiiBKgCCLACAQ&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=Ke00BjMWrDUxMRyndbVw-lxE&daddr=L%C3%B4+12+%C4%90%C6%B0%E1%BB%9Dng+%C4%90%E1%BB%81n+L%E1%BB%AB,+Ho%C3%A0ng+V%C4%83n+Th%E1%BB%A5,+Ho%C3%A0ng+Mai,+H%C3%A0+N%E1%BB%99i" target="_blank">Lô 12 Đường Đền Lừ, Hoàng Văn Thụ, Hoàng Mai, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hà Đông' and school.name ==  'Mầm non Yên Nghĩa' %}
+        <center><h4>Địa chỉ: CS1: <a href="https://www.google.com/maps/dir//8+Y%C3%AAn+Ngh%C4%A9a,+Ba+La,+Ph%C3%BA+La,+H%C3%A0+%C4%90%C3%B4ng,+H%C3%A0+N%E1%BB%99i/@20.9560809,105.7157747,13z/data=!4m8!4m7!1m0!1m5!1m1!1s0x313452e848520a8d:0x23269772cb2ff54e!2m2!1d105.7569745!2d20.9560057?entry=ttu" target="_blank">tổ 08 - Yên Nghĩa - Hà Đông - Hà Nội. </a></h4></center>
+        <center><h4> CS2: <a href="https://www.google.com/maps?s=web&sca_esv=361d108b9e725553&sca_upv=1&lqi=ChVt4bqnbSBub24gecOqbiBuZ2jEqWFI4pist_yqgIAIWiMQABABGAAYARgCGAMiFW3huqdtIG5vbiB5w6puIG5naMSpYZIBCXByZXNjaG9vbKoBTRABKg0iCW3huqdtIG5vbihCMh8QASIbc88f9E7l4cwDx9oFWYpDzIbHoaGmxvBOc9DLMhkQAiIVbeG6p20gbm9uIHnDqm4gbmdoxKlh&vet=12ahUKEwjo8LXuy7eFAxUhqFYBHV32AScQ1YkKegQIHxAB..i&cs=0&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KR-VyUj0UjQxMXVcME0Mh1oM&daddr=XP2Q%2BXCW,+Y%C3%AAn+Ngh%C4%A9a,+H%C3%A0+%C4%90%C3%B4ng,+H%C3%A0+N%E1%BB%99i" target="_blank">Tổ dân phố số 3 - Phường Yên Nghĩa -Quận Hà Đông - TP. Hà Nội </a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hà Đông' and school.name ==  'Mầm non Hoa Hồng' %}
+        <center><h4>Địa chỉ: CS1: <a href="https://www.google.com/maps?s=web&lqi=Ch9N4bqnbSBub24gSG9hIEjhu5NuZyBow6AgxJHDtG5nkgEJcHJlc2Nob29sqgFIEAEyHxABIhttEukBMfRw_ZfoZ5VtVvyyDJbcDw23p-B-yA8yIxACIh9t4bqnbSBub24gaG9hIGjhu5NuZyBow6AgxJHDtG5n&vet=12ahUKEwjHjeLNzreFAxXgh1YBHcIcAGcQ1YkKegQIGxAB..i&cs=0&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KQGRn7wqUzQxMYFqUBaNNa9g&daddr=XQ9J%2BM97,+30+P.+B%C3%A0Tri%E1%BB%87u,+P.+Nguy%E1%BB%85n+Tr%C3%A3i,+H%C3%A0+%C4%90%C3%B4ng,+H%C3%A0+N%E1%BB%99i" target="_blank">Số 30 ngõ 4 Bà Triệu - Hà Đông - Hà Nội</a></h4></center>
+        <center><h4>CS2:  <a href="https://www.google.com/maps?s=web&lqi=Ch9N4bqnbSBub24gSG9hIEjhu5NuZyBow6AgxJHDtG5nkgEGc2Nob29sqgFIEAEyHxABIhttEukBMfRw_ZfoZ5VtVvyyDJbcDw23p-B-yA8yIxACIh9t4bqnbSBub24gaG9hIGjhu5NuZyBow6AgxJHDtG5n&vet=12ahUKEwjHjeLNzreFAxXgh1YBHcIcAGcQ1YkKegQIHxAB..i&cs=0&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KRPjRu_VUjQxMbSnzqtUhbL-&daddr=15+P.+L%C6%B0%C6%A1ng+V%C4%83n+Can,+P.+Nguy%E1%BB%85n+Tr%C3%A3i,+H%C3%A0+%C4%90%C3%B4ng,+H%C3%A0+N%E1%BB%99i" target="_blank">15 P. Lương Văn Can, P. Nguyễn Trãi, Hà Đông, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hà Đông' and school.name ==  'Mầm non Ngô Thì Nhậm' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?sca_esv=d635237b949d40bc&sca_upv=1&sxsrf=ACQVn090uTyjqV_M9myKsjj9ritYli0V1w:1712752145271&uact=5&gs_lp=Egxnd3Mtd2l6LXNlcnAiJU3huqdtIG5vbiBOZ8O0IFRow6wgTmjhuq1tIGjDoCDEkcO0bmcyDhAuGIAEGMcBGK8BGI4FMgIQJjIIEAAYgAQYogQyCBAAGIAEGKIEMggQABiABBiiBDIdEC4YgAQYxwEYrwEYjgUYlwUY3AQY3gQY4ATYAQFItAxQ7ANYnAtwBngAkAEFmAFkoAGTCqoBBDE0LjG4AQPIAQD4AQGYAhCgAtIHwgIIEAAYgAQYsAPCAgkQABgHGB4YsAPCAgkQABgIGB4YsAPCAgsQABiABBiiBBiwA8ICBhAAGBYYHpgDAIgGAZAGBroGBggBEAEYFJIHBDE0LjKgB4Vv&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=Kcs1DZatUzQxMcrren3Ocxsx&daddr=XQCC%2B626,+P.+Nguy%E1%BB%85n+Vi%E1%BA%BFt+Xu%C3%A2n,+P.+Quang+Trung,+H%C3%A0+%C4%90%C3%B4ng,+H%C3%A0+N%E1%BB%99i" target="_blank">Tổ dân phố 5 Ngô Thì Nhậm,P. Nguyễn Viết Xuân, P. Quang Trung, Hà Đông, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Hệ thống Lomonoxop' and school.name ==  'Mầm non Monoloxop An Khánh' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyBggAEEUYOdIBBzIwNGowajSoAgCwAgA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KUfE299FUzQxMadi83LiQ8E2&daddr=Geleximco,+A28+Khu+%C4%91%C3%B4+th%E1%BB%8B,+%C4%90.+L%C3%AA+Tr%E1%BB%8Dng+T%E1%BA%A5n,+An+Kh%C3%A1nh,+Ho%C3%A0i+%C4%90%E1%BB%A9c,+H%C3%A0+N%E1%BB%99i" target="_blank">Geleximco, A28 Khu đô thị, Đ. Lê Trọng Tấn, An Khánh, Hoài Đức, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Hệ thống Lomonoxop' and school.name ==  'Mầm non Monoloxop Dương Nội' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyBggAEEUYOTISCAEQLhgNGK8BGMcBGIAEGI4FMgoIAhAAGAUYDRgeMgoIAxAAGAUYDRge0gEHMjI4ajBqNKgCALACAA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KQVhhwe8UzQxMTjRafyhCr3I&daddr=khu+li%E1%BB%81n+k%E1%BB%81+Geleximco,+%C4%90.+L%C3%AA+Tr%E1%BB%8Dng+T%E1%BA%A5n,+D%C6%B0%C6%A1ng+N%E1%BB%99i,+H%C3%A0+%C4%90%C3%B4ng,+H%C3%A0+N%E1%BB%99i" target="_blank">khu liền kề Geleximco, Đ. Lê Trọng Tấn, Dương Nội, Hà Đông, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Huyện Thanh Trì' and school.name ==  'Mầm non A thị trấn Văn Điển' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUqDggAEEUYJxg7GIAEGIoFMg4IABBFGCcYOxiABBiKBTIQCAEQLhivARjHARiABBiOBTIICAIQABgWGB4yCAgDEAAYFhgeMgoIBBAAGIAEGKIE0gEHNTU0ajBqNKgCALACAA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KQVDdaiwrTUxMWXLI7BfJeWI&daddr=WRXW%2BQ78,+V%C4%83n+%C4%90i%E1%BB%83n,+Thanh+Tr%C3%AC,+H%C3%A0+N%E1%BB%99i" target="_blank">Số 20- Ngõ 265- Đường Ngọc Hồi- Thanh Trì- Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hoàn Kiếm' and school.name ==  'Mầm non CLC 20/10' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+CLC+20%2F10/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135ab96dafe876f:0x94ec5905fb204d6a?sa=X&ved=1t:3061&ictx=111" target="_blank">40 P. Thợ Nhuộm, Trần Hưng Đạo, Hoàn Kiếm, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hoàn Kiếm' and school.name ==  'Mẫu giáo Quang Trung' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%ABu+gi%C3%A1o+Quang+Trung/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135ab920affd617:0x1f477bed4fafb674?sa=X&ved=1t:3061&ictx=111" target="_blank">43 P. Quang Trung, Trần Hưng Đạo, Hoàn Kiếm, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hoàn Kiếm' and school.name ==  'Mẫu giáo mầm non A' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?s=web&lqi=ChdN4bqrdSBnacOhbyBt4bqnbSBub24gQUjZ8YXk-pWAgAhaLRAAEAEQAhADEAQYABgBGAIYAxgEIhdt4bqrdSBnacOhbyBt4bqnbSBub24gYZIBDGtpbmRlcmdhcnRlbqoBQBABMh8QASIbqlM2zbFiWnEk9h4UP6NjmnHaLvc0Mpw9P4XYMhsQAiIXbeG6q3UgZ2nDoW8gbeG6p20gbm9uIGE&vet=12ahUKEwiFgqT61beFAxUA2TQHHWj6BC8Q1YkKegQIJBAB..i&cs=0&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KYESi6WTqzUxMRXFRpLtw6NG&daddr=88+P.+Th%E1%BB%A3+Nhu%E1%BB%99m,+Tr%E1%BA%A7n+H%C6%B0ng+%C4%90%E1%BA%A1o,+Ho%C3%A0n+Ki%E1%BA%BFm,+H%C3%A0+N%E1%BB%99i" target="_blank">88 P. Thợ Nhuộm, Trần Hưng Đạo, Hoàn Kiếm, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hoàn Kiếm' and school.name ==  'Mầm non Tháng 8' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+Th%C3%A1ng+8/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135ab9508174501:0x6f162236f9ca4f77?sa=X&ved=1t:3061&ictx=111" target="_blank">3 P. Nhà Chung, Hàng Trống, Hoàn Kiếm, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hoàn Kiếm' and school.name ==  'Mầm non B' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+B/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135abec6a463c1d:0x5ef6471a4298e84e?sa=X&ved=1t:3061&ictx=111" target="_blank"> 5 P. Phan Chu Trinh, Phan Chu Trinh, Hoàn Kiếm, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hoàn Kiếm' and school.name ==  'Mầm non Tuổi Thơ' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//Tr%C6%B0%E1%BB%9Dng+M%E1%BA%ABu+Gi%C3%A1o+Tu%E1%BB%95i+Th%C6%A1,+22+P.+H%C3%A0ng+Bu%E1%BB%93m,+H%C3%A0ng+Bu%E1%BB%93m,+Ho%C3%A0n+Ki%E1%BA%BFm,+H%C3%A0+N%E1%BB%99i+10000/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135abbf5435d7e3:0xebe2be7b9e8e372?sa=X&ved=1t:57443&ictx=111" target="_blank">22 P. Hàng Buồm, Hàng Buồm, Hoàn Kiếm, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hoàn Kiếm' and school.name ==  'Mầm non Tuổi Hoa' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//m%E1%BA%A7m+non+tu%E1%BB%95i+hoa+ho%C3%A0n+ki%E1%BA%BFm/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135abc798bee381:0x9ad3ee1b16a9f277?sa=X&ved=1t:3061&ictx=111" target="_blank">1 P .Nguyễn Tư Giản, Phúc Tân, Hoàn Kiếm, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hoàn Kiếm' and school.name ==  'Mầm non Sao Sáng' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIHCAEQIRigAdIBCDIzMzRqMGo0qAIAsAIA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KfOYpjHtqzUxMZuQskTdHIU8&daddr=5+Ng%C3%B4+Th%C3%AC+Nh%E1%BA%ADm,+H%C3%A0ng+B%C3%A0i,+Ho%C3%A0n+Ki%E1%BA%BFm,+H%C3%A0+N%E1%BB%99i" target="_blank">5 Ngô Thì Nhậm, Hàng Bài, Hoàn Kiếm, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hoàn Kiếm' and school.name ==  'Mầm non Bình Minh' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyCggAEEUYFhgeGDkyBggBEEUYQDIKCAIQABiABBiiBDIKCAMQABiABBiiBDIKCAQQABiABBiiBDIKCAUQABiABBiiBNIBCDI0NzhqMGo0qAIAsAIA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KQu2QPuVqzUxMaypjUB-QgeC&daddr=75+P.+H%C3%A0ng+B%C3%B4ng,+H%C3%A0ng+B%C3%B4ng,+Ho%C3%A0n+Ki%E1%BA%BFm,+H%C3%A0+N%E1%BB%99i" target="_blank">75 P. Hàng Bông, Hàng Bông, Hoàn Kiếm, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Ba Đình' and school.name ==  'Mầm non Thực Hành Hoa Sen' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIGCAEQRRg70gEHMTc4ajBqN6gCCLACAQ&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KQsfGkJxqzUxMd_FyEDVmLgG&daddr=Khu+D4,+P.+Tr%E1%BA%A7n+Huy+Li%E1%BB%87u,+Gi%E1%BA%A3ng+V%C3%B5,+Ba+%C4%90%C3%ACnh,+H%C3%A0+N%E1%BB%99i" target="_blank">Khu D4, P. Trần Huy Liệu, Giảng Võ, Ba Đình, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Ba Đình' and school.name ==  'Mầm non Sao Mai' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+Sao+Mai+ba+%C4%91%C3%ACnh/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135ab174f09ba6d:0x75cb98324a14b7d7?sa=X&ved=1t:3061&ictx=111" target="_blank">33 P. Vĩnh Phúc, Vĩnh Phú, Ba Đình, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Ba Đình' and school.name ==  'Mầm non Thành Công' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//21+P.+Nguy%C3%AAn+H%E1%BB%93ng,+Th%C3%A0nh+C%C3%B4ng,+Ba+%C4%90%C3%ACnh,+H%C3%A0+N%E1%BB%99i/@21.0212424,105.7301821,12z/data=!4m8!4m7!1m0!1m5!1m1!1s0x3135ab65d06be3a9:0x4d45a0407cc486e8!2m2!1d105.8125838!2d21.0212622?entry=ttu" target="_blank">21 P. Nguyên Hồng, Thành Công, Ba Đình, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Ba Đình' and school.name ==  'Mầu giáo số 3' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7u+gi%C3%A1o+s%E1%BB%91+3/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135abba1a23dd8b:0x1c244e42731d9f2b?sa=X&ved=1t:3061&ictx=111" target="_blank">2 P. Phan Huy Ích, Ba Đình, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Ba Đình' and school.name ==  'Mẫu giáo số 10' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDIQCAEQLhivARjHARiABBiOBTIICAIQABgWGB4yCggDEAAYDxgWGB4yCggEEAAYgAQYogQyCggFEAAYgAQYogQyCggGEAAYgAQYogQyCggHEAAYgAQYogSoAgCwAgA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KUOkiqEKqzUxMZrFvCUV6MhQ&daddr=2RMH%2BJFV,+Ng.+100+P.+%C4%90%E1%BB%99i+C%E1%BA%A5n,+%C4%90%E1%BB%99i+C%E1%BA%A5n,+Ba+%C4%90%C3%ACnh,+H%C3%A0+N%E1%BB%99i" target="_blank"> Ng. 100 P. Đội Cấn, Đội Cấn, Ba Đình, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Ba Đình' and school.name ==  'Mầm non Tuổi Hoa' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?sca_esv=221f3c1ac0fa11b3&sca_upv=1&sxsrf=ACQVn09YgZ51gAs20ENqd9d0zpJbB717IQ:1712884396629&uact=5&gs_lp=Egxnd3Mtd2l6LXNlcnAiHk3huqdtIG5vbiBUdeG7lWkgSG9hIGJhIMSRw6xuaDIOEC4YgAQYxwEYrwEYjgUyBhAAGBYYHjICECYyCBAAGIAEGKIEMggQABiABBiiBDIIEAAYiQUYogQyCBAAGIAEGKIEMh0QLhiABBjHARivARiOBRiXBRjcBBjeBBjgBNgBAUjaFFC6CFjtE3AFeAGQAQKYAWmgAdIHqgEDOC4zuAEDyAEA-AEBmAIOoALjBsICBxAjGLADGCfCAgoQABhHGNYEGLADwgIKECMYgAQYigUYJ8ICCxAuGIAEGMcBGK8BwgIFEAAYgASYAwCIBgGQBgq6BgYIARABGBSSBwM5LjWgB8lx&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=Ke9xdK9zqzUxMX6roWImZNz1&daddr=102/B1+P.+Tr%E1%BA%A7n+Huy+Li%E1%BB%87u,+Gi%E1%BA%A3ng+V%C3%B5,+Ba+%C4%90%C3%ACnh,+H%C3%A0+N%E1%BB%99i" target="_blank">102/B1 P. Trần Huy Liệu, Giảng Võ, Ba Đình, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Ba Đình' and school.name ==  'Mầm non Hoa Hồng' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir/20.978057,105.7938072/110+P.+Qu%C3%A1n+Th%C3%A1nh,+Qu%C3%A1n+Th%C3%A1nh,+Ba+%C4%90%C3%ACnh,+H%C3%A0+N%E1%BB%99i/@21.0097984,105.7785677,13z/data=!3m1!4b1!4m9!4m8!1m1!4e1!1m5!1m1!1s0x3135abba86670c43:0xcf9c39fd74aa31b3!2m2!1d105.8434442!2d21.0423183?entry=ttu" target="_blank">Số 110 Phố Quán Thánh, Quận Ba Đình, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Ba Đình' and school.name ==  'Mẫu giáo số 6' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDIQCAEQLhivARjHARiABBiOBTIKCAIQABiABBiiBDIKCAMQABiABBiiBDIKCAQQABiABBiiBDIKCAUQABiABBiiBDIKCAYQABiABBiiBNIBBzIwMmowajSoAgCwAgA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KVU2OPtjqzUxMQNuOndFukcJ&daddr=81+Ng.+189+%C4%90.+Ho%C3%A0ng+Hoa+Th%C3%A1m,+Ng%E1%BB%8Dc+H%E1%BB%93,+Ba+%C4%90%C3%ACnh,+H%C3%A0+N%E1%BB%99i" target="_blank">81 Ng. 189 Đ. Hoàng Hoa Thám, Ngọc Hồ, Ba Đình, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hai Bà Trưng' and school.name ==  'Tiểu Học Lê Văn Tám' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//Ti%E1%BB%83u+H%E1%BB%8Dc+L%C3%AA+V%C4%83n+T%C3%A1m/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135ac76b977c32d:0xbaeb918a53542992?sa=X&ved=1t:3061&ictx=111" target="_blank"> 74 Ng. 40 P. Tạ Quang Bửu, Bách Khoa, Hai Bà Trưng, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hai Bà Trưng' and school.name ==  'Tiểu học Ngô Quyền' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//Ti%E1%BB%83u+h%E1%BB%8Dc+Ng%C3%B4+Quy%E1%BB%81n/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135ac0c13b6b05d:0xc12d097903cffd50?sa=X&ved=1t:3061&ictx=111" target="_blank"> Số 271 Ngõ Quỳnh, Phường Quỳnh Lôi, Quận Hai Bà Trưng, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hai Bà Trưng' and school.name ==  'Tiểu học Ngô Thì Nhậm' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//Ti%E1%BB%83u+h%E1%BB%8Dc+Ng%C3%B4+Th%C3%AC+Nh%E1%BA%ADm/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135abf2ebe54609:0x7b6a91831f890933?sa=X&ved=1t:3061&ictx=111" target="_blank"> 9 P. Hoà Mã, Phạm Đình Hổ, Hai Bà Trưng, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hai Bà Trưng' and school.name ==  'Mầm non Lê Đại Hành' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDINCAEQLhivARjHARiABDIKCAIQABiABBiiBDIKCAMQABiiBBiJBTIKCAQQABiABBiiBKgCALACAA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=Ka9q-UuIqzUxMWaSHY2eGaPL&daddr=53+P.+L%C3%AA+%C4%90%E1%BA%A1i+H%C3%A0nh,+L%C3%AA+%C4%90%E1%BA%A1i+H%C3%A0nh,+Hai+B%C3%A0+Tr%C6%B0ng,+H%C3%A0+N%E1%BB%99i" target="_blank"> 53 P. Lê Đại Hành, Lê Đại Hành, Hai Bà Trưng, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hai Bà Trưng' and school.name ==  'Mầm non Sao Sáng' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?s=web&sca_esv=221f3c1ac0fa11b3&sca_upv=1&lqi=CiJN4bqnbSBub24gU2FvIFPDoW5nIGhhaSBiw6AgdHLGsG5nkgEObnVyc2VyeV9zY2hvb2yqAWUQASoXIhNt4bqnbSBub24gc2FvIHPDoW5nKEIyIBABIhyqU8CHGvNbPuTH2VrycApaRcUJGTYtfMR3Gw-YMiYQAiIibeG6p20gbm9uIHNhbyBzw6FuZyBoYWkgYsOgIHRyxrBuZw&vet=12ahUKEwjcpOTtwLuFAxVus1YBHUw_B8cQ1YkKegQIJhAB..i&cs=0&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KZXA8_B3qzUxMWtlwIIm2IO9&daddr=139+P.+Nguy%E1%BB%85n+%C4%90%C3%ACnh+Chi%E1%BB%83u,+L%C3%AA+%C4%90%E1%BA%A1i+H%C3%A0nh,+Hai+B%C3%A0+Tr%C6%B0ng,+H%C3%A0+N%E1%BB%99i" target="_blank">139 P. Nguyễn Đình Chiểu, Lê Đại Hành, Hai Bà Trưng, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hai Bà Trưng' and school.name ==  'Mầm non CLC Việt Bun' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+Vi%E1%BB%87t+Bun/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135abf38ca0b497:0x14ff7d0dd7e4f5bd?sa=X&ved=1t:3061&ictx=111" target="_blank">27 P. Hương Viên, Đồng Nhân, Hai Bà Trưng, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hai Bà Trưng' and school.name ==  'Mầm non Quỳnh Lôi' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDINCAEQLhivARjHARiABDIKCAIQABiABBiiBDIKCAMQABiABBiiBDIKCAQQABiABBiiBKgCALACAA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=Kd0F1PEMrDUxMbSeAwkAOMeE&daddr=Ng%C3%B5+159+P.+H%E1%BB%93ng+Mai,+Qu%E1%BB%B3nh+L%C3%B4i,+Hai+B%C3%A0+Tr%C6%B0ng,+H%C3%A0+N%E1%BB%99i" target="_blank">Ngõ 159 P. Hồng Mai, Quỳnh Lôi, Hai Bà Trưng, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hai Bà Trưng' and school.name ==  'Mầm non Quỳnh Mai' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDINCAEQLhivARjHARiABDIICAIQABgWGB4yCAgDEAAYFhgeMggIBBAAGBYYHjIKCAUQABiABBiiBDIKCAYQABiABBiiBDIKCAcQABiABBiiBKgCALACAA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=Kcsfgc0IrDUxMULq8KbvjHgq&daddr=9+P.+Kim+Ng%C6%B0u,+Qu%E1%BB%B3nh+Mai,+Hai+B%C3%A0+Tr%C6%B0ng,+H%C3%A0+N%E1%BB%99i" target="_blank">9 P. Kim Ngưu, Quỳnh Mai, Hai Bà Trưng, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hai Bà Trưng' and school.name ==  'Mầm non Bách Khoa' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+B%C3%A1ch+Khoa/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x3135ac7483eecf51:0x49586b84bae181a5?sa=X&ved=1t:3061&ictx=111" target="_blank">46 P. Tạ Quang Bửu, Bách Khoa, Hai Bà Trưng, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Hai Bà Trưng' and school.name ==  'Mầm non 8/3' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyCQgAEEUYORiABDIICAEQABgWGB4yCAgCEAAYFhgeMggIAxAAGBYYHjIICAQQABgWGB4yCAgFEAAYFhgeMggIBhAAGBYYHjIICAcQABgWGB4yCAgIEAAYFhgeMggICRAAGBYYHqgCCLACAQ&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KbOKjKcOrDUxMchYPhnOb-cG&daddr=68+P.+8-3,+Qu%E1%BB%B3nh+Mai,+Hai+B%C3%A0+Tr%C6%B0ng,+H%C3%A0+N%E1%BB%99i" target="_blank">68 P. 8-3, Quỳnh Mai, Hai Bà Trưng, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Huyện Đông Anh' and school.name ==  'Mầm non Phúc Lộc' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+Ph%C3%BAc+L%E1%BB%99c/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x313501d9cdab8dcb:0x4ae224ecc7984bcd?sa=X&ved=1t:3061&ictx=111" target="_blank">Đ. Phúc Lộc, Uy Nỗ, Đông Anh, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Huyện Đông Anh' and school.name ==  'Mầm non Cổ Loa' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps/dir//M%E1%BA%A7m+non+C%E1%BB%95+Loa/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x313500b66f1fbdcd:0x65e540a83c31d66d?sa=X&ved=1t:3061&ictx=111" target="_blank">Cổ Loa, Đông Anh, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Huyện Đông Anh' and school.name ==  'Mầm non Tuổi Thơ' %}
+        <center><h4>Địa chỉ: CS1: <a href="https://www.google.com/maps/dir/20.978057,105.7938072/Tr%C6%B0%E1%BB%9Dng+M%E1%BA%A7m+Non+Tu%E1%BB%95i+Th%C6%A1,+136+%C4%90.+%C4%90%E1%BA%A3n+D%E1%BB%8B,+Uy+N%E1%BB%97,+%C4%90%C3%B4ng+Anh,+H%C3%A0+N%E1%BB%99i/@21.0602034,105.7585421,12z/data=!3m1!4b1!4m9!4m8!1m1!4e1!1m5!1m1!1s0x313500df096bed15:0x4231b908639104f9!2m2!1d105.8554367!2d21.1431594?entry=ttu" target="_blank"> 136 Đ. Đản Dị, Uy Nỗ, Đông Anh, Hà Nội</a></h4></center>
+        <center><h4>CS2: <a href="https://www.google.com/maps/dir/20.978057,105.7938072/5V65%2B9PJ+Tr%C6%B0%E1%BB%9Dng+M%E1%BA%A7m+non+Tu%E1%BB%95i+th%C6%A1,+Uy+N%E1%BB%97,+%C4%90%C3%B4ng+Anh,+H%C3%A0+N%E1%BB%99i/@21.0691036,105.7369699,12z/data=!3m1!4b1!4m9!4m8!1m1!4e1!1m5!1m1!1s0x3135013b906fffff:0xd030f922130a409c!2m2!1d105.8592589!2d21.1609585?entry=ttu" target="_blank"> Uy Nỗ, Đông Anh, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Nam Từ Liêm' and school.name ==  'Tiểu học Đại Mỗ' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?rlz=1C1CHBF_enVN1043VN1043&gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDINCAEQLhivARjHARiABDIKCAIQABgPGBYYHjIICAMQABgWGB4yCAgEEAAYFhgeMggIBRAAGBYYHjIICAYQABgWGB4yCAgHEAAYFhgeMggICBAAGBYYHjIICAkQABgWGB6oAgCwAgA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KauqquprUzQxMb3hF9hSKyrX&daddr=XQW2%2B3PR,+Ph%E1%BB%AB%C6%A1ng,+Nam+T%E1%BB%AB+Li%C3%AAm,+H%C3%A0+N%E1%BB%99i" target="_blank">TDP Tháp - Đại Mỗ - Nam Từ Liêm - Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Nam Từ Liêm' and school.name ==  'Tiểu học Lý Nam Đế' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?rlz=1C1CHBF_enVN1043VN1043&gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDINCAEQLhivARjHARiABDIHCAIQABiABDIICAMQABgWGB4yCAgEEAAYFhgeMggIBRAAGBYYHjIICAYQABgWGB4yCAgHEAAYFhgeMggICBAAGBYYHjIICAkQABgWGB6oAgCwAgA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KQE2m8iBVDQxMSTl5acyPwJk&daddr=Mi%C3%AAu+Nha,+T%E1%BB%AB+Li%C3%AAm,+H%C3%A0+N%E1%BB%99i" target="_blank">TDP 4 Miêu Nha, Tây Mỗ, Nam Từ Liêm, Hà Nội</a></h4></center>
+        {% endif %}
+        {% if district.name == 'Quận Nam Từ Liêm' and school.name ==  'Tiểu học Phương Canh' %}
+        <center><h4>Địa chỉ: <a href="https://www.google.com/maps?rlz=1C1CHBF_enVN1043VN1043&gs_lcrp=EgZjaHJvbWUyDAgAEEUYORjjAhiABDINCAEQLhivARjHARiABDIICAIQABgWGB4yCAgDEAAYFhgeMggIBBAAGBYYHjIICAUQABgWGB4yCAgGEAAYFhgeMggIBxAAGBYYHjIKCAgQABiABBiiBKgCALACAA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KVVVVSWMVDQxMclh_5H8MmAm&daddr=2PMV%2BH88,+Xu%C3%A2n+Ph%C6%B0%C6%A1ng,+T%E1%BB%AB+Li%C3%AAm,+H%C3%A0+N%E1%BB%99i" target="_blank">Số 195 đường Phương Canh, Q. Nam Từ Liêm, Hà Nội</a></h4></center>
+        {% endif %}
+
+        {% else %}
+        <center><h4>Địa chỉ: <a href="{{school.school_location}}" target="_blank">{{school.school_address}}</a></h4></center>
+        {% endif %}
+        <center><h3>({{district.name}} - {{department.name}})</h3></center>
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th><center>Phòng lab</center></th>
+                        <th><center>Số lượng tài sản</center></th>
+                        <th><center>Số lượng hỏng / Sử dụng được</center></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for labroom in labrooms %}
+                    <tr>
+                        <td>
+                            <h6>
+                                <strong>
+                                    <center>
+                                        <a href='{% url 'labroom_detail' department_id=department.id district_id=district.id school_id=school.id labroom_id=labroom.id %}'>
+                                            {{labroom.name}}
+                                        </a>
+                                    </center>
+                                </strong>
+                            </h6>
+                        </td>
+                        <td><center>{{labroom.asset_count}}</center></td>
+                        <td><center>{{labroom.broken_asset_count}} / {{labroom.active_asset_count}}</center></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <p></p>
+</div>
+            {% if request.user.is_superuser %}
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createLabModal">
+                Thêm phòng lab 
+            </button>
+            
+            <!-- Modal -->
+            <div class="modal fade" id="createLabModal" tabindex="-1" aria-labelledby="createLabModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="createLabModalLabel">Thêm phòng lab</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form method="post" action="{% url 'create_labroom' department_id=department.id district_id=district.id school_id=school.id %}">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="TenLab">Tên phòng lab</label>
+                                    <input type="text" class="form-control" id="TenLab" name="name" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Thêm</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <p></p>
+            {% endif %}
+        </div>
+    </div>
+
+<br>
+<center><div>
+    <div class="row">
+        <div class="col-sm-12 col-md-4">
+            <a href="#" class="active_assets">
+            <div class="p-5 mb-4 bg-light rounded-4">
+                <div class="container-fluid py-10">
+                    <h3 class="display-10 fw-bold">Sử dụng được<br></h3><br><h4>{{labroom_active_asset}}</h4>
+                </div>
+            </div>
+            </a>
+        </div>
+        <div class="col-sm-12 col-md-4">
+            <a href="#" class="broken_assets">
+                <div class="p-5 mb-4 bg-light rounded-4">
+                    <div class="container-fluid py-10">
+                        <h3 class="display-10 fw-bold">Đã hỏng</h3><br><h4>{{labroom_broken_asset}}</h4>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-12 col-md-4">
+            <a href="#" class="all_assets">
+            <div class="p-5 mb-4 bg-light rounded-4">
+                <div class="container-fluid py-10">
+
+                    <h3 class="display-10 fw-bold">Tổng</h3><br><h4>{{labroom_asset}}</h4>
+                </div>
+            </div>
+            </a>
+    </div>
+    </div>
+</div></center>
+</div>
+<center>
+    <div class="card" style="width: 70%;">
+        <figure class="highcharts-figure" data-percentage-active="{{ school_percentage_active}}" data-percentage-broken="{{ school_percentage_broken }}">
+        <div id="container"></div>
+        <p class="highcharts-description">
+        <center>Biểu đồ hiển thị tỉ lệ tài sản trường {{ school.name }} thuộc {{district.name}} - {{department.name}} </center>
+        </p>
+    </figure>
+    </div>
+</center>
+{% if request.user.is_superuser %}
+            <a href="#" id="addNewButton" class="btn" data-bs-toggle="modal" data-bs-target="#createLabModal">
+                <img src="{% static 'images/pngwing.png' %}">
+            </a>
+     {% endif %}
+</div>
+<script>
+    $(document).ready(function () {
+        $("#myInput").on("input", filterDropdown);
+    });
+
+    function filterDropdown() {
+        var value = $(this).val().toLowerCase();
+        $(".table tbody tr").each(function () {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+        });
+    }
+    function goBack() {
+        window.history.back();
+    }
+    function searchFunction() {
+        // Add your search logic here
+        alert("Search button clicked!");
+    }
+    $(document).ready(function(){
+        $('#createLabModal').modal('hide');
+    });
+    document.addEventListener('DOMContentLoaded', function () {
+        var figureElement = document.querySelector('.highcharts-figure');
+        var percentageActive = parseFloat(figureElement.getAttribute('data-percentage-active')) || 0;
+        var percentageBroken = parseFloat(figureElement.getAttribute('data-percentage-broken')) || 0;
+        console.log('Percentage Active:', percentageActive);
+        console.log('Percentage Broken:', percentageBroken);
+        Highcharts.chart('container', {
+            chart: {
+                type: 'pie'
+            },
+            title: {
+                text: 'Tỉ lệ tài sản'
+            },
+            tooltip: {
+                valueSuffix: '%'
+            },
+            subtitle: {
+                text:
+                'Source:<a href="https://www.mdpi.com/2072-6643/11/3/684/htm" target="_default">MDPI</a>'
+            },
+            plotOptions: {
+                series: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: [{
+                        enabled: true,
+                        distance: 20
+                    }, {
+                        enabled: true,
+                        distance: -40,
+                        format: '{point.percentage:.1f}%',
+                        style: {
+                            fontSize: '1.2em',
+                            textOutline: 'none',
+                            opacity: 0.7
+                        },
+                        filter: {
+                            operator: '>',
+                            property: 'percentage',
+                            value: 10
+                        }
+                    }]
+                }
+            },
+            series: [
+                {
+                    name: 'Percentage',
+                    colorByPoint: true,
+                    data: [
+                        {
+                            name: 'Tài sản hỏng',
+                            y: percentageBroken
+                        },
+                        {
+                            name: 'Tài sản sử dụng được',
+                            sliced: true,
+                            selected: true,
+                            y: percentageActive
+                        },
+                    ]
+                }
+            ]
+        });
+    });
+document.addEventListener("DOMContentLoaded", function() {
+            var loadingScreen = document.getElementById("loading-screen");
+            var content = document.getElementById("content");
+
+            function checkLoadingProgress() {
+                var totalResources = document.images.length;
+                var loadedResources = 0;
+
+                for (var i = 0; i < totalResources; i++) {
+                    if (document.images[i].complete) {
+                        loadedResources++;
+                    }
+                }
+
+                var loadPercentage = (loadedResources / totalResources) * 100;
+
+                if (loadPercentage >= 95) {
+                    loadingScreen.style.display = "none";
+                    content.style.display = "block";
+
+                    // Khi loading screen ẩn, cho phép cuộn trang
+                    document.body.style.overflow = "auto";
+                    document.documentElement.style.overflow = "auto";
+                } else {
+                    window.requestAnimationFrame(checkLoadingProgress);
+                }
+            }
+
+            checkLoadingProgress();
+        });
+</script>
+{% endblock %}

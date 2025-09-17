@@ -1,0 +1,593 @@
+<title>Chi tiết quận</title>
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% load humanize %}
+
+{% block content %}
+{% load static %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<style>
+    html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-image: url('/static/media/pexels-eberhard-grossgasteiger-2310713.jpg/');
+            background-size: cover;
+            background-repeat: repeat;
+            width: 100%;
+}
+    .avatar {
+        max-width: 50px;
+        max-height: 35px;
+        width: 50px;
+        height: 35px;
+        border-radius: 10%; 
+    }
+    a.active_assets{
+        text-decoration: none;
+        color: darkgreen;
+    }
+    a.broken_assets{
+        text-decoration: none;
+        color: red;
+    }
+    a.all_assets{
+        text-decoration: none;
+        color:black;
+    }
+    .search-container {
+        position:relative;
+        display:flex;
+        margin-bottom: 30px;
+    }
+    #addNewButton {
+        position:fixed;
+        bottom: 70px;
+        right: 50px;
+        z-index: 99999;
+    }
+    #FallBack
+    {   
+        max-width: 100px;
+        position:fixed;
+        bottom: 70px;
+        left: 50px;
+        z-index: 9999;
+    }
+    .card-container{
+        max-width: 900px;
+        margin-left: 50px;
+        display: flex;
+    }
+    .card1 {
+        flex: 0 0 150%;
+        margin-left: -50%;
+        width: 600px;
+        max-width:  600px; /* Ví dụ đặt giới hạn tối đa cho chiều rộng */
+        max-height: 600px;
+    }
+    
+    .card-container-2 .card {
+        flex: 0 0 auto;
+        margin-left: 0px;
+    }
+    
+    /* Phong cách cho màn hình nhỏ hơn 768px */
+    @media (max-width: 768px) {
+    .card, .card-container-2 .card {
+        flex: 0 0 100%;
+    }
+
+    .card1 {
+        flex: 0 0 100%; /* Đảm bảo thừa hưởng thiết lập flex từ .card */
+        margin-left: 0; /* Loại bỏ lệch margin */
+        width: 100%; /* Đặt chiều rộng phù hợp */
+        max-width: 100%; /* Đảm bảo không vượt qua container */
+    }
+
+    /* Căn chỉnh lại container chứa biểu đồ cho màn hình nhỏ */
+    .card-container, .card-container-2 {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+    @media (max-width: 768px) {
+        .col {
+            width: 100%;
+            max-width: 100%;
+        }
+        .p-5 {
+            padding: 20px !important; /* Giảm padding */
+        }
+    }
+#loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+.color-legend {
+    display: flex;
+    align-items: center; /* Căn chỉnh các items về giữa theo chiều dọc */
+    justify-content: start; /* Căn các items từ trái sang phải */
+}
+
+.legend-item {
+    margin-right: 20px; /* Tạo khoảng cách giữa các items */
+    display: flex;
+    align-items: center; /* Căn chỉnh text và indicator */
+}
+.status-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center; 
+    /* Có thể thêm min-width hoặc min-height nếu cần */
+}
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px; /* Điều chỉnh khoảng cách */
+    flex-shrink: 0; /* Đảm bảo không co lại */
+}
+
+.indicator-success {
+    background-color: #28a745; /* Màu tương ứng, sử dụng màu của btn-success */
+}
+
+.indicator-danger {
+    background-color: #dc3545; /* Màu tương ứng, sử dụng màu của btn-danger */
+}
+
+.indicator-warning {
+    background-color: #ffc107; /* Màu tương ứng, sử dụng màu của btn-warning */
+}
+
+/* Ẩn text khi hiển thị trên thiết bị di động */
+@media (max-width: 767px) {
+    .status-btn {
+        font-size: 0; /* Ẩn text */
+    }
+    .status-indicator {
+        margin: 0 auto; /* Căn giữa ô màu */
+    }
+}
+.dropdown-item:hover {
+        background-color: #080a91;
+        color: #ffffff; /* Màu nền bạn muốn thay đổi khi di chuột qua */
+    }
+.dropdown-item.delete-item:hover {
+        background-color: #ffffff; /* Màu nền khi di chuột qua */
+        color: #ffffff; /* Màu chữ khi di chuột qua */
+    }
+</style>
+<div id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+    <div id="content" style="display:none;">
+<center>
+    <div class="search-container">
+    <input class="form-control" id="myInput" type="text" placeholder="Tìm kiếm" style="width: 1020px; height: 40px;"><button class="btn btn-primary">Tìm kiếm</button>
+    </div>
+</center>
+<a href="{% url 'department_detail_2' department_id=department.id %}" class="btn btn-success" >Quay lại trang trước</a>
+<p></p>
+
+<div id="search-results"></div>
+<div class="card">
+    <div class="card-body">
+        <center><h1>{{ district.name }}</h1></center>
+        <center><h3>({{ department.name }})</h3></center>
+<div class="color-legend">
+    <div class="legend-item"><span class="status-indicator indicator-success"></span> Đang liên kết</div>
+    <div class="legend-item"><span class="status-indicator indicator-warning"></span> Đang đàm phán</div>
+    <div class="legend-item"><span class="status-indicator indicator-danger"></span> Ngưng liên kết</div>
+</div>
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th><center>Tên trường</center></th>
+                        <th><center>Số lượng tài sản</center></th>
+                        <th><center>Hỏng / Sử dụng được</center></th>
+                        <th><center>Tình trạng</center></th>
+                        <th><center>Số lượng phòng lab</center></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for school in schools %}
+                    <tr>
+                        <td><h6><strong><center><a href='{% url 'school_detail' department_id=department.id district_id=district.id school_id=school.id %}'>{{ school.name }}</a></center></strong></h6></td>
+                        <td><center>{{ school.asset_count }}</center></td>
+                        <td><center>{{ school.broken_asset_count }} / {{ school.active_asset_count }}</center></td>
+                        {% if request.user.is_superuser %}
+                        <td ><center>
+                            <div class="btn-group">
+                                <button class="btn status-btn dropdown-toggle 
+    {% if school.school_status == 'Đang liên kết' %}btn-success
+    {% elif school.school_status == 'Ngưng liên kết' %}btn-danger
+    {% else %}btn-warning{% endif %}" data-bs-toggle="dropdown" aria-expanded="false" data-school-id="{{ school.id }}">
+    <span class="status-indicator {% if school.school_status == 'Đang liên kết' %}indicator-success
+    {% elif school.school_status == 'Ngưng liên kết' %}indicator-danger
+    {% else %}indicator-warning{% endif %}"></span>
+    {{ school.school_status }}
+</button>
+                                <ul class="dropdown-menu school-status-dropdown">
+                                    <li><a class="dropdown-item" href="#" data-status="Đang liên kết" data-color="btn-success">Đang liên kết</a></li>
+                                    <li><a class="dropdown-item" href="#" data-status="Đang đàm phán" data-color="btn-warning">Đang đàm phán</a></li>
+                                    <li><a class="dropdown-item" href="#" data-status="Ngưng liên kết" data-color="btn-danger">Ngưng liên kết</a></li>
+                                </ul>
+                            </div>
+                        </center></td>
+                        {% else %}
+                        <td ><center><div class="btn status-btn {% if school.school_status == 'Đang liên kết' %}btn-success{% elif school.school_status == 'Ngưng liên kết' %}btn-danger{% else %}btn-warning{% endif %}">{{ school.school_status }}</div></center></td>
+                        {% endif %}
+                        <td><center>{{ school.labroom_count }}</center></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <p></p>
+            {% if request.user.is_superuser %}
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSchoolModal">
+                Thêm trường 
+            </button>
+            
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if request.user.is_superuser %}
+    <!-- Modal tạo thêm trường -->
+    <div class="modal fade" id="createSchoolModal" tabindex="-1" role="dialog" aria-labelledby="createSchoolModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createSchoolModalLabel">Thêm trường</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'create_school' department_id=department.id district_id=district.id %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="{{ form.name.id_for_label }}">Tên trường</label>
+                            <input type="text" class="form-control" id="TenTruong" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.school_status.id_for_label }}">Tình trạng</label>
+                            <select class="form-control" id="TinhTrang" name="school_status" required>
+                                <option value="Đang liên kết" selected>Đang liên kết</option>
+                                <option value="Đang đàm phán">Đang đàm phán</option>
+                                <option value="Ngưng liên kết">Ngưng liên kết</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.school_address.id_for_label }}">Địa Điểm</label>
+                            <input type="text" class="form-control" id="DiaDiem" name="school_address" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.school_location.id_for_label }}">Vị Trí (Vị trí từ GG maps)</label>
+                            <input type="text" class="form-control" id="ViTri" name="school_location" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Thêm</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>    
+<br>
+<center><div>
+    <div class="row">
+        <div class="col-sm-12 col-md-4">
+            <a href="#" class="active_assets">
+            <div class="p-5 mb-4 bg-light rounded-4">
+                <div class="container-fluid py-10">
+                    <h3 class="display-10 fw-bold">Tổng số lượng trường<br></h3><br><h4>{{all_school_count}}</h4>
+                </div>
+            </div>
+            </a>
+        </div>
+        <div class="col-sm-12 col-md-4">
+            <a href="#" class="broken_assets">
+                <div class="p-5 mb-4 bg-light rounded-4">
+                    <div class="container-fluid py-10">
+                        <h3 class="display-10 fw-bold">Tổng số lượng phòng lab</h3><br><h4>{{all_labroom_count}}</h4>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-12 col-md-4">
+            <a href="{% url 'district_all_asset' department.id district.id %}" class="all_assets">
+            <div class="p-5 mb-4 bg-light rounded-4">
+                <div class="container-fluid py-10">
+                    <h3 class="display-10 fw-bold">Tổng số lượng tài sản</h3><br><h4>{{asset_school_count }}</h4>
+                </div>
+            </div>
+            </a>
+    </div>
+    </div>
+</div></center>
+</div>
+<center>
+    <div class="card-container" style="display: flex; justify-content: center;">
+        <div class="card-container-2" style="display: flex; justify-content: center;">
+            <!-- Biểu đồ thứ nhất -->
+            <div class="card1" style="flex: 0 0 130%; margin-left: 0px;">
+                <figure class="highcharts-figure" data-percentage-active="{{ school_percentage_active}}" data-percentage-broken="{{ school_percentage_broken }}">
+                    <div id="container"></div>
+                    
+                </figure>
+            </div>
+        </div>
+            <!-- Biểu đồ thứ hai -->
+            <div class="card1" style="flex: 0 0 70%; margin-left: 00px;">
+                <figure class="highcharts-figure-2" data-linking-percentage="{{ linking_percentage }}" data-negotiating-percentage="{{ negotiating_percentage }}" data-stopped-percentage="{{ stopped_percentage }}">
+                    <div id="container-2"></div>
+                     
+                </figure>
+            </div>
+        </div>
+</center>
+</div>
+{% if request.user.is_superuser %}
+            <a href="#" id="addNewButton" class="btn" data-bs-toggle="modal" data-bs-target="#createSchoolModal">
+                <img src="{% static 'images/pngwing.png' %}">
+            </a>
+     {% endif %}
+</div>
+<script>
+    $(document).ready(function () {
+        $("#myInput").on("input", filterDropdown);
+    });
+
+    function filterDropdown() {
+        var value = $(this).val().toLowerCase();
+        $(".table tbody tr").each(function () {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+        });
+    }
+    function goBack() {
+        window.history.back();
+    }
+    function searchFunction() {
+        // Add your search logic here
+        alert("Search button clicked!");
+    }
+    $(document).ready(function(){
+        $('#createSchoolModal').modal('hide');
+    });
+    document.addEventListener('DOMContentLoaded', function () {
+        var figureElement = document.querySelector('.highcharts-figure');
+        var percentageActive = parseFloat(figureElement.getAttribute('data-percentage-active')) || 0;
+        var percentageBroken = parseFloat(figureElement.getAttribute('data-percentage-broken')) || 0;
+        console.log('Percentage Active:', percentageActive);
+        console.log('Percentage Broken:', percentageBroken);
+        Highcharts.chart('container', {
+            chart: {
+                type: 'pie'
+            },
+            title: {
+                text: 'Tỉ lệ tài sản'
+            },
+            tooltip: {
+                valueSuffix: '%'
+            },
+            subtitle: {
+                text:
+                'Biểu đồ tỉ lệ tài sản của {{ district.name }} ({{department.name}})'
+            },
+            plotOptions: {
+                series: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: [{
+                        enabled: true,
+                        distance: 20
+                    }, {
+                        enabled: true,
+                        distance: -40,
+                        format: '{point.percentage:.1f}%',
+                        style: {
+                            fontSize: '1.2em',
+                            textOutline: 'none',
+                            opacity: 0.7
+                        },
+                        filter: {
+                            operator: '>',
+                            property: 'percentage',
+                            value: 10
+                        }
+                    }]
+                }
+            },
+            series: [
+                {
+                    name: 'Percentage',
+                    colorByPoint: true,
+                    data: [
+                        {
+                            name: 'Tài sản hỏng',
+                            y: percentageBroken
+                        },
+                        {
+                            name: 'Tài sản sử dụng được',
+                            sliced: true,
+                            selected: true,
+                            y: percentageActive
+                        },
+                    ]
+                }
+            ]
+        });
+    });
+    var chart2Initialized = false;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Kiểm tra biến cờ trước khi tạo biểu đồ
+        if (!chart2Initialized) {
+            var figureElement = document.querySelector('.highcharts-figure-2');
+            var percentageLinking = parseFloat(figureElement.getAttribute('data-linking-percentage')) || 0;
+            var percentageNegotiating = parseFloat(figureElement.getAttribute('data-negotiating-percentage')) || 0;
+            var percentageStopped = parseFloat(figureElement.getAttribute('data-stopped-percentage')) || 0;
+            console.log('Percentage Linking:', percentageLinking);
+            console.log('Percentage Negotiating:', percentageNegotiating);
+            console.log('Percentage Stopped:', percentageStopped);
+    
+            Highcharts.chart('container-2', {
+                chart: {
+                    type: 'pie'
+                },
+                title: {
+                    text: 'Tỉ lệ các trường'
+                },
+                tooltip: {
+                    valueSuffix: '%'
+                },
+                subtitle: {
+                    text: 'Biểu đồ tỉ lệ các trường của {{ district.name }} ({{department.name}})'
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            distance: 20,
+                            format: '{point.percentage:.1f}%',
+                            style: {
+                                fontSize: '1.2em',
+                                textOutline: 'none',
+                                opacity: 0.7
+                            },
+                            filter: {
+                                operator: '>',
+                                property: 'percentage',
+                                value: 10
+                            }
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Percentage',
+                    colorByPoint: true,
+                    data: [{
+                        name: 'Ngưng liên kết',
+                        y: percentageStopped,
+                        color:'red'
+                    }, {
+                        name: 'Đang liên kết',
+                        sliced: true,
+                        selected: true,
+                        y: percentageLinking
+                    }, {
+                        name: 'Đang đàm phán',
+                        sliced: true,
+                        selected: true,
+                        y: percentageNegotiating,
+                        color:'gold'
+                    }]
+                }]
+            });
+    
+            // Đánh dấu biến cờ đã được thiết lập để tránh thực thi lại
+            chart2Initialized = true;
+        }
+    });
+    $(document).ready(function() {
+        $('.school-status-dropdown .dropdown-item').click(function(e) {
+            e.preventDefault(); // Prevent the default action of the anchor tag
+    
+            var schoolId = $(this).closest('.btn-group').find('.status-btn').data('school-id');
+            var newStatus = $(this).data('status');
+            var newColor = $(this).data('color');
+    
+            // AJAX request to update the school status
+            $.ajax({
+                url: "{% url 'update_school_status' %}",
+                type: "POST",
+                data: {
+                    school_id: schoolId,
+                    new_status: newStatus,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function(data) {
+                    if (data.success) {
+                        // Update the button text and class on the DOM based on the new status
+                        var statusBtn = $('.status-btn[data-school-id="'+ schoolId +'"]');
+                        statusBtn.text(newStatus);
+                        statusBtn.removeClass('btn-success btn-warning btn-danger').addClass(newColor);
+                    } else {
+                        // Handle failure
+                        console.error("Failed to update status:", data.error);
+                    }
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    console.error("Error:", errorThrown);
+                }
+            });
+        });
+    });
+ document.addEventListener("DOMContentLoaded", function() {
+            var loadingScreen = document.getElementById("loading-screen");
+            var content = document.getElementById("content");
+
+            function checkLoadingProgress() {
+                var totalResources = document.images.length;
+                var loadedResources = 0;
+
+                for (var i = 0; i < totalResources; i++) {
+                    if (document.images[i].complete) {
+                        loadedResources++;
+                    }
+                }
+
+                var loadPercentage = (loadedResources / totalResources) * 100;
+
+                if (loadPercentage >= 95) {
+                    loadingScreen.style.display = "none";
+                    content.style.display = "block";
+
+                    // Khi loading screen ẩn, cho phép cuộn trang
+                    document.body.style.overflow = "auto";
+                    document.documentElement.style.overflow = "auto";
+                } else {
+                    window.requestAnimationFrame(checkLoadingProgress);
+                }
+            }
+
+            checkLoadingProgress();
+        });
+</script>
+{% endblock %}

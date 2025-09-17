@@ -1,0 +1,835 @@
+{% load static %}
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+{% load bootstrap_icons %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.2.1/font/bootstrap-icons.css">
+<link rel="stylesheet" href="{% static 'bootstrap_icons/css/bootstrap_icons.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<title>Cài App</title>
+<link rel="icon" href="{% static '/images/Logo1.jpg' %}">
+<style>
+    html, body{
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow: hidden;
+
+    background-image: url('/static/media/nencai.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: repeat;
+}
+.container {
+    position: relative;
+    text-align: center;
+}
+.zoom-image {
+    display: block;
+    width: auto;
+    height: auto;
+    transition: transform 0.3s ease;
+}
+.image-container:hover .zoom-image {
+    transform: scale(1.1); /* Adjust the scale factor for zoom effect */
+}
+.text-wrap-button .user-name {
+    white-space: high; /* Cho phép text wrap nếu quá dài */
+    overflow: hidden; /* Tránh text vượt ra ngoài nút */
+    text-overflow: ellipsis; /* Thêm dấu "..." nếu text quá dài */
+}
+/* Style the image */
+.centered-image {
+    display:flex;
+    margin: auto;
+}
+.centered-text {
+    position:absolute;
+    bottom: -1;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 50px;
+    color:darkblue; /* Change this to your desired text color */
+    padding: 0%;
+}
+.row-images {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+}
+.row-images a {
+    margin-right: 80px; /* Adjust this value to set the desired space between images */
+    margin-bottom: 80px;
+}
+#search-bar {
+    width: 500px;
+    padding: 8px;
+    margin:  auto;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Style the search button */
+#search-button {
+    padding: 8px;
+    margin: 10px;
+    border: 1px solid #007BFF;
+    background-color: #007BFF;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.avatar {
+    max-width: 50px;  /* Đặt chiều rộng tối đa */
+    max-height: 35px; /* Đặt chiều cao tối đa */
+    width: 50px;
+    height: 35px;
+    border-radius: 10%; /* Làm tròn góc */
+}
+/* Notification dropdown styles */
+#notification-dropdown {
+    background-color: #fff;
+    max-height: 500px;
+    width: 350px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    right: 0;
+    left: auto;
+    transform: none;
+    transform-origin: top right;
+    margin-top: 0.5rem;
+    padding: 0;
+    overflow: hidden;
+    display: none; /* Hidden by default, shown with JavaScript */
+}
+
+/* Show dropdown when active */
+#notification-dropdown.show {
+    display: block;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Notification item styles */
+.notification-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.notification-item:hover {
+    background-color: #f8f9fa;
+}
+
+.notification-item.unread {
+    background-color: #f8f9ff;
+    border-left: 3px solid #0d6efd;
+}
+
+.notification-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.notification-icon {
+    font-size: 1.25rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+
+.notification-item.unread .notification-icon {
+    color: #0d6efd;
+}
+
+.notification-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-message {
+    color: #212529;
+    margin-bottom: 0.25rem;
+    word-break: break-word;
+}
+
+.notification-time {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+/* Badge styles */
+#notification-badge {
+    font-size: 0.65rem;
+    padding: 0.25em 0.5em;
+    line-height: 1;
+    min-width: 1.25em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    top: 0.25rem !important;
+    right: -0.25rem !important;
+}
+
+/* No notifications message */
+.no-notifications {
+    text-align: center;
+    padding: 1.5rem;
+    color: #6c757d;
+}
+
+.no-notifications i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: #dee2e6;
+}
+
+/* Mark all as read button */
+#mark-all-read-btn {
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+#mark-all-read-btn:hover {
+    text-decoration: underline;
+}
+
+/* Scrollbar styling */
+#notification-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+#notification-dropdown::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+#notification-dropdown::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+#notification-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+.dropdown-item:hover {
+        background-color: #080a91;
+        color: #ffffff; /* Màu nền bạn muốn thay đổi khi di chuột qua */
+    }
+.dropdown-item.delete-item:hover {
+        background-color: #ffffff; /* Màu nền khi di chuột qua */
+        color: #ffffff; /* Màu chữ khi di chuột qua */
+    }
+</style>
+<nav class="navbar navbar-expand-lg sticky-top bg-light">
+    <div class="container-fluid" style="margin-left: 2%;">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+            aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <div class="d-flex align-items-left">
+                    <div class="nav-item dropdown">
+        <a class="btn btn-primary" href="{% url 'todo_dashboard' %}" target="_blank">Note</a>
+        <a href="{% url 'dashboard' %}" target="_blank" class="btn btn-primary me-auto">Phiếu</a>
+        <a  href="{% url 'view_department' %}" class="btn btn-primary me-2-auto" style="color: white;">Tài sản</a>
+</div>
+</div></div>
+<div class = 'ms-auto head-noti'>
+<div class="btn-group">
+        <!-- Notification Bell -->
+        <div class="dropdown">
+            <a class="btn btn-warning position-relative" id="bellIcon" onclick="toggleNotificationDropdown(event)" style="color: black;">
+                <i class="bi bi-bell"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notification-badge" style="display: none;">
+                    0
+                </span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end p-0" id="notification-dropdown" style="width: 350px; max-height: 500px; overflow-y: auto;">
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                    <h6 class="mb-0 fw-bold">Thông báo</h6>
+                    <a href="#" id="mark-all-read-btn" class="text-primary small" onclick="event.stopPropagation(); markAllNotificationsAsRead(); return false;">
+                        Đánh dấu đã đọc tất cả
+                    </a>
+                </div>
+                <div id="notification-message" class="p-2">
+                    <div class="text-center p-4 text-muted">
+                        <i class="bi bi-bell-slash fs-1 d-block mb-2"></i>
+                        <span>Không có thông báo mới</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    &emsp;<button type="button" class="btn btn-warning dropdown-toggle text-wrap-button" style='max-width:150px; max-height: 50px;' data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+        <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}{% static 'media/avatars/avt.jpg' %}{% endif %}" class="avatar" alt="avatar">
+        <span class="user-name">{{request.user.first_name}}</span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href="{% url 'view_profile' %}">Thông tin cá nhân</a></li>
+        <li><a class="dropdown-item" href="{% url 'change_password' %}">Đổi mật khẩu</a></li>
+        <li><a class="dropdown-item" href="{% url 'view_department' %}">Quản lý tài sản</a></li>
+        {% if request.user.is_superuser %}
+        <li><a class="dropdown-item" href="{% url 'manage_users' %}">Cập nhật người hỗ trợ</a></li>
+        
+        {% endif %}
+	<li><a class="dropdown-item" href="{% url 'all_users' %}">Danh sách tài khoản</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><button class="dropdown-item" type="button"><a href="{% url 'logout' %}" class="btn btn">Đăng xuất</a></div></button></li>
+    </ul>
+</div>
+</div>
+</div>
+</div>
+</nav>
+</head>
+<body>
+    <div id="loading-screen">
+            <div class="spinner"></div>
+        </div>
+        <div id="content" style="display:none;">
+    <br>
+        
+            
+                <center><div class = 'col-sm-2'>
+    <div class='image-container' style="min-height: 95%;">
+                <div class ='row'> 
+                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+                    <a href="/"><h1><img src='{% static 'images/logo-web-lỗi.png'%}' class ='zoom-image' style='max-height:200px'/></h1></a></center>
+    </div>
+                    <div class="p-2 mb-4 bg-custom ">
+                    <div class="container-fluid" style="min-height: 95%;">
+                        <div class="row">
+                            <center><div class="col-sm-10">
+                                
+                <table class="table table-responsive table-bordered border-primary">
+                    <thead>
+                        <tr>
+                            <td class='row1'><center><div class="image-container; "><img src="{% static 'images/apple.png' %}" style='max-height:100px' class="centered-image-text img-fluid"/><p \n><h4><strong>Cài đặt App trên điện thoại, máy tính bảng của Apple</strong></h4></p></center></div></div></td>
+                            <td><center><div class="image-container; "><img src="{% static 'images/android.png' %}" style='max-height:100px' class="centered-image-text img-fluid"/><p \n><h4><strong>Cài đặt App trên điện thoại, máy tính bảng hệ điều hành Android và các thiết bị của Công Ty</strong></h4></p></center></div></div></td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <p>1. Vào Appstore tìm kiếm tên app "Enspire Online" </p>
+                                <p>2. Tải về và đợi máy tự động cài đặt</p>
+                                <p> Có thể xem hướng dẫn chi tiết <a href="https://www.youtube.com/watch?v=i6idTX1sLKQ&ab_channel=EnspireEnglish-Trungt%C3%A2mNgo%E1%BA%A1ing%E1%BB%AFEnspire" target="_blank"><strong> Tại Đây!</strong></a></p>
+                            </td>
+                            <td>
+                                <p>1. Vào CH-play hoặc Googleplay, Đăng nhập vào tài khoản mail: </p>
+                                <p>Tài khoản: <strong>enspireonline80@gmail.com</strong></p>
+                                <p>Mật khẩu: <strong>VES@80ALH</strong></p>
+                                <p><strong>NGHIÊM CẤM KHÔNG ĐƯỢC ĐỔI MẬT KHẨU EMAIL NÀY!!!!</strong></p>
+                                <p>2.Tìm kiếm tên app "Enspire Online" </p>
+                                <p>3. Tải về và đợi máy tự động cài đặt</p>
+                                <p> Có thể xem hướng dẫn chi tiết <a href="https://www.youtube.com/watch?v=i6idTX1sLKQ&ab_channel=EnspireEnglish-Trungt%C3%A2mNgo%E1%BA%A1ing%E1%BB%AFEnspire" target="_blank"><strong> Tại Đây!</strong></a></p>
+                            </td>
+                        </tr>
+                    </tbody>
+    </div>
+    </body>
+<script>
+$(document).ready(function(){
+    $("#myInput").on("keyup", function() {
+    var value = $(this).val().toLowerCase();
+    $(".table tbody tr").filter(function() {
+        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+    });
+    });
+});
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load notifications from localStorage first for instant display
+        loadNotificationsFromStorage();
+        
+        // Then fetch fresh notifications from the server
+        fetchNotifications();
+    
+        // Set up WebSocket for real-time notifications
+        const websocketUrl = `ws://${window.location.host}/ws/notifications/`;
+        let notificationSocket = new WebSocket(websocketUrl);
+    
+        function setupWebSocketHandlers(socket) {
+            socket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                console.log('WebSocket message received:', data);
+                if (data.type === 'notification') {
+                    // Add the new notification
+                    const wasAdded = addNotification(
+                        data.id, 
+                        data.message, 
+                        false, 
+                        data.timestamp
+                    );
+                    
+                    // If this was a new notification, show a toast
+                    if (wasAdded) {
+                        saveNotificationsToStorage();
+                        updateNotificationUI();
+                        
+                        // Only show toast if dropdown is closed
+                        if (!notificationDropdown.classList.contains('show')) {
+                            showToastNotification(data.message);
+                        }
+                    }
+                }
+            };
+    
+            socket.onclose = function(e) {
+                console.log('WebSocket connection closed. Reconnecting...', e.reason);
+                setTimeout(function() {
+                    notificationSocket = new WebSocket(websocketUrl);
+                    setupWebSocketHandlers(notificationSocket);
+                }, 1000);
+            };
+    
+            socket.onerror = function(err) {
+                console.error('WebSocket encountered error: ', err);
+                socket.close();
+            };
+        }
+    
+        setupWebSocketHandlers(notificationSocket);
+    
+        notificationSocket.onopen = function() {
+            console.log('WebSocket connection established');
+        };
+        
+        // Set up polling as a fallback for WebSocket
+        setInterval(fetchNotifications, 30000); // Check for updates every 30 seconds
+    });
+    
+    // Function to show toast notification
+    function showToastNotification(message) {
+        // Check if the browser supports notifications
+        if (!('Notification' in window)) {
+            console.log('This browser does not support desktop notification');
+            return;
+        }
+        
+        // Check if notification permissions have already been granted
+        if (Notification.permission === 'granted') {
+            // If it's okay, create a notification
+            new Notification('Thông báo mới', {
+                body: message,
+                icon: '/static/images/Logo1.jpg'
+            });
+        }
+        // Otherwise, ask the user for permission
+        else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(function(permission) {
+                // If the user accepts, create a notification
+                if (permission === 'granted') {
+                    new Notification('Thông báo mới', {
+                        body: message,
+                        icon: '/static/images/Logo1.jpg'
+                    });
+                }
+            });
+        }
+        
+        // Fallback to toastr if notifications are blocked
+        if (Notification.permission === 'denied') {
+            toastr.options = {
+                closeButton: true,
+                progressBar: true,
+                positionClass: 'toast-bottom-right',
+                timeOut: 5000,
+                extendedTimeOut: 2000,
+                preventDuplicates: true,
+                newestOnTop: true
+            };
+            toastr.info(message, 'Thông báo mới');
+        }
+    }
+
+    // Global notification variables
+    let notifications = [];
+    const notificationBadge = document.getElementById('notification-badge');
+    const notificationDropdown = document.getElementById('notification-dropdown');
+    const notificationMessage = document.getElementById('notification-message');
+    
+    // Function to save notifications to localStorage
+    function saveNotificationsToStorage() {
+        try {
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+        } catch (e) {
+            console.error('Error saving notifications to localStorage:', e);
+        }
+    }
+    
+    // Function to load notifications from localStorage
+    function loadNotificationsFromStorage() {
+        try {
+            const savedNotifications = localStorage.getItem('notifications');
+            if (savedNotifications) {
+                const parsed = JSON.parse(savedNotifications);
+                if (Array.isArray(parsed)) {
+                    notifications = parsed;
+                    updateNotificationUI();
+                }
+            }
+        } catch (e) {
+            console.error('Error loading notifications from localStorage:', e);
+        }
+    }
+    // Function to fetch notifications from the server
+    function fetchNotifications() {
+        fetch('/ticket/get-notifications/')
+            .then(response => response.json())
+            .then(serverNotifications => {
+                // Create a map of existing notifications for quick lookup
+                const existingNotifications = new Map(notifications.map(n => [n.id, n]));
+                let hasUpdates = false;
+                
+                // Process each notification from the server
+                serverNotifications.forEach(serverNotif => {
+                    const existingNotif = existingNotifications.get(serverNotif.id);
+                    
+                    // If notification doesn't exist or server has a newer version
+                    if (!existingNotif || 
+                        new Date(serverNotif.timestamp) > new Date(existingNotif.timestamp)) {
+                        // Update or add the notification
+                        addNotification(
+                            serverNotif.id, 
+                            serverNotif.message, 
+                            serverNotif.read, 
+                            serverNotif.timestamp
+                        );
+                        hasUpdates = true;
+                    }
+                });
+                
+                // If we have updates, save to localStorage and update UI
+                if (hasUpdates) {
+                    saveNotificationsToStorage();
+                    updateNotificationUI();
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching notifications:', error);
+            });
+    }
+
+    // Function to add or update a notification
+    function addNotification(id, message, read, timestamp) {
+        const notificationObject = {
+            id: id,
+            message: message,
+            read: read,
+            timestamp: timestamp
+        };
+        
+        // Check if notification already exists
+        const existingIndex = notifications.findIndex(n => n.id === id);
+        
+        if (existingIndex === -1) {
+            // Add new notification at the beginning of the array
+            notifications.unshift(notificationObject);
+            
+            // If we've reached the limit, remove the oldest notification
+            if (notifications.length > 50) {
+                notifications.pop();
+            }
+            
+            return true; // Indicate that an update was made
+        } else {
+            // Update existing notification if the server version is newer or if read status changed
+            const existingNotif = notifications[existingIndex];
+            const serverTimestamp = new Date(timestamp);
+            const localTimestamp = new Date(existingNotif.timestamp);
+            
+            if (serverTimestamp > localTimestamp || existingNotif.read !== read) {
+                // Keep the existing notification but update its properties
+                existingNotif.message = message;
+                existingNotif.read = read;
+                existingNotif.timestamp = timestamp;
+                return true; // Indicate that an update was made
+            }
+            return false; // No update needed
+        }
+    }
+
+    // Function to format time as "time ago"
+    function formatTimeAgo(date) {
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+        
+        const intervals = {
+            'năm': 31536000,
+            'tháng': 2592000,
+            'tuần': 604800,
+            'ngày': 86400,
+            'giờ': 3600,
+            'phút': 60,
+            'giây': 1
+        };
+        
+        for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+            const interval = Math.floor(seconds / secondsInUnit);
+            if (interval >= 1) {
+                return `${interval} ${unit} trước`;
+            }
+        }
+        
+        return 'Vừa xong';
+    }
+
+    // Function to update the notification UI
+    function updateNotificationUI() {
+        // Clear existing notifications
+        notificationMessage.innerHTML = '';
+        
+        // Sort notifications by timestamp (newest first)
+        const sortedNotifications = [...notifications].sort((a, b) => 
+            new Date(b.timestamp) - new Date(a.timestamp)
+        );
+        
+        // Count unread notifications
+        const unreadCount = notifications.filter(n => !n.read).length;
+        
+        // Update the unread count in the badge
+        notificationBadge.textContent = unreadCount > 0 ? unreadCount : '';
+        notificationBadge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+        
+        // Display notifications in the dropdown
+        if (notifications.length === 0) {
+            const noNotifications = document.createElement('div');
+            noNotifications.className = 'text-center p-4 text-muted';
+            noNotifications.innerHTML = '<i class="bi bi-bell-slash fs-1 d-block mb-2"></i><span>Không có thông báo mới</span>';
+            notificationMessage.appendChild(noNotifications);
+        } else {
+            // Show only the 10 most recent notifications
+            sortedNotifications.slice(0, 10).forEach((notification) => {
+                const notificationItem = document.createElement('div');
+                notificationItem.className = `notification-item ${!notification.read ? 'unread' : ''}`;
+                
+                // Store the notification ID as a data attribute
+                notificationItem.setAttribute('data-notification-id', notification.id);
+                
+                // Create notification content
+                notificationItem.innerHTML = `
+                    <div class="notification-content">
+                        <div class="notification-icon">
+                            <i class="bi ${!notification.read ? 'bi-bell-fill' : 'bi-bell'}"></i>
+                        </div>
+                        <div class="notification-details">
+                            <div class="notification-message">${notification.message}</div>
+                            <div class="notification-time">${formatTimeAgo(new Date(notification.timestamp))}</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add click handler for the notification item
+                notificationItem.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Mark as read if not already read
+                    if (!notification.read) {
+                        markNotificationAsRead(notification.id);
+                    }
+                    
+                    // Close the dropdown
+                    notificationDropdown.classList.remove('show');
+                });
+                
+                notificationMessage.appendChild(notificationItem);
+            });
+        }
+    }
+
+    // Function to mark notification as read
+    function markNotificationAsRead(id) {
+        if (!id || id === 'undefined') {
+            console.error('Invalid notification ID:', id);
+            return;
+        }
+
+        // Convert id to number if it's a string representation of a number
+        const notificationId = isNaN(id) ? id : parseInt(id, 10);
+
+        // Find the notification in our local array
+        const notification = notifications.find(notif => 
+            notif.id === notificationId || 
+            notif.id.toString() === notificationId.toString()
+        );
+
+        if (!notification) {
+            console.error('Notification not found with ID:', notificationId);
+            return;
+        }
+
+        if (notification.read) return; // Already read, nothing to do
+
+        // Optimistically update the UI
+        notification.read = true;
+        saveNotificationsToStorage();
+
+        // Update the UI immediately for better UX
+        updateNotificationUI();
+
+        // Send request to server to mark as read
+        fetch(`/ticket/mark-notification-as-read/${notificationId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status !== 'success') {
+                throw new Error(data.error || 'Unknown error');
+            }
+            // The server has confirmed the read status
+            // No need to update UI again as we did it optimistically
+        })
+        .catch(error => {
+            console.error('Error marking notification as read:', error);
+            // Revert the optimistic update on error
+            notification.read = false;
+            saveNotificationsToStorage();
+            updateNotificationUI();
+        });
+    }
+    
+    // Function to mark all notifications as read
+    function markAllNotificationsAsRead() {
+        // Get all unread notifications
+        const unreadNotifications = notifications.filter(n => !n.read);
+        if (unreadNotifications.length === 0) return;
+        
+        // Optimistically update the UI
+        unreadNotifications.forEach(notification => {
+            notification.read = true;
+        });
+        
+        // Save to localStorage and update UI immediately
+        saveNotificationsToStorage();
+        updateNotificationUI();
+        
+        // Send request to mark all as read on the server
+        fetch('/ticket/mark-all-notifications-read/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status !== 'success') {
+                throw new Error(data.error || 'Unknown error');
+            }
+            // The server has confirmed the read status
+            // No need to update UI again as we did it optimistically
+        })
+        .catch(error => {
+            console.error('Error marking all notifications as read:', error);
+            // Revert the optimistic update on error
+            unreadNotifications.forEach(notification => {
+                notification.read = false;
+            });
+            saveNotificationsToStorage();
+            updateNotificationUI();
+        });
+    }
+    
+    // Function to get CSRF token from cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // Function to toggle notification dropdown
+    function toggleNotificationDropdown(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        const isShowing = notificationDropdown.classList.contains('show');
+        
+        // Close all other dropdowns first
+        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+            if (menu !== notificationDropdown) {
+                menu.classList.remove('show');
+            }
+        });
+        
+        // Toggle this dropdown
+        if (!isShowing) {
+            notificationDropdown.classList.add('show');
+            
+            // Mark all notifications as read when dropdown is opened
+            setTimeout(() => {
+                const unreadNotifications = notifications.filter(n => !n.read);
+                if (unreadNotifications.length > 0) {
+                    markAllNotificationsAsRead();
+                }
+            }, 100);
+            
+            // Add click outside handler
+            const clickHandler = function(e) {
+                if (!notificationDropdown.contains(e.target) && 
+                    !document.getElementById('bellIcon').contains(e.target)) {
+                    notificationDropdown.classList.remove('show');
+                    document.removeEventListener('click', clickHandler);
+                }
+            };
+            
+            // Add a small delay to prevent the click from immediately closing the dropdown
+            setTimeout(() => {
+                document.addEventListener('click', clickHandler);
+            }, 10);
+        } else {
+            notificationDropdown.classList.remove('show');
+        }
+    }
+    
+</script>
+</body>
+</html>
+

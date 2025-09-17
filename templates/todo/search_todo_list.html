@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<style>
+    html, body {
+        height: 100%;
+        background-image: url('/static/media/pexels-eberhard-grossgasteiger-2310713.jpg');
+        background-size: cover;
+        background-position: cover;
+        background-repeat: repeat;
+        height: fit-content;
+        margin-bottom: 100px;
+    }
+
+    .avatar {
+        max-width: 50px;
+        max-height: 35px;
+        width: 50px;
+        height: 35px;
+        border-radius: 10%;
+    }
+</style>
+
+<h2>Kết quả tìm kiếm cho "{{ query }}"</h2>
+
+<center>
+    <div class="search-bar">
+        <form method="GET" action="{% url 'search_todo_list' %}">
+            <input class="form-control" type="text" style="width: 1100px; height: 40px;" name="query" placeholder="Tìm kiếm">
+            <button class="btn btn-primary" type="submit">Tìm kiếm</button>
+        </form>
+    </div>
+</center>
+
+<p></p>
+
+<div class="row row-cols-1 row-cols-md-4 g-4">
+    <div class="col">
+        <div class="card h-100 d-flex flex-column">
+            <a href="{% url 'create_todo_list' %}" style="text-align: center; display: block;">
+                <img src='{% static 'asset/themcongviec.png'%}' style="width: 16rem; height: 16rem; object-fit: cover; margin: 0 auto;" />
+                <h4><center><p>Tạo công việc mới</p></center></h4>
+            </a>
+        </div>
+    </div>
+
+    {% for todo_list in todo_lists %}
+        <div class="col">
+            <div class="card h-100 d-flex flex-column">
+                <center><img src="{% static 'asset/done.png' %}" style="width: 10rem; object-fit: cover; margin: 0 auto;" class="card-img-top" alt="hotro"></center>
+                <div class="card-body flex-grow-1">
+                    <h5 class="card-title">{{ todo_list.todo_list_title }}</h5>
+                    <p class="card-text d-flex justify-content-between align-items-center">
+                        {% if todo_list.todo_list_status == 'Đang làm' %}
+                            <span class="badge bg-success">Đang làm</span>
+                        {% elif todo_list.todo_list_status == 'Đã xong' %}
+                            <span class="badge bg-danger">Đã xong</span>
+                        {% endif %}
+                        <a href="{% url 'delete_todo_list_search' todo_list.todo_list_id %}" class="btn btn-danger btn-sm ">Xóa</a>
+                    </p>
+                </div>
+                {% if todo_list.todo_list_id %}
+                    <a href="{% url 'todo_list_details' todo_list.todo_list_id %}" class="btn btn-primary btn-sm">Xem chi tiết</a>
+                {% else %}
+                    <p>No ID available</p>
+                {% endif %}
+                <div class="card-footer">
+                    <small class="text-muted">{{todo_list.todo_list_create_time|naturaltime }}</small>
+                </div>
+            </div>
+
+            {% if todo_list.task_lists.exists %}
+                <!-- Render associated task_lists -->
+                <ul>
+                    {% for task_list in todo_list.task_lists.all %}
+                        <li>{{ task_list.task_list_description }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            
+        </div>
+    {% endfor %}
+</div>
+{% endblock content %}

@@ -1,0 +1,191 @@
+<title>Không bắt được wifi</title>
+{% extends "pages/touch.html" %}
+{% block content %}
+<!DOCTYPE html>
+{% load crispy_forms_tags %}
+<html lang="vi">
+{% load static %}
+{% load bootstrap_icons %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.2.1/font/bootstrap-icons.css">
+<link rel="stylesheet" href="{% static 'bootstrap_icons/css/bootstrap_icons.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+<link rel="icon" href="{% static '/images/Logo.jpg' %}">
+<style>
+    html, body{
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+#loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #content {
+            display: none;
+        }
+.container {
+    position: relative;
+    text-align: center;
+}
+.zoom-image {
+    display: block;
+    width: auto;
+    height: auto;
+    transition: transform 0.3s ease;
+}
+.image-container:hover .zoom-image {
+    transform: scale(1.1); /* Adjust the scale factor for zoom effect */
+}
+.row-images {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+}
+.centered-image {
+    display:flex;
+    margin: auto;
+}
+.centered-text {
+    position:absolute;
+    bottom: -1;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 50px;
+    color:darkblue; /* Change this to your desired text color */
+    padding: 0%;
+}
+#zoomableImage {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+#zoomableImage:hover {
+    transform: scale(1.5); /* Thay đổi tỷ lệ phóng to (chọn giá trị tùy ý) */
+}
+.bg-custom {
+    background-color: #000066; /* Thay #yourCustomColor bằng mã màu bạn muốn */
+}
+</style>
+<div id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+    <div id="content">
+<div class="p-2 mb-4 bg-custom ">
+        <div class="container-fluid" style="min-height: 95%;">
+            <div class="row">
+                <center><div class="col-sm-10">
+    <table class="table table-responsive table-bordered border-primary">
+        <thead>
+            <tr>
+                <td><strong><center><h4>Lỗi</h4></center></strong></td>
+                <td><strong><center><h4>Hướng dẫn khắc phục</h4></center></strong></td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    Màn TV tích hợp hoặc màn 21.5 inches không bắt được wifi (hoặc rất yếu)
+                </td>
+                <td><p>- Nguyên nhân của lỗi này là đến từ việc không vặn Ăng-ten wifi vào màn hình, hoặc ăng-ten bị gãy, hỏng.</p>
+                    <p>- Để khắc phục, cần phải tìm ăng-ten để lắp lại TV tích hợp.</p>
+                    <center>
+                        <div class="image-container ">
+                        <img src="{% static 'images/ang-ten.jpg' %}" style='max-height:350px; ' class="centered-image-text img-fluid"/><p><strong>Ăng-ten bắt wifi</strong><p>
+                        <img src="{% static 'images/dauangten.jpg' %}" style='max-height:350px; ' class="centered-image-text img-fluid"/><p><strong>Đầu vặn kết nối ăng-ten bắt wifi</strong></p></center>
+                    </div>
+                <p>- Sau đó hãy chắc chắn rằng đã bật kết nối wifi trên TV nhé!</p>
+                </td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr><td><center><div class="image-container; "><img src="{% static 'images/support.jpg' %}" style='max-height:100px; ' class="centered-image-text img-fluid"/><p \n><strong>Nhờ hỗ trợ.</strong></p></center></div></div></td>
+                <td>Nếu đã thử phương án trên nhưng vẫn không khắc phục được, hãy <a href="{% url 'dashboard' %}" target="_blank">liên hệ</a> nhờ hỗ trợ !</td></tr>
+        </tfoot>
+    </table>
+    </div>
+                </center>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+            var loadingScreen = document.getElementById("loading-screen");
+            var content = document.getElementById("content");
+
+            function checkLoadingProgress() {
+                var totalResources = document.images.length;
+                var loadedResources = 0;
+
+                for (var i = 0; i < totalResources; i++) {
+                    if (document.images[i].complete) {
+                        loadedResources++;
+                    }
+                }
+
+                var loadPercentage = (loadedResources / totalResources) * 100;
+
+                if (loadPercentage >= 60) {
+                    loadingScreen.style.display = "none";
+                    content.style.display = "block";
+
+                    // Khi loading screen ẩn, cho phép cuộn trang
+                    document.body.style.overflow = "auto";
+                    document.documentElement.style.overflow = "auto";
+                } else {
+                    window.requestAnimationFrame(checkLoadingProgress);
+                }
+            }
+
+            checkLoadingProgress();
+        });
+// Lấy thẻ hình ảnh bằng ID
+var zoomableImage = document.getElementById('zoomableImage');
+
+// Thêm sự kiện click cho hình ảnh
+zoomableImage.addEventListener('click', function() {
+    var isZoomed = zoomableImage.classList.contains('zoomed');
+    // Thay đổi kích thước ảnh khi nhấn vào
+    zoomableImage.classList.toggle('zoomed', !isZoomed);
+}); 
+zoomableImage.addEventListener('mouseleave', function() {
+    // Xóa lớp 'zoomed' để trả về kích thước cũ
+    zoomableImage.classList.remove('zoomed');
+});
+</script>
+{% endblock content%}

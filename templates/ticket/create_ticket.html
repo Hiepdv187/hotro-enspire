@@ -1,0 +1,112 @@
+<title>Tạo phiếu</title>
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<style>
+    html, body {
+        min-height: 100%;
+        background-image: url('/static/media/pexels-eberhard-grossgasteiger-2310713.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+    .avatar {
+        max-width: 50px;
+        max-height: 35px;
+        width: 50px;
+        height: 35px;
+        border-radius: 10%; 
+    }
+    #loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        border-top-color: #3498db;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .form-container {
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<div id="loading-screen">
+    <div class="spinner"></div>
+</div>
+
+<div id="content" style="display:none;">
+    <div class="container col-xl-12 col-xxl-10 px-4 py-5">
+        <div class="row align-items-center g-lg-5 py-5">
+            <div class="col-md-10 mx-auto col-lg-6">
+                <h2 class="display-6 fw-bold lh-1 mb-3 text-center">Tạo phiếu mới</h2>
+                <form class="p-4 p-md-5 border rounded-3 bg-light" method='POST' enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="form-floating mb-3">
+                            {% render_field form.ticket_title class="form-control" %}
+                            <label for="floatingInput">Tiêu đề</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            {% render_field form.ticket_description class="form-control" %}
+                            <label for="floatingPassword">Mô tả chi tiết (tối đa 1000 từ)</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            {% render_field form.image class="form-control" %}
+                            <label for="floatingPassword">Hình ảnh (nếu có)</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            {% render_field form.up_video class="form-control" %}
+                            <label for="floatingPassword">Video(nếu có)</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            {% render_field form.school class="form-control" %}
+                            <label for="floatingInput">Nơi làm việc (Ghi rõ tên Trường, Quận)</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            {% render_field form.phone_number class="form-control" id="phoneInput" %}
+                            <label for="phoneInput">Nhập số điện thoại liên hệ</label>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button class="btn btn-primary btn-lg" type="submit">Gửi yêu cầu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Hiển thị nội dung sau khi tải xong
+        setTimeout(function() {
+            document.getElementById("loading-screen").style.display = "none";
+            document.getElementById("content").style.display = "block";
+            document.body.style.overflow = "auto";
+            document.documentElement.style.overflow = "auto";
+        }, 500);
+    });
+</script>
+
+{% endblock %}
+<footer></footer>

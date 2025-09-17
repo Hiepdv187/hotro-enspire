@@ -1,0 +1,72 @@
+<title>Đăng ký tài khoản</title>
+{% extends "accounts/base.html" %}
+{% load widget_tweaks %}
+{% block heading %}
+Đăng ký tài khoản sử dụng
+{% endblock heading %}
+
+{% block content %}
+{% load static %}
+<style>
+    html, body{
+        height:100%;
+        background-image: url('/static/media/pexels-francesco-ungaro-281260.jpg');
+        background-size: cover;
+        background-position: relative;
+        background-repeat:repeat ;
+        height: fit-content;
+        margin-bottom: 0;
+    }
+</style>
+<form class="p-5 p-md-4 border rounded-3 bg-light" method='POST'>
+    {% csrf_token %}
+    <div class="form-floating mb-3">
+        {% render_field form.email class="form-control" %}
+        <label for="floatingInput">Email đăng nhập</label>
+    </div>
+    <div class="form-floating mb-3">
+        {% render_field form.first_name class="form-control" %}
+        <label for="floatingInput">Tên</label>
+    </div>
+    <div class="form-floating mb-3">
+        {% render_field form.last_name class="form-control" %}
+        <label for="floatingInput">Họ</label>
+    </div>
+    <div class="form-floating mb-3">
+        {% render_field form.school class="form-control" %}
+        <label for="floatingInput">Nơi làm việc</label>
+    </div>
+    <div class="form-floating mb-3">
+        <select name="work_place" class="form-select" id="id_work_place">
+            <option value="" selected disabled>Chọn phòng ban</option>
+            <option value="Ban lãnh đạo" {% if form.work_place.value == 'Ban lãnh đạo' %}selected{% endif %}>Ban lãnh đạo</option>
+            <option value="Phòng mầm non 1" {% if form.work_place.value == 'Phòng mầm non 1' %}selected{% endif %}>Phòng mầm non 1</option>
+            <option value="Phòng mầm non 2" {% if form.work_place.value == 'Phòng mầm non 2' %}selected{% endif %}>Phòng mầm non 2</option>
+            <option value="Phòng tiểu học" {% if form.work_place.value == 'Phòng tiểu học' %}selected{% endif %}>Phòng tiểu học</option>
+            <option value="Phòng hành chính" {% if form.work_place.value == 'Phòng hành chính' %}selected{% endif %}>Phòng hành chính</option>
+	    <option value="Phòng tài chính" {% if form.work_place.value == 'Phòng tài chính' %}selected{% endif %}>Phòng tài chính</option>
+            <option value="Phòng kế toán" {% if form.work_place.value == 'Phòng kế toán' %}selected{% endif %}>Phòng kế toán</option>
+            <option value="Phòng kinh doanh marketing" {% if form.work_place.value == 'Phòng kinh doanh marketing' %}selected{% endif %}>Phòng kinh doanh marketing</option>
+            <option value="Phòng nhân sự" {% if form.work_place.value == 'Phòng nhân sự' %}selected{% endif %}>Phòng nhân sự</option>
+            <option value="Học viện Enspire Láng Hạ" {% if form.work_place.value == 'Học viện Enspire Láng Hạ' %}selected{% endif %}>Học viện Enspire Láng Hạ</option>
+            <option value="Enspire Hải Phòng" {% if form.work_place.value == 'Enspire Hải Phòng' %}selected{% endif %}>Enspire Hải Phòng</option>
+            <option value="Phòng công nghệ" {% if form.work_place.value == 'Phòng công nghệ' %}selected{% endif %}>Phòng công nghệ</option>
+            <option value="Phòng R&D mầm non" {% if form.work_place.value == 'Phòng R&D mầm non' %}selected{% endif %}>Phòng R&D mầm non</option>
+        </select>
+        <label for="floatingInput">Phòng ban</label>
+    </div>
+    <div class="form-floating mb-3">
+        {% render_field form.password1 class="form-control" %}
+        <small><center>Mật khẩu phải có ít nhất 6 ký tự và bao gồm cả chữ và số</center></small>
+        <label for="floatingInput">Mật khẩu</label>
+    </div>
+    <div class="form-floating mb-3">
+        {% render_field form.password2 class="form-control" %}
+        <label for="floatingInput">Xác nhận lại mật khẩu</label>
+    </div>
+    <button class="w-100 btn btn-lg btn-primary" type="submit">Đăng ký</button>
+    <hr class="my-4">
+    <small class="text-muted">Đã có tài khoản?<a href="{% url 'login' %}">Đăng nhập</a></small>
+</form>
+    
+{% endblock content %}

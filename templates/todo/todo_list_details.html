@@ -1,0 +1,421 @@
+<title>Chi tiết công việc</title>
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+{% load humanize %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+<style>
+html, body{
+    height: 100%;
+    background-image: url('/static/media/pexels-eberhard-grossgasteiger-2310713.jpg');
+    background-size:cover ;
+    background-position: relative;
+    background-repeat:repeat;
+    height: fit-content;
+    margin-bottom: 300px;
+}
+.avatar {
+    max-width: 50px;
+    max-height: 35px;
+    width: 50px;
+    height: 35px;
+    border-radius: 10%; 
+}
+input[type="checkbox"] {
+    transform: scale(2.0);
+}
+#task-form-container{
+    max-width: 1010px;
+}
+#add-task-btn{
+    max-width:500px
+}
+.fixed-width-table {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.fixed-width-table th,
+.fixed-width-table td {
+    word-wrap: break-word;
+    overflow: hidden;
+}
+.custom-width-table {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.custom-width-table th {
+    word-wrap: break-word;
+    overflow: hidden;
+}
+
+.wide-column {
+    width: 70%; /* Đặt chiều rộng mong muốn cho cột đầu tiên */
+}
+
+.narrow-column {
+    width: 20%; /* Đặt chiều rộng mong muốn cho các cột khác */
+}
+.task-enter{
+    width: 70%;
+}
+.complete-todo-list{
+    right: inherit;
+}
+#loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+</style>
+<div id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+    <div id="content" style="display:none;">
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2>{{ todo_list.todo_list_title }}
+            {% if todo_list.todo_list_status == 'Đang làm' %}
+                <span class="badge bg-success">Đang làm</span>
+            {% elif todo_list.todo_list_status == 'Đã xong' %}
+                <span class="badge bg-danger">Đã xong</span>
+            {% endif %}
+        </h2>
+	{% if todo_list.todo_list_status == 'Đã xong' %}
+	<form method="post" action="{% if todo_list.todo_list_is_resolved %}{% url 'delete_todo_list_resolved' todo_list_id=todo_list.todo_list_id %}{% else %}{% url 'delete_todo_list_details' todo_list_id=todo_list.todo_list_id %}{% endif %}">
+            {% csrf_token %}
+	<button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteTodoModal{{ todo_list.todo_list_id }}" data-todo-list-id="{{ todo_list.todo_list_id }}" data-todo-list-name="{{ todo_list.todo_list_name }}">
+                Xóa công việc
+            </button>
+        </form>
+	{% else %}
+        <form method="post" action="{% if todo_list.todo_list_is_resolved %}{% url 'delete_todo_list_resolved' todo_list_id=todo_list.todo_list_id %}{% else %}{% url 'delete_todo_list_details' todo_list_id=todo_list.todo_list_id %}{% endif %}">
+            {% csrf_token %}
+	<button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{ todo_list.todo_list_id }}">
+        	Sửa tiêu đề
+   	</button>
+            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteTodoModal{{ todo_list.todo_list_id }}" data-todo-list-id="{{ todo_list.todo_list_id }}" data-todo-list-name="{{ todo_list.todo_list_name }}">
+                Xóa công việc
+            </button>
+        </form>
+	{% endif %}
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered fixed-width-table">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="wide-column" scope="col">Task công việc</th>
+                        <th scope="col"><center>Đã xong</center></th>
+                        <th scope="col"><center>Đang làm</center></th>
+                    </tr>
+                </thead>
+                <tbody id="task-table-body">
+                    {% for task_list in task_lists %}
+                        <tr>
+                            <td style="word-wrap: break-word; display: flex; justify-content: space-between; align-items: center;">
+                                <span class="task-content">{{ task_list.task_list_description }}</span>
+                                <span class="edit-form" style="display: none;">
+                                    <input type="text" class="form-control edit-input" value="{{ task_list.task_list_description }}">
+                                </span>
+                                {% if not todo_list.todo_list_is_resolved %}
+                                    <div class='Function-Button'>
+                                        <button type="button" class="btn btn-outline-success edit-task" data-bs-toggle="modal" data-bs-target="#editModal{{ task_list.id }}" data-task-list-id="{{ task_list.id }}" data-task-list-name="{{ task_list.id }}">
+                                            Chỉnh sửa
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger delete-task" data-bs-toggle="modal" data-bs-target="#deleteModal{{ task_list.id }}" data-task-list-id="{{ task_list.id }}" data-task-list-name="{{ task_list.id }}">
+                                            Xóa
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <form id="update-task-status-form" method="post" action="{% url 'update_task_status' todo_list_id=todo_list.todo_list_id task_list_id=task_list.id %}">
+                                {% csrf_token %}
+                                <td>
+                                    <center>
+                                        <input type="checkbox" id="task_status_{{ task_list.id }}_resolved" {% if task_list.task_list_is_resolved %}checked{% endif %} {% if todo_list.todo_list_is_resolved %}disabled{% endif %} />
+                                        <label for="task_status_{{ task_list.id }}_resolved"></label>
+                                    </center>
+                                </td>
+                                <td>
+                                    <center>
+                                        <input type="checkbox" id="task_status_{{ task_list.id }}_unresolved" {% if task_list.task_list_is_unresolved %}checked{% endif %} {% if todo_list.todo_list_is_resolved %}disabled{% endif %} />
+                                        <label for="task_status_{{ task_list.id }}_unresolved"></label>
+                                    </center>
+                                </td>
+                            </form>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if not todo_list.todo_list_is_resolved %}
+            <div id="task-form-container">
+                <form method="post" action="{% url 'todo_list_details' todo_list_id=todo_list.todo_list_id %}" id="task-form" data-url="{% url 'add_task' %}">
+                    {% csrf_token %}
+                    <div class="form-group row">
+                        <div class="col-md-10" id="task-enter">
+                            <input type="text" name="task_list_description" class="form-control">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-success" type="submit" id="add-task-btn">Thêm công việc</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+        {% if not todo_list.todo_list_is_resolved %}
+            <form method="post" action="{% url 'resolve_todo_list' todo_list_id=todo_list.todo_list_id %}">
+                {% csrf_token %}
+                <button class="btn btn-primary" type="submit" id="complete-todo-list">Hoàn thành công việc</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Definitions -->
+{% for task_list in task_lists %}
+    <div class="modal fade" id="deleteModal{{ task_list.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ task_list.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel{{ task_list.id }}">Xóa task <b>{{ task_list.task_list_description }}</b>?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'delete_task_list' todo_list_id=todo_list.todo_list_id task_list_id=task_list.id %}" class="mt-2">
+                        {% csrf_token %}
+                        <button class="btn btn-danger">Xóa</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="editModal{{ task_list.id }}" tabindex="-1" aria-labelledby="editModalLabel{{ task_list.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel{{ task_list.id }}">Cập nhật</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'edit_task_list' todo_list_id=todo_list.todo_list_id task_list_id=task_list.id %}" class="mt-2">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="TenTask{{ task_list.id }}">Chỉnh sửa</label>
+                            <input type="text" class="form-control" id="TenTask{{ task_list.id }}" name="task_list_description" value="{{ task_list.task_list_description }}" required>
+                        </div>
+                        <br>
+                        <button type="submit" class="btn btn-primary">Cập nhật</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+<div class="modal fade" id="deleteTodoModal{{ todo_list.todo_list_id }}" tabindex="-1" aria-labelledby="deleteTodoModalLabel{{ todo_list.todo_list_id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteTodoModalLabel{{ todo_list.todo_list_id }}">Xóa công việc <b>{{ todo_list.todo_list_title }}</b>?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% if todo_list.todo_list_is_resolved %}{% url 'delete_todo_list_resolved' todo_list.todo_list_id %}{% else %}{% url 'delete_todo_list_details' todo_list.todo_list_id %}{% endif %}" class="mt-2">
+                    {% csrf_token %}
+                    <button class="btn btn-danger">Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="editModal{{ todo_list.todo_list_id }}" tabindex="-1" aria-labelledby="editModalLabel{{ todo_list.todo_list_id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel{{ todo_list.todo_list_id }}">Cập nhật</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'edit_todo_list' todo_list_id=todo_list.todo_list_id %}" class="mt-2">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="TenTodo{{ todo_list.todo_list_id }}">Chỉnh sửa</label>
+                        <input type="text" class="form-control" id="TenTodo{{ todo_list.todo_list_id }}" name="todo_list_title" value="{{ todo_list.todo_list_title }}" required>
+                    </div>
+                    <br>
+                    <button type="submit" class="btn btn-primary">Cập nhật</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<script>
+    var changes = {};
+    var csrf_token = '{{ csrf_token }}';
+    var todo_list_id = '{{ todo_list.todo_list_id }}';
+    
+    function handleCheckboxChange(task_list_id, status) {
+        var resolvedCheckbox = document.getElementById('task_status_' + task_list_id + '_resolved');
+        var unresolvedCheckbox = document.getElementById('task_status_' + task_list_id + '_unresolved');
+    
+        if (resolvedCheckbox && unresolvedCheckbox) {
+            if (status === 'resolved' && resolvedCheckbox.checked) {
+                unresolvedCheckbox.checked = false;
+            } else if (status === 'unresolved' && unresolvedCheckbox.checked) {
+                resolvedCheckbox.checked = false;
+            }
+            changes[task_list_id] = resolvedCheckbox.checked ? 'resolved' : 'unresolved';
+        }
+    }
+    
+    function saveStatusToServer(task_list_id, status) {
+        var url = `/todo/update_task_status/${todo_list_id}/${task_list_id}/`;
+        console.log(url);
+        return fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+            },
+            body: JSON.stringify({ "task_status": status }),
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+    
+    function saveAllTaskStatus() {
+        var promises = [];
+    
+        for (var task_list_id in changes) {
+            if (changes.hasOwnProperty(task_list_id)) {
+                promises.push(saveStatusToServer(task_list_id, changes[task_list_id]));
+            }
+        }
+    
+        // Wait for all promises to resolve before submitting the form
+        Promise.all(promises).then(() => {
+            document.getElementById('update-task-status-form').submit();  // Update the form ID
+            changes = {};
+        });
+    }
+    
+    function saveStatusToForm(task_list_id, status) {
+        var form = document.getElementById('update-task-status-form');
+        if (form) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'task_list_statuses[]';
+            input.value = task_list_id + ':' + status;
+            form.appendChild(input);
+        }
+    }
+    
+    function attachEventListeners(task_list_id) {
+        var unresolvedCheckbox = document.getElementById('task_status_' + task_list_id + '_unresolved');
+        var resolvedCheckbox = document.getElementById('task_status_' + task_list_id + '_resolved');
+    
+        if (unresolvedCheckbox && resolvedCheckbox) {
+            unresolvedCheckbox.addEventListener('change', function () {
+                handleCheckboxChange(task_list_id, 'unresolved');
+                saveStatusToServer(task_list_id, changes[task_list_id]);
+                // Do not save all task statuses immediately when the checkbox changes
+            });
+    
+            resolvedCheckbox.addEventListener('change', function () {
+                handleCheckboxChange(task_list_id, 'resolved');
+                saveStatusToServer(task_list_id, changes[task_list_id]);
+                // Do not save all task statuses immediately when the checkbox changes
+            });
+    
+            if (!unresolvedCheckbox.checked && !resolvedCheckbox.checked) {
+                unresolvedCheckbox.checked = true;
+            }
+        }
+    }
+    
+    // Assuming you want to trigger saving when the checkbox changes
+    document.addEventListener('change', function (event) {
+        if (event.target.matches('.status-checkbox')) {
+            saveAllTaskStatus();
+        }
+    });
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        // Attach event listeners to task checkboxes
+        {% for task_list in task_lists %}
+            attachEventListeners('{{ task_list.id }}');
+        {% endfor %}
+    });
+document.addEventListener("DOMContentLoaded", function() {
+            var loadingScreen = document.getElementById("loading-screen");
+            var content = document.getElementById("content");
+
+            function checkLoadingProgress() {
+                var totalResources = document.images.length;
+                var loadedResources = 0;
+
+                for (var i = 0; i < totalResources; i++) {
+                    if (document.images[i].complete) {
+                        loadedResources++;
+                    }
+                }
+
+                var loadPercentage = (loadedResources / totalResources) * 100;
+
+                if (loadPercentage >= 65) {
+                    loadingScreen.style.display = "none";
+                    content.style.display = "block";
+
+                    // Khi loading screen ẩn, cho phép cuộn trang
+                    document.body.style.overflow = "auto";
+                    document.documentElement.style.overflow = "auto";
+                } else {
+                    window.requestAnimationFrame(checkLoadingProgress);
+                }
+            }
+
+            checkLoadingProgress();
+        });
+</script>
+{% endblock content %}

@@ -1,0 +1,186 @@
+<title>Tín hiệu Box không lên</title>
+{% extends "pages/box.html" %}
+{% block content %}
+<!DOCTYPE html>
+{% load crispy_forms_tags %}
+<html lang="vi">
+<head>
+{% load static %}
+{% load bootstrap_icons %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.2.1/font/bootstrap-icons.css">
+<link rel="stylesheet" href="{% static 'bootstrap_icons/css/bootstrap_icons.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+
+<link rel="icon" href="{% static '/images/Logo.jpg' %}">
+<style>
+    html, body{
+    	height: 100%;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        overflow: hidden;
+    	background-image: url('/static/media/ketnoi.png');
+    	background-size:cover ;
+    	background-position: relative;
+    	background-repeat:repeat;
+    	height: fit-content;
+}
+.container {
+    position: relative;
+    text-align: center;
+}
+.zoom-image {
+    display: block;
+    width: auto;
+    height: auto;
+    transition: transform 0.3s ease;
+}
+.image-container:hover .zoom-image {
+    transform: scale(1.1); /* Adjust the scale factor for zoom effect */
+}
+.row-images {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+}
+.centered-image {
+    display:flex;
+    margin: auto;
+}
+.centered-text {
+    position:absolute;
+    bottom: -1;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 50px;
+    color:darkblue; /* Change this to your desired text color */
+    padding: 0%;
+}
+#zoomableImage {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+#zoomableImage:hover {
+    transform: scale(2); /* Thay đổi tỷ lệ phóng to (chọn giá trị tùy ý) */
+}
+#loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #content {
+            display: none;
+        }
+.dropdown-item:hover {
+        background-color: #080a91;
+        color: #ffffff; /* Màu nền bạn muốn thay đổi khi di chuột qua */
+    }
+.dropdown-item.delete-item:hover {
+        background-color: #ffffff; /* Màu nền khi di chuột qua */
+        color: #ffffff; /* Màu chữ khi di chuột qua */
+    }
+</style>
+<div id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+    <div id="content" style="display:none;">
+        <div class="container-fluid" style="min-height: 95%;">
+            <div class="row">
+                <center><div class="col-sm-10">
+    <table class="table table-bordered border-primary">
+        <thead>
+            <tr>
+                <td><strong><center><h4>Nguyên nhân</h4></center></strong></td>
+                <td><strong><center><h4>Cách khắc phục</h4></center></strong></td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><center>Không lên do chưa bật nguồn điện.</center></td>
+                <td>- Kiểm tra xem Box đã được cắm điện hay chưa, Box đã lên đèn chưa, đầu nguồn có bị gãy, cong, hỏng hay không. Kiểm tra nguồn ổ điện đã có điện vào chưa. </td>
+            </tr
+            <tr>
+                <td><center>Không có tín hiệu do dây kết nối.</center></td>
+                <td>- Kiểm tra lại đầu dây HDMI có bị gập, bị cong hay không. Với những TV kết nối qua phía sau có nguy cơ bị lỗi này nhiều hơn, do sát tường nên đầu HDMI bị gập, gây ra nhiễu, tín hiệu kém, mất tín hiệu. 
+                    <p>- Cách khắc phục là nên rút cả 2 đầu dây và cắm thử lại, 
+                    nếu vẫn không được thì thay dây mới, thường thì trong hộp đựng TVbox đã có 1 dây HDMI sơ cua, hãy tháo hẳn dây cũ ra và kết nối dây mới.</p></td>
+            </tr>
+            <tr>
+                <td><center>Không có tín hiệu do lỗi thiết bị.</center></td>
+                <td>Nếu thay dây kết nối vẫn bị hiện tượng trên, có thể bị lỗi do cổng kết nối HDMI của TV hoặc cổng HDMI Box. Hãy thử rút nguồn Box, vệ sinh lại cổng kết nối của TV và của Box nhẹ nhàng bằng tăm bông và cắm lại.</td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr><td><center><div class="row; container-fluid"><div class="image-container; "><img src="{% static 'images/support.jpg' %}" style='max-height:100px; max-width: fit-content;' class="centered-image-text"/><p \n><strong>Nhờ hỗ trợ.</strong></p></center></div></div></td>
+                <td>Nếu đã thử các phương án trên nhưng vẫn không khắc phục được, hãy <a href=href="{% url 'dashboard' %}" target="_blank">liên hệ</a> nhờ hỗ trợ !</td></tr>
+        </tfoot>
+    </table>
+    </div>
+                </center>
+            </div>
+        </div>
+</div>
+</div>
+</div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var loadingScreen = document.getElementById("loading-screen");
+            var content = document.getElementById("content");
+
+            function checkLoadingProgress() {
+                var totalResources = document.images.length;
+                var loadedResources = 0;
+
+                for (var i = 0; i < totalResources; i++) {
+                    if (document.images[i].complete) {
+                        loadedResources++;
+                    }
+                }
+
+                var loadPercentage = (loadedResources / totalResources) * 100;
+
+                if (loadPercentage >= 60) {
+                    loadingScreen.style.display = "none";
+                    content.style.display = "block";
+
+                    // Khi loading screen ẩn, cho phép cuộn trang
+                    document.body.style.overflow = "auto";
+                    document.documentElement.style.overflow = "auto";
+                } else {
+                    window.requestAnimationFrame(checkLoadingProgress);
+                }
+            }
+
+            checkLoadingProgress();
+        });
+    </script>
+</body>
+
+{% endblock content%}

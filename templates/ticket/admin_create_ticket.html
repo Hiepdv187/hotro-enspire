@@ -1,0 +1,168 @@
+<title>Tạo phiếu</title>
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<style>
+    html, body{
+        height: 100%;
+        background-image: url('/static/media/pexels-eberhard-grossgasteiger-2310713.jpg/');
+        background-size:cover ;
+        background-position: relative;
+        background-repeat:repeat;
+        height: fit-content;
+    }
+    .avatar {
+        max-width: 50px;
+        max-height: 35px;
+        width: 50px;
+        height: 35px;
+        border-radius: 10%; 
+    }
+#loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+</style>
+<div id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+    <div id="content" style="display:none;">
+<div class="container col-xl-12 col-xxl-10 px-4 py-5">
+    <div class="row align-items-center g-lg-5 py-5">
+        <div class="col-md-10 mx-auto col-lg-6">
+            <h2 class="display-6 fw-bold lh-1 mb-3 text-center">Tạo phiếu mới</h2>
+            <form class="p-4 p-md-5 border rounded-3 bg-light" method='POST' enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="form-floating mb-3">
+                    {% render_field form.ticket_title class="form-control" %}
+                    <label for="floatingInput">Tiêu đề</label>
+                </div>
+                <div class="form-floating mb-3">
+                    {% render_field form.ticket_description class="form-control" %}
+                    <label for="floatingPassword">Mô tả chi tiết (tối đa 1000 từ)</label>
+                </div>
+                <div class="form-floating mb-3">
+                    {% render_field form.image class="form-control" %}
+                    <label for="floatingPassword">Hình ảnh (nếu có)</label>
+                </div>
+                <div class="form-floating mb-3">
+                    {% render_field form.up_video class="form-control" %}
+                    <label for="floatingPassword">Video(nếu có)</label>
+                </div>
+                <div class="form-floating mb-3">
+                    {% render_field form.engineer class="form-control" %}
+                    <label for="floatingPassword">Chọn người hỗ trợ</label>
+                </div>
+                <div class="form-floating mb-3">
+                    {% render_field form.school class="form-control" %}
+                    <label for="floatingInput">Nơi làm việc (Ghi rõ tên Trường, Quận)</label>
+                </div>
+                <div class="form-floating mb-3">
+                    {% render_field form.phone_number class="form-control" id="phoneInput" %}
+                    <label for="phoneInput">Nhập số điện thoại liên hệ</label>
+                </div>
+                <button  class="w-100 btn btn-lg btn-primary" type="submit">Gửi</button>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var loadingScreen = document.getElementById("loading-screen");
+            var content = document.getElementById("content");
+
+            // Phone number validation
+            const phoneInput = document.getElementById("phoneInput");
+            if (phoneInput) {
+                // Prevent non-numeric input
+                phoneInput.addEventListener("keydown", function(e) {
+                    // Allow: backspace, delete, tab, escape, enter, decimal point
+                    if ([46, 8, 9, 27, 13, 110, 190].includes(e.keyCode) ||
+                        // Allow: Ctrl+A, Command+A
+                        (e.keyCode === 65 && (e.ctrlKey === true || e.metaKey === true)) ||
+                        // Allow: Ctrl+C, Command+C
+                        (e.keyCode === 67 && (e.ctrlKey === true || e.metaKey === true)) ||
+                        // Allow: Ctrl+X, Command+X
+                        (e.keyCode === 88 && (e.ctrlKey === true || e.metaKey === true)) ||
+                        // Allow: home, end, left, right
+                        (e.keyCode >= 35 && e.keyCode <= 39)) {
+                        // Let it happen
+                        return;
+                    }
+                    
+                    // Ensure that it is a number and stop the keypress if not
+                    if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                        e.preventDefault();
+                    }
+                });
+
+                // Handle paste event
+                phoneInput.addEventListener("paste", function(e) {
+                    // Get pasted data via clipboard API
+                    const pastedData = e.clipboardData.getData('text/plain');
+                    // Check if the pasted data contains non-numeric characters
+                    if (/\D/.test(pastedData)) {
+                        // If it does, prevent the paste and show an alert
+                        e.preventDefault();
+                        alert("Chỉ được nhập số điện thoại");
+                    }
+                });
+
+                // Clean up any non-numeric input on change
+                phoneInput.addEventListener("input", function() {
+                    this.value = this.value.replace(/\D/g, '');
+                });
+            }
+
+            function checkLoadingProgress() {
+                var totalResources = document.images.length;
+                var loadedResources = 0;
+
+                for (var i = 0; i < totalResources; i++) {
+                    if (document.images[i].complete) {
+                        loadedResources++;
+                    }
+                }
+
+                var loadPercentage = (loadedResources / totalResources) * 100;
+
+                if (loadPercentage >= 95) {
+                    loadingScreen.style.display = "none";
+                    content.style.display = "block";
+
+                    // Khi loading screen ẩn, cho phép cuộn trang
+                    document.body.style.overflow = "auto";
+                    document.documentElement.style.overflow = "auto";
+                } else {
+                    window.requestAnimationFrame(checkLoadingProgress);
+                }
+            }
+
+            checkLoadingProgress();
+        });
+    </script>
+{% endblock content %}
+<footer></footer>

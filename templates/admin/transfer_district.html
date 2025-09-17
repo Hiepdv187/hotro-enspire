@@ -1,0 +1,19 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h2>Transfer Districts to New Department</h2>
+<form method="post">{% csrf_token %}
+    <p>Select a new department for the selected district(s):</p>
+    <select name="new_department" required>
+        {% for department in departments %}
+        <option value="{{ department.id }}">{{ department.name }}</option>
+        {% empty %}
+        <option disabled>No departments available</option>
+        {% endfor %}
+    </select>
+    <input type="hidden" name="action" value="transfer_district_to_new_department">
+    <button type="submit" name="apply" class="button">Transfer</button>
+</form>
+
+<!-- Add Debugging -->
+<p>Form departments count: {{ departments|length }}</p>
+{% endblock %}

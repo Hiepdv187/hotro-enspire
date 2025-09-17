@@ -1,0 +1,502 @@
+<title>Thông tin phiếu</title>
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+{% load humanize %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox-plus-jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+<style>
+    html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow: hidden;
+            background-image: url('/static/media/pexels-eberhard-grossgasteiger-2310713.jpg/');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+
+        }
+    .avatar {
+        max-width: 50px;
+        max-height: 35px;
+        width: 50px;
+        height: 35px;
+        border-radius: 10%; 
+    }
+    .comment {
+        margin-bottom: 40px; /* Điều chỉnh giữa các comment */
+        padding: 20px; /* Để comment trở nên rõ ràng hơn */
+        border: 0px solid #ccc; /* Đường viền comment */
+        
+    }
+    .reply {
+        margin-bottom: 30px; /* Điều chỉnh giữa các comment */
+        padding: px; /* Để comment trở nên rõ ràng hơn */
+        border: 0px solid #ccc; /* Đường viền comment */
+        
+    }
+    .comment-avatar {
+        max-width: 50px;  /* Hoặc bất kỳ giá trị nào phù hợp với thiết kế của bạn */
+        max-height: 35px; /* Hoặc bất kỳ giá trị nào phù hợp với thiết kế của bạn */
+        border-radius: 10%; /* Để làm tròn ảnh nếu bạn muốn */
+    }
+    .avatar-reply {
+        max-width: 50px;  /* Hoặc bất kỳ giá trị nào phù hợp với thiết kế của bạn */
+        max-height: 35px; /* Hoặc bất kỳ giá trị nào phù hợp với thiết kế của bạn */
+        border-radius: 10%; /* Để làm tròn ảnh nếu bạn muốn */
+    }
+    .description_image {
+        width: 40%;  /* Hoặc bất kỳ giá trị nào phù hợp với thiết kế của bạn */
+        height: 40%; /* Hoặc bất kỳ giá trị nào phù hợp với thiết kế của bạn */
+        padding: 0px;
+        margin-bottom: 20px;
+    }
+    .Comment_Image {
+        max-width: 200px;  /* Hoặc bất kỳ giá trị nào phù hợp với thiết kế của bạn */
+        max-height: 200px; /* Hoặc bất kỳ giá trị nào phù hợp với thiết kế của bạn */
+        padding: 1px;
+    }
+    .Comment_Image {
+        width: 50%;
+    }
+    .image-reply{
+        width: 300px;  /* Hoặc bất kỳ giá trị nào phù hợp với thiết kế của bạn */
+        height: 300px; /* Hoặc bất kỳ giá trị nào phù hợp với thiết kế của bạn */
+        padding: 1px;
+    }
+    .image-reply{
+        width: 50%;
+    }
+    .up_video {
+        max-width: 200x;  /* Hoặc bất kỳ giá trị nào phù hợp với thiết kế của bạn */
+        max-height: 200px; /* Hoặc bất kỳ giá trị nào phù hợp với thiết kế của bạn */
+        padding: 0px;
+        margin-bottom: 0px;
+    }
+    .flex {
+        display: flex;
+        justify-content:baseline ;
+        flex-wrap: wrap;
+    }
+  
+    #videoPlayer {
+        width: 40%;
+        height: 40%; /* Điều chỉnh chiều rộng theo nhu cầu của bạn */
+    }
+    .hidden {
+        display: none;
+    }
+    .truncated-description {
+        max-height: 100px; /* Đặt giới hạn chiều cao mong muốn */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: normal; /* Đảm bảo hiển thị đúng các dòng mới */
+    }
+    .full-description {
+        max-height: none; /* Xóa giới hạn chiều cao */
+        overflow: visible;
+        white-space: normal;
+    }
+#loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #content {
+            display: none;
+        }
+.media-container {
+    display: flex;
+    gap: 10px; /* Khoảng cách giữa các phần tử */
+    justify-content: space-between; /* Khoảng cách đều giữa các phần tử */
+}
+
+.image-item {
+    flex: 1;
+    max-width: 19%; /* Hình ảnh sẽ chiếm 70% chiều rộng của container */
+}
+
+.video-item {
+    flex: 1;
+    max-width: 80%; /* Video sẽ chiếm 30% chiều rộng của container */
+    height: 100%;
+}
+
+.description_image {
+    width: 100%; /* Đảm bảo hình ảnh chiếm toàn bộ chiều rộng của container của nó */
+    height: auto; /* Giữ tỷ lệ khung hình tự nhiên */
+}
+
+.up_video {
+    width: 100%; /* Đảm bảo video chiếm toàn bộ chiều rộng của container của nó */
+    height: auto; /* Giữ tỷ lệ khung hình tự nhiên */
+}
+/* Media query for smaller screens */
+@media (max-width: 768px) {
+    .media-container {
+        flex-direction: row; /* Chuyển đổi sang bố cục dọc */
+        align-items: center; /* Căn giữa các phần tử */
+    }
+
+    .image-item {
+    flex: 1;
+    max-width: 35%; /* Hình ảnh sẽ chiếm 70% chiều rộng của container */
+}
+
+.video-item {
+    flex: 1;
+    max-width: 60%; 
+    height: 100%;
+}
+
+.description_image {
+    width: 100%; /* Đảm bảo hình ảnh chiếm toàn bộ chiều rộng của container của nó */
+    height: auto; /* Giữ tỷ lệ khung hình tự nhiên */
+}
+
+.up_video {
+    width: 100%; /* Đảm bảo video chiếm toàn bộ chiều rộng của container của nó */
+    height: auto; /* Giữ tỷ lệ khung hình tự nhiên */
+}
+}
+</style>
+ <div id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+
+    <div id="content">
+
+<div class="container-fluid">
+    <div class="row p-5 mb-4 bg-light rounded-4">
+        <div class="col-md-8">
+            <div class="py-6">
+                <h1 class="display-6 fw-bold">{{ticket.ticket_title}}</h1>
+                
+                <p style="word-wrap: break-word;">
+                    {{ ticket.ticket_description }}
+                </p>
+                
+                <!-- Container for image and video -->
+                <div class="media-container">
+    {% if ticket.image %}
+    <div class="image-item">
+        <a data-fancybox="group" href="{{ ticket.image.url }}" class="description_image">
+            <img src="{{ ticket.image.url }}" alt="Image" class="description_image">
+        </a>
+    </div>
+    {% endif %}
+    
+    {% if ticket.up_video %}
+    <div class="video-item">
+        <video id="videoPlayer" class="up_video" controls>
+            <source src="{{ ticket.up_video.url }}" alt="up_video" type="video/mp4" data-quality="1080p" label="1080p">
+        </video>
+    </div>
+    {% endif %}
+</div>
+                
+                <!-- Status badges and buttons -->
+                {% if ticket.status == 'Chờ xử lý' %}
+                    <span class="badge bg-warning"> Chờ xử lý</span>
+                {% elif ticket.status == 'Đang xử lý' %}
+                    <span class="badge bg-success"> Đang xử lý</span>
+                {% elif ticket.status == 'Đã xong' %}
+                    <span class="badge bg-danger"> Đã xong</span>
+                {% endif %}
+
+                <!-- Conditional buttons for superuser and customer -->
+                {% if request.user.is_superuser and ticket.is_resolved == False %}
+                    {% if ticket.is_assigned_to_engineer %}
+                        <a id="editButton1" href="{% url 'change_assign_ticket' ticket.ticket_id %}" type="button" class="btn btn-outline-primary">Thay đổi người hỗ trợ</a>
+                    {% else %}
+                        <a id="editButton3" href="{% url 'assign_ticket' ticket.ticket_id %}" type="button" class="btn btn-outline-primary">Thêm người hỗ trợ</a>
+                    {% endif %}
+                    
+                    <a type="submit" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#exampleModal{{ ticket.ticket_id }}">Xóa phiếu</a>
+                {% endif %}
+                
+                <!-- Edit and delete modals -->
+                {% if request.user.is_superuser %}
+                    <!-- Modal for deleting ticket -->
+                    <div class="modal fade" id="exampleModal{{ ticket.ticket_id }}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Xóa phiếu <b>{{ticket.ticket_id}}</b> ?</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form method="post" action="{% url 'delete_ticket_details' ticket_id=ticket.ticket_id %}">
+                                        {% csrf_token %}
+                                        <button class="btn btn-danger">Xóa</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Right column for ticket info -->
+        <div class="col-md-4 col-sm-12 order-md-1 order-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="py-6">
+                        <center>
+                            <h2 class="display-6">Thông tin phiếu</h2>
+                            <p>Thông tin về phiếu, người tạo phiếu và người hỗ trợ xử lý.</p>
+                        </center>
+                        <ul class="icon-list">
+                            <li><b><a style="color:darkblue;">ID phiếu:</a></b> {{ticket.ticket_id}}</li>
+                            <li><b><a style="color:darkblue;">Người tạo phiếu:</a></b> {{ticket.customer.last_name}} {{ticket.customer.first_name}}</li>
+                            <li><b><a style="color:darkblue;">Chức vụ:</a></b> {{ticket.customer.title}}</li>
+                            <li><b><a style="color:darkblue;">Nơi làm việc:</a></b> {{ticket.school}}</li>
+                            <li><b><a style="color:darkblue;">Phòng ban:</a></b> {{ticket.customer.work_place}}</li>
+                            <li><b><a style="color:darkblue;">Người hỗ trợ:</a></b> {{ticket.engineer.last_name}} {{ticket.engineer.first_name}}</li>
+                            <li><b><a style="color:darkblue;">Phương thức liên hệ:</a></b> {{ticket.phone}}</li>
+                            <li><b><a style="color:darkblue;">Tạo vào lúc:</a></b> {{ticket.created_on}}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if ticket.is_resolved %}
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Hướng dẫn xử lý</h5>
+        {{ ticket.resolution_steps }}
+	<br>
+        <small style='color: gray;' disabled>Xử lý vào lúc: {{ ticket.formatted_last_modified }}</small>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5 class="card-title">Bình luận</h5>
+
+            {% for comment in comments.all %}
+            <div class="comment">
+                <img src="{{ comment.user.avatar.url }}" alt="{{ comment.author.name }} Avatar", class="comment-avatar">
+                <strong>{{ comment.author.user.last_name}} {{ comment.author.user.first_name}}</strong>
+                <div class="row p-1 mb-4 rounded-5"  style = "background-image: url('/static/images/comm.jpg');">
+                    <p  style="word-wrap: break-word;">{{ comment.body }}</p>
+                    {% if user.is_authenticated and comment.user == user %}
+                    {% if comment.image %}
+                    <a data-fancybox="group" href="{{comment.image.url }}" class="Comment_Image">
+                    <img src="{{ comment.image.url }}" alt="Comment_Image" class="Comment_Image">
+                    </a>
+                    {% endif %}
+                    <p><small class="form-text text-muted">{{ comment.created_at|naturaltime }}</small></p>
+                    <!--Button trigger Modal-->
+                    <div class="delete_comment">
+                    <button type="submit" class=" small btn btn-link text-danger ml-2" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                        Xóa bình luận
+                    </button>
+                    </div>
+                
+                    <!--Modal-->
+                    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Xóa bình luận này?</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="">
+                            <div class="">
+                    <form method="post" action="{% url 'delete_comment' comment_id=comment.id %}"class="mt-2">
+                        {% csrf_token %}
+                                <!--Button trigger Modal-->
+                                <button class="btn btn-danger">Xóa</button>
+                            </div>
+                            </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                </div>
+
+                {% endif %}
+            
+                    {% for reply in comment.comment_replies.all %}
+                        &emsp; &emsp;<div class="reply">
+                            <img src="{{ reply.author.avatar.url }}" alt="{{ reply.author }} Avatar" class="avatar-reply">
+                            <strong>{{ reply.author.last_name }} {{ reply.author.first_name }}</strong>
+                            <div class="row p-1 mb-4 rounded-5" style="background-color: whitesmoke;">
+                            {% if reply.image  %}
+                                <a data-fancybox="group" href="{{reply.image.url }}" class="image-reply">
+                                <img src="{{ reply.image.url }}" alt="image-reply" class="image-reply">
+                                </a>
+                            {% endif %}
+                            <p  style="word-wrap: break-word;">{{ reply.body }}</p>
+                            <p><small class="form-text text-muted">{{ reply.created_at|naturaltime }}</small></p>
+                        </div>
+                    {% endfor %}
+                    <form method="post" action="{% url 'add_reply' ticket_id=ticket.ticket_id comment_id=comment.id %}" class="mb-2" enctype= "multipart/form-data">
+                        {% csrf_token %}
+                        {% for field in reply_form %}
+                            <div class="mb-3">
+                                {{ field.label_tag }}
+                                {% if field.name == 'image' %}
+                                    <input type="file" name="{{ field.name }}" accept="image/*" class="form-control-file">
+                                {% else %}
+                                    {% render_field field class="form-control" %}
+                                {% endif %}
+                                {% if field.help_text %}
+                                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-primary" style="max-width: 70px;">Trả lời</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}    
+        <p></p>
+        <!-- Main comment form outside the comment loop -->
+        <form method="POST" action="{% url 'add_comment' ticket_id=ticket.ticket_id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in comments_form %}
+                <div class="mb-3">
+                    {{ field.label_tag }}
+                    {% if field.name == 'image' %}
+                        <input type="file" name="{{ field.name }}" accept="image/*" class="form-control-file">
+                    {% else %}
+                        {% render_field field class="form-control" %}
+                    {% endif %}
+                    {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <input type="hidden" name="parent_comment" value="{{ comment.id }}">
+            <button type="submit" class="btn btn-primary">Gửi Bình Luận</button>
+        </form>        
+    </div>
+</div>
+</div>
+{% else %}
+{% if request.user.is_engineer %}
+
+        <!--Button trigger Modal-->
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+            Gửi thông tin 
+        </button>
+        <!--Modal-->
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Giải pháp</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="">
+                        <div class="">
+                            <form action="{% url 'resolve_ticket' ticket.ticket_id %}" method = "POST">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="exampleFormControlTextarea1" class="form-label">Viết hỗ trợ </label>
+                                    <textarea class="form-control" id="exampleFormControlTextarea1" rows ="3" name="rs"></textarea>
+                                </div>
+                                <!--Button trigger Modal-->
+                                <button class="btn btn-primary">Gửi thông tin</button>
+                            </div>
+        </div>
+        </div>
+    </form>
+</div>
+</div>
+<p \n></p>
+
+{% endif %}
+{% endif %}
+
+<footer></footer>
+</div>
+
+<script>
+     document.addEventListener("DOMContentLoaded", function() {
+            var loadingScreen = document.getElementById("loading-screen");
+            var content = document.getElementById("content");
+
+            function checkLoadingProgress() {
+                var totalResources = document.images.length;
+                var loadedResources = 0;
+
+                for (var i = 0; i < totalResources; i++) {
+                    if (document.images[i].complete) {
+                        loadedResources++;
+                    }
+                }
+
+                var loadPercentage = (loadedResources / totalResources) * 100;
+
+                if (loadPercentage >= 65) {
+                    loadingScreen.style.display = "none";
+                    content.style.display = "block";
+
+                    // Khi loading screen ẩn, cho phép cuộn trang
+                    document.body.style.overflow = "auto";
+                    document.documentElement.style.overflow = "auto";
+                } else {
+                    window.requestAnimationFrame(checkLoadingProgress);
+                }
+            }
+
+            checkLoadingProgress();
+        });
+
+        
+        $(document).ready(function () {
+            const editButton = $("#editButton");
+            const editForm = $("#editForm");
+
+            if (editButton.length > 0) {
+                editButton.click(function () {
+                    console.log("Nút chỉnh sửa đã được nhấn");
+                    // Ẩn nút chỉnh sửa bằng cách thêm class 'hidden'
+                    editButton.addClass("hidden");
+                    // Hiển thị form chỉnh sửa bằng cách loại bỏ class 'hidden'
+                    editForm.removeClass("hidden");
+                });
+            }
+        });
+</script>
+{% endblock %}

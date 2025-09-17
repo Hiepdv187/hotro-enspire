@@ -1,0 +1,811 @@
+<title>Tài sản phòng lab</title>
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% load humanize %}
+
+{% block content %}
+{% load static %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<style>
+    html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-image: url('/static/media/pexels-eberhard-grossgasteiger-2310713.jpg/');
+            background-size: cover;
+            background-repeat: repeat;
+            width: 100%;
+        }
+    .avatar {
+        max-width: 50px;
+        max-height: 35px;
+        width: 50px;
+        height: 35px;
+        border-radius: 10%; 
+    }
+    #search-bar {
+        width: 500px;
+        padding: 8px;
+        margin:  auto;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    /* Style the search button */
+    #search-button {
+        padding: 8px;
+        margin: 10px;
+        border: 1px solid #007BFF;
+        background-color: #007BFF;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .search-container {
+        position:relative;
+        display:flex;
+        margin-bottom: 30px;
+    }
+    input[type="checkbox"] {
+        transform: scale(2.0);
+    }
+    a.active_assets{
+        text-decoration: none;
+        color: darkgreen;
+    }
+    a.broken_assets{
+        text-decoration: none;
+        color: red;
+    }
+    a.all_assets{
+        text-decoration: none;
+        color:black;
+    }
+    #addNewButton {
+        position:fixed;
+        bottom: 70px;
+        right: 50px;
+        z-index: 99999;
+    }
+    #FallBack
+    {   
+        max-width: 100px;
+        position:fixed;
+        bottom: 70px;
+        left: 50px;
+        z-index: 9999;
+    }
+    .modal {
+        z-index: 1050;
+    }
+
+#loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+.dropdown-item:hover {
+        background-color: #080a91;
+        color: #ffffff; /* Màu nền bạn muốn thay đổi khi di chuột qua */
+    }
+.dropdown-item.delete-item:hover {
+        background-color: #ffffff; /* Màu nền khi di chuột qua */
+        color: #ffffff; /* Màu chữ khi di chuột qua */
+    }
+
+
+.column1{
+	width:50%;
+}
+.column2{
+	width:10%;
+}
+.column3{
+	width:10%;
+}
+.column4{
+	width:30%;
+}
+.wrap-text {
+    max-width: 30px; /* Giới hạn chiều rộng của dropdown menu */
+    white-space: normal; /* Cho phép text wrap */
+}
+</style>
+<div id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+    <div id="content" style="display:none;">
+<center>
+<form method="GET" action="{% url 'labroom_detail' department_id=department.id district_id=district.id school_id=school.id labroom_id=labroom.id %}" class="mb-3">
+    <div class="search-container">
+    <input class="form-control" name="q" type="text" placeholder="Tìm kiếm" {% if query %}value="{{ query }}"{% endif %} style="width: 1020px; height: 40px;" ><button class="btn btn-primary">Tìm kiếm</button>
+    </div>
+</form>
+</center>
+<a href="{% url 'school_detail' department.id district.id school.id %}" class="btn btn-success" >Quay lại trang trước</a>
+<p></p>
+<div id="search-results"></div>
+<div class="card">
+    <div class="card-body">
+        <center><h1>{{ labroom.name }}</h1></center>
+        <center><h3>({{ school.name }} - {{ district.name }} - {{ department.name }})</h3></center>
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                <th class="column1">Tên tài sản</th>
+                <th class="column2"><center>Số lượng</center></th>
+                <th class="column3"><center>Tình trạng</center></th>
+                
+            </tr>
+        </thead>
+        <tbody>
+                    {% for asset in page_obj %}
+                    <tr>
+                         {% if request.user.is_superuser %}
+                                <td class = "wrap-text">
+                                    
+                                    <div class="dropdown">
+                                        <a class="dropdown-toggle wrap-text" href="#" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <b>{{asset.name|safe}}</b>
+                                        </a>
+                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                                            <li><a class="dropdown-item" data-toggle="modal" data-target="#splitAssetModal{{ asset.id }}" data-asset-id="{{ asset.id }}" data-asset-name="{{ asset.name }}" data-asset-amount="{{ asset.amount }}" href="#" >Cập nhật</a></li>
+                                            <li><a class="dropdown-item" data-toggle="modal" data-target="#devideAssetModal{{ asset.id }}" data-asset-id="{{ asset.id }}" data-asset-name="{{ asset.name }}" data-asset-amount="{{ asset.amount }}" href="#" >Chia số lượng</a></li>
+                                            <li><a class="dropdown-item" href="#" data-toggle="modal" data-target="#moveAssetModal{{ asset.id }}" data-asset-id="{{ asset.id }}" data-asset-name="{{ asset.name }}" data-asset-amount="{{ asset.amount }}" >Chuyển địa điểm</a></li>
+                                            <div class="dropdown-divider"></div>
+					    <li><a class="dropdown-item delete-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal{{ asset.id }}" data-asset-id="{{ asset.id }}" data-asset-name="{{ asset.name }}" data-asset-amount="{{ asset.amount }}" style="color: #ff0000;">Xóa</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                                {% else %}
+                                <td>
+                                    {{asset.name}}
+                                </td>
+                                {% endif %}
+                        <td><center>{{ asset.asset_amount }}</center></td>
+                        {% if request.user.is_superuser %}
+                        <td>
+                            <center><div class="btn-group">
+                                <button type="button" class="btn status-btn {% if asset.asset_status == 'Tốt' %}btn-success{% elif asset.asset_status == 'Hỏng' %}btn-danger{% endif %} dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" data-asset-id="{{ asset.id }}">
+                                    {{ asset.asset_status }}
+                                </button>
+                                <ul class="dropdown-menu asset-status-dropdown">
+                                    <li><a class="dropdown-item" href="#" data-status="Tốt">Tốt</a></li>
+                                    <li><a class="dropdown-item" href="#" data-status="Hỏng">Hỏng</a></li>
+                                </ul>
+                            </div></center>
+                        </td>
+                        {% else %}
+                        <td>
+                            <center><div class="btn status-btn {% if asset.asset_status == 'Tốt' %}btn-success{% elif asset.asset_status == 'Hỏng' %}btn-danger{% endif %}">
+                                {{ asset.asset_status }}
+                            </div></center>
+                        </td>
+                        {% endif %}
+                
+            </tr>
+            {% endfor %}
+                </tbody>
+            </table>
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% if request.user.is_superuser %}
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAssetModal">
+                Thêm tài sản mới
+            </button>
+		{% endif %}
+        </div>
+    </div>
+    
+    <!-- Modal chỉnh sửa -->
+    {% for asset in page_obj %}
+    <div class="modal fade" id="splitAssetModal{{ asset.id }}" tabindex="-1" role="dialog" aria-labelledby="splitAssetModalLabel{{ asset.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="splitAssetModalLabel{{ asset.id }}">Cập nhật tài sản</h5>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'edit_asset_lab' department.id district.id school.id labroom.id asset.id%}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="TenTaiSanlab{{ asset.id }}">Tên tài sản</label>
+                            <input type="text" class="form-control" id="TenTaiSanlab{{ asset.id }}" name="name" value="{{ asset.name }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="SoLuongtslab{{ asset.id }}">Số lượng</label>
+                            <input type="number" class="form-control" id="SoLuongtslab{{ asset.id }}" name="asset_amount" min="1" value="{{ asset.amount }}" required>
+                            <small class="form-text text-muted"><b>Số lượng hiện có: {{ asset.asset_amount }}</b></small>
+			</div>
+                        <button type="submit" class="btn btn-primary">Cập nhật</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal di chuyển -->
+    <div class="modal fade" id="moveAssetModal{{ asset.id }}" tabindex="-1" role="dialog" aria-labelledby="moveAssetModalLabel{{ asset.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="moveAssetModalLabel{{ asset.id }}">Di chuyển tài sản</h5>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'move_asset_labroom' department.id district.id school.id labroom.id asset.id %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="new_department{{ asset.id }}">Chọn phòng ban:</label>
+                            <select class="form-control department-dropdown" id="new_department{{ asset.id }}" name="new_department" data-asset-id="{{ asset.id }}">
+                                <option value="" selected disabled>-----</option>
+                                {% for department in departments %}
+                                <option value="{{ department.id }}">{{ department.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="new_district{{ asset.id }}">Chọn Quận:</label>
+                            <select class="form-control" id="new_district{{ asset.id }}" name="new_district">
+                                <option value="" selected disabled>-----</option>
+                                {% for district in district_list %}
+                                <option value="{{ district.id }}">{{ district.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="new_school{{ asset.id }}">Chọn Trường:</label>
+                            <select class="form-control" id="new_school{{ asset.id }}" name="new_school">
+                                <option value="" selected disabled>-----</option>
+                                <!-- Schools will be filled with JavaScript -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="new_labroom{{ asset.id }}">Chọn phòng lab:</label>
+                            <select class="form-control" id="new_labroom{{ asset.id }}" name="new_labroom">
+                                <option value="" selected disabled>-----</option>
+                                <!-- Labrooms will be filled with JavaScript -->
+                            </select>
+                        </div>
+			<div class="form-group">
+                                        <label for="quantity{{ asset.id }}">Số lượng:</label>
+                                        <input type="number" class="form-control" id="quantity{{ asset.id }}" name="quantity" min="1" max="{{ asset.asset_amount }}" required>
+                          		<small class="form-text text-muted"><b>Số lượng hiện có: {{ asset.asset_amount }}</b></small>
+			</div>
+                        <button type="submit" class="btn btn-primary">Di chuyển</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal xóa -->
+    <div class="modal fade" id="deleteModal{{ asset.id }}" tabindex="-1" aria-labelledby="deleteModal{{ asset.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModal{{ asset.id }}">Xóa <b>{{ asset.name }}</b> ?</h5>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'delete_asset_lab' department.id district.id school.id labroom.id asset.id %}" class="mt-2">
+                        {% csrf_token %}
+                        <button class="btn btn-danger">Xóa</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal chia số lượng -->
+    <div class="modal fade" id="devideAssetModal{{ asset.id }}" tabindex="-1" role="dialog" aria-labelledby="devideAssetModal{{ asset.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="devideAssetModal{{ asset.id }}">Chia số lượng</h5>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'update_assets_labroom' department.id district.id school.id labroom.id%}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="TenTaiSanlab{{ asset.id }}">Tên tài sản</label>
+                            <input type="text" class="form-control" id="TenTaiSanlab{{ asset.id }}" name="name" value="{{ asset.name }}" disabled required>
+                        </div>
+                        <div class="form-group">
+                            <label for="SoLuongtslab{{ asset.id }}">Số lượng</label>
+                            <input type="number" class="form-control" id="SoLuongtslab{{ asset.id }}" name="asset_amount" min="1" required>
+                            <input type="hidden" name="asset_id" id="asset-id-hidden{{ asset.id }}" value="{{ asset.id }}">
+			    <small class="form-text text-muted"><b>Số lượng hiện có: {{ asset.asset_amount }}</b></small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Chia số lượng</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    <!-- Modal thêm tài sản -->
+    <div class="modal fade" id="createAssetModal" tabindex="-1" role="dialog" aria-labelledby="createAssetModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createAssetModalLabel">Thêm tài sản</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'create_asset_lab' department.id district.id school.id labroom.id %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="{{ form.name.id_for_label }}">Tên tài sản</label>
+                            <input type="text" class="form-control" id="TenTaiSan" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.asset_amount.id_for_label }}">Số lượng</label>
+                            <input type="number" class="form-control" id="SoLuong" name="asset_amount" min="1" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.asset_status.id_for_label }}">Tình trạng</label>
+                            <select class="form-control" id="TinhTrang" name="asset_status" required>
+                                <option value="Tốt" selected>Tốt</option>
+                                <option value="Hỏng">Hỏng</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Tạo tài sản</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<br>
+<center><div>
+    <div class="row">
+        <div class="col-sm-12 col-md-4">
+            <a href="#" class="active_assets">
+            <div class="p-5 mb-4 bg-light rounded-4">
+                <div class="container-fluid py-10">
+                    <h3 class="display-10 fw-bold">Sử dụng được<br></h3><br><h4>{{active_asset_in_lab_count}}</h4>
+                </div>
+            </div>
+            </a>
+        </div>
+        <div class="col-sm-12 col-md-4">
+            <a href="#" class="broken_assets">
+                <div class="p-5 mb-4 bg-light rounded-4">
+                    <div class="container-fluid py-10">
+                        <h3 class="display-10 fw-bold">Đã hỏng</h3><br><h4>{{broken_asset_in_lab_count}}</h4>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-12 col-md-4">
+            <a href="#" class="all_assets">
+            <div class="p-5 mb-4 bg-light rounded-4">
+                <div class="container-fluid py-10">
+                    <h3 class="display-10 fw-bold">Tổng</h3><br><h4>{{asset_in_lab_count}}</h4>
+                </div>
+            </div>
+            </a>
+    </div>
+    </div>
+</div></center>
+</div>
+<center>
+    <div class="card" style="width: 70%;">
+        <figure class="highcharts-figure" data-percentage-active="{{ lab_percentage_active }}" data-percentage-broken="{{ lab_percentage_broken }}">
+        <div id="container"></div>
+        <p class="highcharts-description">
+        <center>Biểu đồ hiển thị tỉ lệ tài sản phòng {{ labroom.name }} của {{school.name}} - {{district.name}} - {{department.name}} </center>
+        </p>
+    </figure>
+    </div>
+</center>
+	{% if request.user.is_superuser %}
+            <a href="#" id="addNewButton" class="btn" data-bs-toggle="modal" data-bs-target="#createAssetModal">
+                <img src="{% static 'images/pngwing.png' %}">
+            </a>
+        {% endif %}
+</div>
+<script>
+    $(document).ready(function () {
+        $("#myInput").on("input", filterDropdown);
+    });
+
+    function filterDropdown() {
+        var value = $(this).val().toLowerCase();
+        $(".table tbody tr").each(function () {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+        });
+    }
+    function goBack() {
+        window.history.back();
+    }
+    function searchFunction() {
+        // Add your search logic here
+        alert("Search button clicked!");
+    }
+    $(document).ready(function(){
+        $('#createAssetModal').modal('hide');
+    });
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var figureElement = document.querySelector('.highcharts-figure');
+        var percentageActive = parseFloat(figureElement.getAttribute('data-percentage-active')) || 0;
+        var percentageBroken = parseFloat(figureElement.getAttribute('data-percentage-broken')) || 0;
+        console.log('Percentage Active:', percentageActive);
+        console.log('Percentage Broken:', percentageBroken);
+        Highcharts.chart('container', {
+            chart: {
+                type: 'pie',
+                width: null,
+            },
+            title: {
+                text: 'Tỉ lệ tài sản'
+            },
+            tooltip: {
+                valueSuffix: '%'
+            },
+            subtitle: {
+                text:
+                'Source:<a href="https://www.mdpi.com/2072-6643/11/3/684/htm" target="_default">MDPI</a>'
+            },
+            plotOptions: {
+                series: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: [{
+                        enabled: true,
+                        distance: 20
+                    }, {
+                        enabled: true,
+                        distance: -40,
+                        format: '{point.percentage:.1f}%',
+                        style: {
+                            fontSize: '1.2em',
+                            textOutline: 'none',
+                            opacity: 0.7
+                        },
+                        filter: {
+                            operator: '>',
+                            property: 'percentage',
+                            value: 10
+                        }
+                    }]
+                }
+            },
+            series: [
+                {
+                    name: 'Percentage',
+                    colorByPoint: true,
+                    data: [
+                        {
+                            name: 'Tài sản hỏng',
+                            y: percentageBroken
+                        },
+                        {
+                            name: 'Tài sản sử dụng được',
+                            sliced: true,
+                            selected: true,
+                            y: percentageActive
+                        },
+                    ]
+                }
+            ]
+        });
+    });
+    $(document).ready(function() {
+        $('.asset-status-dropdown .dropdown-item').click(function(e) {
+            e.preventDefault(); // Ngăn chặn trang web reload
+    
+            var assetId = $(this).closest('.btn-group').find('.status-btn').data('asset-id');
+            var newStatus = $(this).data('status');
+            
+            // AJAX request để cập nhật trạng thái
+            $.ajax({
+                url: "{% url 'update_asset_status' %}",
+                type: "POST",
+                data: {
+                    asset_id: assetId,
+                    new_status: newStatus,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function(data) {
+                    if (data.success) {
+                        // Cập nhật text và class của button trên DOM dựa vào trạng thái mới
+                        var statusBtn = $('.status-btn[data-asset-id="'+ assetId +'"]');
+                        statusBtn.text(newStatus);
+                        if(newStatus === 'Tốt') {
+                            statusBtn.removeClass('btn-danger').addClass('btn-success');
+                        } else {
+                            statusBtn.removeClass('btn-success').addClass('btn-danger');
+                        }
+                    } else {
+                        // Handle failure
+                        console.error("Failed to update status:", data.error);
+                    }
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    console.error("Error:", errorThrown);
+                }
+            });
+        });
+    });
+    
+$(document).ready(function() {
+        function checkSchoolRequired(departmentName, districtName, schoolSelect) {
+            // Kiểm tra nếu department không phải là "Ban lãnh đạo" và district không chứa "Văn phòng"
+            if (departmentName !== "Ban lãnh đạo" && !districtName.includes("Văn phòng") && !districtName.includes("Kho") && !districtName.includes("Server")) {
+                schoolSelect.attr("required", "required");
+            } else {
+                schoolSelect.removeAttr("required");
+            }
+        }
+    
+        function checkLabroomRequired(schoolSelect, labroomSelect) {
+            if (schoolSelect.val()) {
+                labroomSelect.attr("required", "required");
+            } else {
+                labroomSelect.removeAttr("required");
+            }
+        }
+    
+        $('[id^=new_department]').on('change', function() {
+            var assetId = $(this).attr('id').replace('new_department', ''); // Lấy asset ID từ ID của phòng ban
+            var departmentId = $(this).val(); // Lấy giá trị phòng ban đã chọn
+            var departmentName = $(this).find('option:selected').text(); // Lấy tên phòng ban đã chọn
+    
+            if (departmentId) {
+                // Gửi yêu cầu AJAX để lấy danh sách các quận thuộc phòng ban và hiển thị lên dropdown
+                $.ajax({
+                    type: 'GET',
+                    url: '/asset/get_districts/',
+                    data: {'department_id': departmentId},
+                    success: function(response) {
+                        var districtsDropdown = $('#new_district' + assetId);
+                        districtsDropdown.empty(); // Xóa các option hiện có
+    
+                        // Thêm option mặc định
+                        districtsDropdown.append($('<option>', {
+                            value: '',
+                            text: '-----'
+                        }));
+    
+                        // Điền các option mới từ dữ liệu trả về
+                        $.each(response.districts, function(i, district) {
+                            districtsDropdown.append($('<option>', {
+                                value: district.id,
+                                text: district.name
+                            }));
+                        });
+    
+                        // Reset dropdowns của Trường và Phòng lab
+                        $('#new_school' + assetId).empty().append($('<option>', {value: '', text: '-----'}));
+                        $('#new_labroom' + assetId).empty().append($('<option>', {value: '', text: '-----'}));
+                    },
+                    error: function(xhr, textStatus, errorThrown) {
+                        console.log("Error in getting districts:", xhr.responseText);
+                    }
+                });
+            } else {
+                // Nếu không có phòng ban nào được chọn, reset tất cả các dropdown
+                $('#new_district' + assetId).empty().append($('<option>', {value: '', text: '-----'}));
+                $('#new_school' + assetId).empty().append($('<option>', {value: '', text: '-----'}));
+                $('#new_labroom' + assetId).empty().append($('<option>', {value: '', text: '-----'}));
+            }
+    
+            // Kiểm tra required cho school khi thay đổi department
+            var districtName = $('#new_district' + assetId).find('option:selected').text();
+            checkSchoolRequired(departmentName, districtName, $('#new_school' + assetId));
+        });
+    
+        $('[id^=new_district]').on('change', function() {
+            var assetId = $(this).attr('id').replace('new_district', '');
+            var districtId = $(this).val();
+            var districtName = $(this).find('option:selected').text(); // Lấy tên quận đã chọn
+    
+            if (districtId) {
+                var departmentName = $('#new_department' + assetId).find('option:selected').text(); // Lấy tên phòng ban đã chọn
+                $.ajax({
+                    type: 'GET',
+                    url: '/asset/get_schools/',
+                    data: {
+                        'department_id': $('#new_department' + assetId).val(),
+                        'district_id': districtId
+                    },
+                    success: function(response) {
+                        var schoolsDropdown = $('#new_school' + assetId);
+                        schoolsDropdown.empty();
+                        schoolsDropdown.append($('<option>', {
+                            value: '',
+                            text: '-----'
+                        }));
+    
+                        $.each(response.schools, function(i, school) {
+                            schoolsDropdown.append($('<option>', {
+                                value: school.id,
+                                text: school.name
+                            }));
+                        });
+                    },
+                    error: function(xhr, textStatus, errorThrown) {
+                        console.log("Error in getting schools:", xhr.responseText);
+                    }
+                });
+    
+                // Reset dropdown
+                $('#new_labroom' + assetId).empty().append($('<option>', {value: '', text: '-----'}));
+            } else {
+                $('#new_school' + assetId).empty().append($('<option>', {value: '', text: '-----'}));
+                $('#new_labroom' + assetId).empty().append($('<option>', {value: '', text: '-----'}));
+            }
+    
+            // Kiểm tra required cho school khi thay đổi district
+            var departmentName = $('#new_department' + assetId).find('option:selected').text();
+            checkSchoolRequired(departmentName, districtName, $('#new_school' + assetId));
+        });
+    
+        $('[id^=new_school]').on('change', function() {
+            var assetId = $(this).attr('id').replace('new_school', ''); // Lấy asset ID từ ID của Trường
+            var schoolId = $(this).val(); // Lấy giá trị Trường đã chọn
+    
+            if (schoolId) {
+                // Gửi yêu cầu AJAX để lấy danh sách các phòng lab thuộc Trường và hiển thị lên dropdown
+                $.ajax({
+                    type: 'GET',
+                    url: '/asset/get_labrooms/',
+                    data: {'school_id': schoolId},
+                    success: function(response) {
+                        var labroomsDropdown = $('#new_labroom' + assetId);
+                        labroomsDropdown.empty(); // Xóa các option hiện có
+    
+                        // Thêm option mặc định
+                        labroomsDropdown.append($('<option>', {
+                            value: '',
+                            text: '-----'
+                        }));
+    
+                        // Điền các option mới từ dữ liệu trả về
+                        $.each(response.labrooms, function(i, labroom) {
+                            labroomsDropdown.append($('<option>', {
+                                value: labroom.id,
+                                text: labroom.name
+                            }));
+                        });
+                    },
+                    error: function(xhr, textStatus, errorThrown) {
+                        console.log("Error in getting labrooms:", xhr.responseText);
+                    }
+                });
+            } else {
+                // Nếu không có Trường nào được chọn, reset dropdown của Phòng lab
+                $('#new_labroom' + assetId).empty().append($('<option>', {value: '', text: '-----'}));
+            }
+    
+            // Kiểm tra required cho labroom khi thay đổi school
+            checkLabroomRequired($(this), $('#new_labroom' + assetId));
+        });
+    });
+    
+        $('[id^=new_labroom]').on('change', function() {
+            // Cần thêm xử lý ở đây nếu cần
+        });
+    
+        // Hàm kiểm tra và áp dụng required cho districtSelect
+        function checkDistrictRequired(departmentId, districtSelect) {
+            if (departmentId === "1") { // Nếu là department là "Ban lãnh đạo"
+                districtSelect.removeAttr("required");
+            } else {
+                var districtName = districtSelect.find('option:selected').text().trim();
+                if (districtName.includes("Văn phòng") || districtName.includes("Văn phòng Hà Nội") || districtName.includes("Kho hành chính") || districtName.includes("Server")) {
+                    districtSelect.removeAttr("required");
+                } else {
+                    districtSelect.attr("required", "required");
+                }
+            }
+        }
+    
+   
+    
+    $('.edit-asset-button').click(function() {
+        var assetId = $(this).data('asset-id');
+        $('#asset-id-hidden').val(assetId);
+    });
+ document.addEventListener("DOMContentLoaded", function() {
+            var loadingScreen = document.getElementById("loading-screen");
+            var content = document.getElementById("content");
+
+            function checkLoadingProgress() {
+                var totalResources = document.images.length;
+                var loadedResources = 0;
+
+                for (var i = 0; i < totalResources; i++) {
+                    if (document.images[i].complete) {
+                        loadedResources++;
+                    }
+                }
+
+                var loadPercentage = (loadedResources / totalResources) * 100;
+
+                if (loadPercentage >= 95) {
+                    loadingScreen.style.display = "none";
+                    content.style.display = "block";
+
+                    // Khi loading screen ẩn, cho phép cuộn trang
+                    document.body.style.overflow = "auto";
+                    document.documentElement.style.overflow = "auto";
+                } else {
+                    window.requestAnimationFrame(checkLoadingProgress);
+                }
+            }
+
+            checkLoadingProgress();
+        });
+</script>
+{% endblock %}

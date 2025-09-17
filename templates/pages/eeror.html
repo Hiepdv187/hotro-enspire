@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+{% load static %}
+{% load bootstrap_icons %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.2.1/font/bootstrap-icons.css">
+<link rel="stylesheet" href="{% static 'bootstrap_icons/css/bootstrap_icons.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<title>Hướng dẫn xử lý lỗi</title>
+<link rel="icon" href="{% static '/images/Logo.jpg' %}">
+<style>
+.toppic{
+    z-index: 9999;
+}
+html, body{
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-image: url('static/media/Test4.png');
+    background-size:cover ;
+    background-position: relative;
+    background-repeat:repeat;
+}
+.container {
+    position: relative;
+    text-align: center;
+    display: flex;
+}
+.text-wrap-button .user-name {
+    white-space: high; /* Cho phép text wrap nếu quá dài */
+    overflow: hidden; /* Tránh text vượt ra ngoài nút */
+    text-overflow: ellipsis; /* Thêm dấu "..." nếu text quá dài */
+}
+.zoom-image {
+    display: block;
+    width: auto;
+    height: auto;
+    transition: transform 0.3s ease;
+}
+/* Apply zoom effect when hovering over the card */
+.bg-custom2:hover .zoom-image {
+    transform: scale(1.1);
+}
+/* Ensure the card has smooth transition */
+.bg-custom2 {
+    transition: transform 0.3s ease;
+}
+
+/* Style the image */
+.centered-image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; /* Đảm bảo chiều cao của ảnh đủ để hiển thị nội dung trong ảnh */
+    overflow: hidden;
+}
+
+.centered-text {
+    position: absolute;
+    bottom: 10%; /* Thay đổi giá trị tùy ý */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 50px;
+    color: darkblue;
+    padding: 0;
+}
+.row-images {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap; /* Cho phép các ảnh chuyển dòng khi không còn đủ không gian */
+    margin-top: 10px;
+}
+.row-images a {
+    flex: 1 0 200px; /* Giữ cho ảnh có chiều rộng tối thiểu là 200px, và linh hoạt khi không gian có sẵn */
+    margin: 50px; /* Khoảng cách giữa các ảnh */
+    max-height: 160px; /* Giới hạn chiều rộng tối đa của ảnh */
+    padding: 10px; /* Thêm padding để tạo khoảng trắng xung quanh ảnh */
+    box-sizing: border-box; 
+    margin-left: 0%;
+}
+    #zoomableImage {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+#zoomableImage:hover {
+    transform: scale(1.5); /* Thay đổi tỷ lệ phóng to (chọn giá trị tùy ý) */
+}
+.avatar {
+    max-width: 50px;  /* Đặt chiều rộng tối đa */
+    max-height: 35px; /* Đặt chiều cao tối đa */
+    width: 50px;
+    height: 35px;
+    border-radius: 10%; /* Làm tròn góc */
+}
+#notification-dropdown {
+    background-color: #fff; /* Màu nền của dropdown */
+    max-height: 300px; /* Độ cao tối đa của dropdown */
+    width: 300px;
+    overflow-y: auto; /* Hiển thị thanh cuộn nếu nội dung quá dài */
+    right: 50%;/* Đặt vị trí dropdown về bên trái */
+    left: 50%; /* Đảm bảo không có sự chồng chéo với left (nếu có) */
+    transform-origin: top center; /* Đặt nguồn gốc của transformation ở trên cùng bên phải */
+    transform: translateX(-50%); /* Di chuyển dropdown sang bên trái */
+}
+#notification-dropdown li {
+    margin-bottom: 5px; /* Giảm khoảng cách giữa các thông báo */
+    margin-left: 12px;
+    padding: 5px;
+}
+#notification-message a {
+    color: black; /* Chọn màu chữ mong muốn, ở đây là màu xanh dương */
+    text-decoration: none; /* Bỏ gạch chân */
+}
+
+#notification-message a:hover {
+    text-decoration: underline; /* Hiển thị gạch chân khi di chuột qua */
+}
+.notification-read {
+    background-color: #f3f3f3; /* Màu nền cho thông báo đã đọc */
+}
+#notification-badge {
+    background-color: red; /* Màu đỏ cho badge */
+    color: white; /* Màu chữ trắng để nổi bật */
+    border-radius: 30%;
+}
+#view-more-link {
+    display: block;
+    text-align: center;
+    color: #007bff; /* Màu của liên kết "Xem thêm" */
+    margin-top: 10px;
+    text-decoration: none;
+}
+#notification-container{
+    display: block;
+    margin-top: 5px;
+}
+
+#notification-header {
+    display: block;
+    margin: 10px 0;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Đường kẻ ngăn cách */
+.divider {
+    height: 1px;
+    margin: 8px 0;
+    overflow: hidden;
+    background-color: #ccc; /* Màu sắc của đường kẻ */
+}
+.disable-text {
+    pointer-events: none;
+    user-select: none;
+}
+.bg-custom {
+    background-color: #000080; /* Thay #yourCustomColor bằng mã màu bạn muốn */
+}
+.bg-custom2 {
+    box-sizing: border-box;
+    background-color: #B5F0FF;
+}
+@font-face {
+    font-family: 'Berlin Sans FB';
+    src: url('berlin-sans-fb.woff2') format('woff2'),
+        url('berlin-sans-fb.woff') format('woff');
+}
+.soft-text-style {
+    
+    font-weight: bold;
+}
+.bold-text {
+    font-weight: bold; /* Hoặc sử dụng số như 600, 700, 800 tùy vào font và hiệu ứng mong muốn */
+}
+.soft-text-style .centered-image-text h5 {
+    transition: color 0.2s; /* Tạo hiệu ứng mượt khi thay đổi màu chữ */
+    font-weight: 700;
+}
+
+.soft-text-style:hover .centered-image-text h5 {
+    color: #FF4500; 
+}
+.navbar-collapse {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Khi màn hình nhỏ, đảm bảo các phần tử vẫn ở bên phải */
+@media (max-width: 991px) {
+.navbar-collapse {
+    flex-direction: column;
+    align-items: flex-end; /* căn lề các phần tử về bên phải */
+}
+
+.navbar-nav {
+    width: 100%;
+    justify-content: center; /* Căn giữa các item nếu bạn muốn */
+}
+.row{
+    margin-top:50px;
+}
+.row1{
+    margin-top:5px;
+}
+.btn-group {
+    align-self: flex-end; /* Giữ cho btn-group ở phía bên phải */
+}
+}
+.dropdown-item:hover {
+        background-color: #080a91;
+        color: #ffffff; /* Màu nền bạn muốn thay đổi khi di chuột qua */
+    }
+.dropdown-item.delete-item:hover {
+        background-color: #ffffff; /* Màu nền khi di chuột qua */
+        color: #ffffff; /* Màu chữ khi di chuột qua */
+    }
+/* Điều chỉnh padding hoặc margin nếu cần */
+.navbar-nav, .btn-group {
+margin-right: 0;
+}
+#loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    .container-fluid {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    .p-2 {
+        padding: 0.5rem !important; /* Reduce padding if needed */
+    }
+    .row.g-1 {
+        margin-right: 0 !important;
+        margin-left: 0 !important;
+    }
+    .col-sm-3 {
+        padding-right: 0.1rem !important;
+        padding-left: 0.1rem !important; /* Adjust padding to control gap between columns */
+    }
+    .mb-1 {
+        margin-bottom: 0px !important; /* Reduce margin-bottom */
+    }
+</style>
+<nav class="navbar navbar-expand-lg sticky-top bg-light" style="position: sticky; top: 0; z-index: 99999;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/"><img src="{% static 'images/logo-web-lỗi.png'%}" style="display: flex; height: 50px; width: 130px; margin-left: 2%;"></a>
+                <div class ='ms-auto'>
+		<ul class="navbar-nac mb-2 mb-lg-0">
+                </ul>
+                <div class="ms-auto d-flex align-items-right" style='margin-right: 5px;'>
+                    <div class="btn-group">
+                        <!-- Notification Bell -->
+                        <div class="dropdown">
+                            <a class="btn btn-warning position-relative" id="bellIcon" onclick="toggleNotificationDropdown(event)" style="color: black;">
+                                <i class="bi bi-bell"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notification-badge" style="display: none;">
+                                    0
+                                </span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end p-0" id="notification-dropdown" style="width: 350px; max-height: 500px; overflow-y: auto;">
+                                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                                    <h6 class="mb-0 fw-bold">Thông báo</h6>
+                                    <a href="#" id="mark-all-read-btn" class="text-primary small" onclick="event.stopPropagation(); markAllNotificationsAsRead(); return false;">
+                                        Đánh dấu đã đọc tất cả
+                                    </a>
+                                </div>
+                                <div id="notification-message" class="p-2">
+                                    <div class="text-center p-4 text-muted">
+                                        <i class="bi bi-bell-slash fs-1 d-block mb-2"></i>
+                                        <span>Không có thông báo mới</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    &emsp;<button type="button" class="btn btn-warning dropdown-toggle text-wrap-button" style='max-width:150px; max-height: 50px;' data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+                            <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}{% static 'media/avatars/avt.jpg' %}{% endif %}" class="avatar" alt="avatar">
+                            <span class="user-name">{{request.user.first_name}}</span>
+                        </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{% url 'view_profile' %}">Thông tin cá nhân</a></li>
+                        <li><a class="dropdown-item" href="{% url 'change_password' %}">Đổi mật khẩu</a></li>
+                        <li><a class="dropdown-item" href="{% url 'view_department' %}">Quản lý tài sản</a></li>
+                        {% if request.user.is_superuser %}
+                        <li><a class="dropdown-item" href="{% url 'manage_users' %}">Cập nhật người hỗ trợ</a></li>
+                        
+                        {% endif %}
+			<li><a class="dropdown-item" href="{% url 'all_users' %}">Danh sách tài khoản</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item" type="button"><a href="{% url 'logout' %}" class="btn btn">Đăng xuất</a></div></button></li>
+                    </ul>
+
+                </div>
+            </div>
+            </div>
+        </div>
+    </nav>
+
+<center>
+<div class='col-sm-15' style='margin-bottom: 6%; margin-top:4%'>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+            <center><h1><b>Trang hướng dẫn xử lý các lỗi thường gặp | <a style = 'color: #3366FF;'>Hỗ trợ</a> <a style='color:#000080;'>enspire</a></h1></b>
+            <h5>Trang web nội bộ để hướng dẫn, xử lý các lỗi thường xảy ra của các thiết bị, bạn có thể xem cách xử lý hoặc gửi yêu cầu hỗ trợ.</h5>
+            </center>
+</div>
+</center>
+<br>
+</head>
+
+<body>
+<div id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+    <div id="content" style="display:none;">
+{% csrf_token %}
+    <div class='row-sm-5' style='min-height: 100px; background-image: url("/media/hinhnen.png");'>
+        
+        <div class="p-2 mb-4 bg-custom">
+	<center>
+    <div class="row" style="margin-top: -1%">
+        <div class="row-sm-2">
+            <div class="bs-sliderbar" style="background-color: none;">
+                <div class="container-fluid">
+                    <nav>
+                        <div class="container-fluid image-container row-images" style="min-height: 95%; margin-bottom: 2px;">
+                            <div class="row g-1"> <!-- Adjusted g-1 to reduce gap between images -->
+                                <div class="col-sm-3 mb-1"> <!-- Adjusted mb-1 to reduce gap between images -->
+                                    <a class="soft-text-style image-container" href="{% url 'tvbox' %}" target="_blank" style='text-decoration: none; color: #000066;'>
+        
+ <div class="p-2 bg-custom2 rounded-4" style='width: 312px;'>
+                                            <center>
+						
+                                                <img src="{% static 'images/box.jpg'%}" class='zoom-image rounded-4' style='max-height:160px; width: 160px;' alt="TV Box">
+                                                
+						<div class="centered-image-text" >
+                                                    <h5 class = 'bold-text'>TV Box và khung cảm ứng</h5>
+
+						</div>
+                                            </center>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <div class="col-sm-3 mb-1">
+                                    <a class="soft-text-style image-container" href="{% url 'tichhop' %}" target="_blank" style='text-decoration: none; color: #000066;'>
+                                        <div class="p-2 bg-custom2 rounded-4" style='width: 312px;'>
+                                            <center>
+                                                <img src="{% static 'images/Tuong_tac.jpg' %}" class="zoom-image rounded-4" style='max-height:160px;width: 160px;' alt="TV tích hợp">
+                                                <div class="centered-image-text">
+                                                    <h5 class="bold-text">TV tích hợp</h5>
+                                                </div>
+                                            </center>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="col-sm-3 mb-1">
+                                    <a class="soft-text-style image-container" href="{% url 'pc' %}" target="_blank" style='text-decoration: none; color: #000066;'>
+                                        <div class="p-2 bg-custom2 rounded-4" style='width: 312px;'>
+                                            <center>
+                                                <img src="{% static 'images/PC2.jpg' %}" class="zoom-image rounded-4" style='max-height:160px;width: 160px;' alt="PC (máy để bàn)">
+                                                <div class="centered-image-text">
+                                                    <h5 class="bold-text">PC</h5>
+                                                </div>
+                                            </center>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <div class="col-sm-3 mb-1">
+                                    <a class="soft-text-style image-container" href="{% url 'view_department' %}" target="_blank" style='text-decoration: none; color: #000066;'>
+                                        <div class="p-2 bg-custom2 rounded-4" style='width: 312px;'>
+                                            <center>
+                                                <img src="{% static 'images/asset_chart.png' %}" class="zoom-image rounded-4" style='max-height:160px;width: 160px;' alt="Tài sản">
+                                                <div class="centered-image-text">
+                                                    <h5 class="bold-text">Tài sản</h5>
+                                                </div>
+                                            </center>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </nav>
+ </div>
+</div>
+</div>
+</div>
+    <div class="row" style="margin-top: -57px;"> <!-- Remove margin-top to bring sections closer -->
+        <div class="row-sm-3">
+            <div class="container-fluid">
+                <nav>
+                    <div class="container-fluid; image-container; row-images" style="min-height: 95%;">
+                        <div class="row g-1"> <!-- Adjusted g-1 to reduce gap between images -->
+                            <div class="col-sm-3 mb-1"> <!-- Adjusted mb-1 to reduce gap between images -->
+                                <a class="soft-text-style image-container" href="{% url 'todo_dashboard' %}" target="_blank" style='text-decoration: none; color: #000066;'>
+                                    <div class="p-2 bg-custom2 rounded-4" style='width: 312px;'>
+                                        <center>
+                                            <img src="{% static 'images/checklist.png' %}" class="zoom-image rounded-4" style='max-height:160px;width: 160px;' alt="Kế hoạch hàng ngày">
+                                            <div class="centered-image-text">
+                                                <h5 class="bold-text">Kế hoạch hàng ngày</h5>
+                                            </div>
+                                        </center>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-sm-3 mb-1">
+                                <a class="soft-text-style image-container" href="{% url 'caiapp' %}" target="_blank" style='text-decoration: none; color: #000066;'>
+                                    <div class="p-2 bg-custom2 rounded-4" style='width: 312px;'>
+                                        <center>
+                                            <img src='{% static 'images/app.png' %}' class='zoom-image' style='max-height:160px; width: 160px;' alt="Hướng dẫn cài đặt">
+                                            <div class="centered-image-text">
+                                                <h5 class="bold-text">Cài app Enspire Online</h5>
+                                            </div>
+                                        </center>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-sm-3 mb-1">
+                                <a class="soft-text-style image-container" href="{% url 'mang' %}" target="_blank" style='text-decoration: none; color: #000066;'>
+                                    <div class="p-2 bg-custom2 rounded-4" style='width: 312px;'>
+                                        <center>
+                                            <img src='{% static 'images/internet.jpg' %}' class="zoom-image rounded-4" style='max-height:160px;width: 160px;' alt="Mạng và wifi">
+                                            <div class="centered-image-text">
+                                                <h5 class="bold-text">Mạng và Wifi</h5>
+                                            </div>
+                                        </center>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-sm-3 mb-1">
+                                <a class="soft-text-style image-container" href="{% url 'dashboard' %}" target="_blank" style='text-decoration: none; color: #000066;'>
+                                    <div class="p-2 bg-custom2 rounded-4" style='width: 312px;'>
+                                        <center>
+                                            <img src='{% static 'images/help.png' %}' class="zoom-image rounded-4" style="max-height: 160px;width: 160px;" alt='Yêu cầu hỗ trợ'>
+                                            <div class="centered-image-text">
+                                                <h5 class="bold-text">Yêu cầu hỗ trợ</h5>
+                                            </div>
+                                        </center>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+</center>
+</div>
+
+        <div class="container-fluid card shadow">
+            
+            <div class="row p-5 mb-4 bg-light ">
+                <div class="col-md-8" style="margin-left: 5%; margin-top: 5%">
+                    <div class="py-6">
+                        <h1 class="display-6 fw-bold">TV BOX VÀ KHUNG CẢM ỨNG</h1>
+                        <p style="word-wrap: break-word;">- Hướng dẫn nhận biết các linh kiện của tv box, và hướng dẫn giải quyết những lỗi đơn giản có thể gặp.</p>
+                        <a href="{% url 'tvbox' %}" target="_blank" class="btn btn-primary ">Xem chi tiết &#8594; </a>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                <div class="card-body">
+                    <div class="py-6">
+                        <center><img src="{% static 'images/box.jpg'%}" class=' rounded-4 img-fluid' style='max-height:300px; width: 300px;'></center>
+            </div>
+                </div>
+                </div>
+                <p></p>
+                <p></p>
+                <div class="card shadow">
+                    <div class="row"> 
+                        <div class="col-md-3"> 
+                            <div class="card-body">
+                                <div class="py-6" style="margin-left: 20%;">
+                                    <img src="{% static 'images/Tuong_tac.jpg' %}" class="rounded-4 img-fluid" style='max-height:300px; width: 300px;'/>
+                                </div>
+                            </div>
+                        </div>
+                
+                        <div class="col-md-9">
+                            <div class="py-6" style ="margin-top: 10%; margin-left: 20%;">
+                                <h1 class="display-6 fw-bold">TV TÍCH HỢP</h1>
+                                <p style="word-wrap: break-word;">- Hướng dẫn sử dụng màn tv tích hợp 65 inch; 75 inch và màn 21.5 inch, và hướng dẫn giải quyết những lỗi đơn giản có thể gặp.</p>
+                                <a href="{% url 'tichhop' %}" target="_blank" class="btn btn-primary">Xem chi tiết &#8594; </a>
+                            </div>
+                        </div>
+                    </div> 
+                </div>
+            <div class="col-md-8" style="margin-left: 5%; margin-top: 5%">
+                <div class="py-6">
+                    <h1 class="display-6 fw-bold">PC (MÁY TÍNH ĐỂ BÀN HOẶC LAPTOP)</h1>
+                    <p style="word-wrap: break-word;">- Hướng dẫn nhận biết các linh kiện của 1 bộ máy tính, và hướng dẫn giải quyết những lỗi đơn giản có thể gặp.</p>
+                    <a href="{% url 'pc' %}" target="_blank" class="btn btn-primary">Xem chi tiết &#8594; </a>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+            <div class="card-body">
+                <div class="py-6">
+                    <center><img src="{% static 'images/PC2.jpg'%}" class=' rounded-4 img-fluid' style='max-height:300px; width: 300px;'></center>
+        </div>
+            </div>
+            </div>
+            <p></p>
+            <p></p>
+            <div class="card shadow">
+                <div class="row"> 
+                    <div class="col-md-3"> 
+                        <div class="card-body">
+                            <div class="py-6" style="margin-left: 20%;">
+                        <img src="{% static 'images/asset_chart.png' %}" class="rounded-4 img-fluid" style='max-height:300px;width: 300px;'/>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="py-6" style ="margin-top: 10%; margin-left: 20%;">
+                        <h1 class="display-6 fw-bold">QUẢN LÝ TÀI SẢN</h1>
+                        <p style="word-wrap: break-word;">- Quản lý, tổng hợp, đánh giá trang thiết bị đang có tại nơi làm việc.</p>
+                        <a href="{% url 'view_department' %}" target="_blank" class="btn btn-primary">Xem chi tiết &#8594; </a>
+                    </div>
+                </div>
+            </div> 
+        </div>
+                <p></p>
+                <p></p>
+                <div class="col-md-8" style="margin-left: 5%; margin-top: 5%">
+                    <div class="py-6">
+                        <h1 class="display-6 fw-bold">CÔNG VIỆC HÀNG NGÀY</h1>
+                        <p style="word-wrap: break-word;">- Khi có quá nhiều công việc, hãy tạo 1 check list công việc hàng ngày để quản lý dễ dàng hơn.</p>
+                        <a href="{% url 'todo_dashboard' %}" target="_blank" class="btn btn-primary">Tạo ngay &#8594; </a>
+                    </div>
+                </div>
+    
+                <div class="col-md-3">
+                <div class="card-body">
+                    <div class="py-6">
+                        <center><img src="{% static 'images/checklist.png'%}" class=' rounded-4 img-fluid' style='max-height:300px; width: 300px;'></center>
+            </div>
+                </div>
+                </div>
+                <p></p>
+                <p></p>
+                <div class="card shadow">
+                    <div class="row"> 
+                        <div class="col-md-3"> 
+                            <div class="card-body">
+                                <div class="py-6" style="margin-left: 20%;">
+                            <img src="{% static 'images/app.png' %}" class="rounded-4 img-fluid" style='max-height:300px;width: 300px;'/>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="py-6" style ="margin-top: 10%; margin-left: 20%;">
+                            <h1 class="display-6 fw-bold">HƯỚNG DẪN CÀI ĐẶT APP ENSPIRE ONLINE</h1>
+                            <p style="word-wrap: break-word;">- Hướng dẫn cài đặt app trên các thiết bị thông minh.</p>
+                            <a href="{% url 'caiapp' %}" target="_blank" class="btn btn-primary">Xem ngay &#8594; </a>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                    <p></p>
+                    <p></p>
+                    <div class="col-md-8" style="margin-left: 5%; margin-top: 5%">
+                        <div class="py-6">
+                            <h1 class="display-6 fw-bold">MẠNG VÀ WIFI</h1>
+                            <p style="word-wrap: break-word;">- Tìm hiểu về các thiết bị mạng, modem, switch, ........ và hướng dẫn xử lý các lỗi thường gặp.</p>
+                            <a href="{% url 'mang' %}" target="_blank" class="btn btn-primary">Xem chi tiết &#8594; </a>
+                        </div>
+                    </div>
+        
+                    <div class="col-md-3">
+                    <div class="card-body">
+                        <div class="py-6">
+                            <center><img src="{% static 'images/internet.jpg'%}" class=' rounded-4 img-fluid' style='max-height:300px; width: 300px;'></center>
+                </div>
+                    </div>
+                    </div>
+                    <p></p>
+                    <p></p>
+                    <div class="card shadow">
+                        <div class="row"> 
+                            <div class="col-md-3"> 
+                                <div class="card-body">
+                                    <div class="py-6" style="margin-left: 20%;">
+                                <img src="{% static 'images/help.png' %}" class="rounded-4 img-fluid" style='max-height:300px;width: 300px;'/>
+                    </div>
+                        </div>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="py-6" style ="margin-top: 10%; margin-left: 20%;">
+                                <h1 class="display-6 fw-bold">YÊU CẦU HỖ TRỢ</h1>
+                                <p style="word-wrap: break-word;">- Yêu cầu hỗ trợ nếu không tự xử lý được lỗi hoặc các vấn đề gặp phải.</p>
+                                <a href="{% url 'dashboard' %}" target="_blank" class="btn btn-primary">Gửi yêu cầu &#8594; </a>
+                            </div>
+                        </div>
+            </div>
+        </div>
+</div>
+
+<script src="static/js/save-notifications.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+            var loadingScreen = document.getElementById("loading-screen");
+            var content = document.getElementById("content");
+
+            function checkLoadingProgress() {
+                var totalResources = document.images.length;
+                var loadedResources = 0;
+
+                for (var i = 0; i < totalResources; i++) {
+                    if (document.images[i].complete) {
+                        loadedResources++;
+                    }
+                }
+
+                var loadPercentage = (loadedResources / totalResources) * 100;
+
+                if (loadPercentage >= 70) {
+                    loadingScreen.style.display = "none";
+                    content.style.display = "block";
+
+                    // Khi loading screen ẩn, cho phép cuộn trang
+                    document.body.style.overflow = "auto";
+                    document.documentElement.style.overflow = "auto";
+                } else {
+                    window.requestAnimationFrame(checkLoadingProgress);
+                }
+            }
+
+            checkLoadingProgress();
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+        fetchNotifications();
+    
+        const websocketUrl = `ws://${window.location.host}/ws/notifications/`;
+        let notificationSocket = new WebSocket(websocketUrl);
+    
+        function setupWebSocketHandlers(socket) {
+            socket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                console.log('WebSocket message received:', data);
+                if (data.type === 'notification') {
+                    addNotification(data.id, data.message, false, data.timestamp);
+                }
+            };
+    
+            socket.onclose = function(e) {
+                console.log('WebSocket connection closed. Reconnecting...', e.reason);
+                setTimeout(function() {
+                    notificationSocket = new WebSocket(websocketUrl);
+                    setupWebSocketHandlers(notificationSocket);
+                }, 1000);
+            };
+    
+            socket.onerror = function(err) {
+                console.error('WebSocket encountered error: ', err);
+                socket.close();
+            };
+        }
+    
+        setupWebSocketHandlers(notificationSocket);
+    
+        notificationSocket.onopen = function() {
+            console.log('WebSocket connection established');
+        };
+    });
+
+    // Global notification variables
+    let notifications = [];
+    const notificationBadge = document.getElementById('notification-badge');
+    const notificationDropdown = document.getElementById('notification-dropdown');
+    const notificationMessage = document.getElementById('notification-message');
+    const markAllReadBtn = document.getElementById('mark-all-read-btn');
+    const notificationToggle = document.getElementById('notificationDropdown');
+
+    // Initialize when the DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load notifications from localStorage first for instant display
+        loadNotificationsFromStorage();
+        
+        // Set up event listeners
+        setupEventListeners();
+        
+        // Initial fetch of notifications
+        fetchNotifications();
+        
+        // Set up WebSocket connection if supported
+        if ('WebSocket' in window) {
+            const notificationSocket = new WebSocket(
+                'ws://' + window.location.host + 
+                '/ws/notifications/' + '?token=' + getCookie('csrftoken')
+            );
+            
+            // Set up WebSocket handlers
+            setupWebSocketHandlers(notificationSocket);
+        } else {
+            console.warn('WebSocket is not supported in this browser');
+        }
+        
+        // Set up polling as a fallback for WebSocket
+        setInterval(fetchNotifications, 30000); // Check for updates every 30 seconds
+    });
+
+    // Function to set up WebSocket handlers
+    function setupWebSocketHandlers(socket) {
+        socket.onopen = function(e) {
+            console.log('WebSocket connection established');
+            // Send authentication token if available
+            const token = getCookie('csrftoken');
+            if (token) {
+                socket.send(JSON.stringify({
+                    'type': 'authenticate',
+                    'token': token
+                }));
+            }
+        };
+
+        // Listen for messages
+        socket.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'notification') {
+                    const notification = data.notification;
+                    const updated = addNotification(
+                        notification.id,
+                        notification.message,
+                        notification.read,
+                        notification.timestamp
+                    );
+                    
+                    if (updated) {
+                        saveNotificationsToStorage();
+                        updateNotificationUI();
+                        
+                        // Show toast for new unread notifications
+                        if (!notification.read) {
+                            showNotificationToast(notification.message);
+                        }
+                    }
+                } else if (data.type === 'ping') {
+                    // Respond to ping with pong
+                    socket.send(JSON.stringify({type: 'pong'}));
+                }
+            } catch (error) {
+                console.error('Error processing WebSocket message:', error);
+            }
+        };
+
+        // Connection closed
+        socket.onclose = function(event) {
+            console.log('WebSocket connection closed');
+            // Attempt to reconnect after a delay if this wasn't a clean close
+            if (event.code !== 1000) {
+                setTimeout(function() {
+                    const newSocket = new WebSocket(
+                        'ws://' + window.location.host + 
+                        '/ws/notifications/' + '?token=' + getCookie('csrftoken')
+                    );
+                    setupWebSocketHandlers(newSocket);
+                }, 5000);
+            }
+        };
+
+        // Connection error
+        socket.onerror = function(err) {
+            console.error('WebSocket error:', err);
+        };
+    }
+
+    // Function to get CSRF token from cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Function to toggle notification dropdown
+    function toggleNotificationDropdown(event) {
+        if (event) {
+            event.stopPropagation();
+        }
+        notificationDropdown.classList.toggle('show');
+        
+        // Mark all notifications as read when dropdown is opened
+        if (notificationDropdown.classList.contains('show')) {
+            const unreadNotifications = notifications.filter(n => !n.read);
+            if (unreadNotifications.length > 0) {
+                markAllNotificationsAsRead();
+            }
+        }
+    }
+    
+    // Function to save notifications to localStorage
+    function saveNotificationsToStorage() {
+        try {
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+        } catch (e) {
+            console.error('Error saving notifications to localStorage:', e);
+        }
+    }
+
+    // Function to load notifications from localStorage
+    function loadNotificationsFromStorage() {
+        try {
+            const savedNotifications = localStorage.getItem('notifications');
+            if (savedNotifications) {
+                const parsed = JSON.parse(savedNotifications);
+                if (Array.isArray(parsed)) {
+                    notifications = parsed;
+                    updateNotificationUI();
+                }
+            }
+        } catch (e) {
+            console.error('Error loading notifications from localStorage:', e);
+        }
+    }
+
+    // Function to fetch notifications from the server
+    function fetchNotifications() {
+        fetch('/ticket/get-notifications/')
+            .then(response => response.json())
+            .then(serverNotifications => {
+                // Create a map of existing notifications for quick lookup
+                const existingNotifications = new Map(notifications.map(n => [n.id, n]));
+                let hasUpdates = false;
+
+                // Process each notification from the server
+                serverNotifications.forEach(serverNotif => {
+                    const existingNotif = existingNotifications.get(serverNotif.id);
+
+                    // If notification doesn't exist or server has a newer version
+                    if (!existingNotif ||
+                        new Date(serverNotif.timestamp) > new Date(existingNotif.timestamp)) {
+                        // Update or add the notification
+                        addNotification(
+                            serverNotif.id,
+                            serverNotif.message,
+                            serverNotif.read,
+                            serverNotif.timestamp
+                        );
+                        hasUpdates = true;
+                    }
+                });
+
+                // If we have updates, save to localStorage and update UI
+                if (hasUpdates) {
+                    saveNotificationsToStorage();
+                    updateNotificationUI();
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching notifications:', error);
+            });
+    }
+
+    // Function to add or update a notification
+    function addNotification(id, message, read, timestamp) {
+        const notificationObject = {
+            id: id,
+            message: message,
+            read: read,
+            timestamp: timestamp
+        };
+
+        // Check if notification already exists
+        const existingIndex = notifications.findIndex(n => n.id === id);
+
+        if (existingIndex === -1) {
+            // Add new notification at the beginning of the array
+            notifications.unshift(notificationObject);
+
+            // If we've reached the limit, remove the oldest notification
+            if (notifications.length > 200) {
+                notifications.pop();
+            }
+
+            // Show toast for new unread notifications
+            if (!read) {
+                showNotificationToast(message);
+            }
+
+            return true; // Indicate that an update was made
+        } else {
+            // Update existing notification if the server version is newer or if read status changed
+            const existingNotif = notifications[existingIndex];
+            const serverTimestamp = new Date(timestamp);
+            const localTimestamp = new Date(existingNotif.timestamp);
+
+            if (serverTimestamp > localTimestamp || existingNotif.read !== read) {
+                // Keep the existing notification but update its properties
+                existingNotif.message = message;
+                existingNotif.read = read;
+                existingNotif.timestamp = timestamp;
+
+                // Show toast for updated unread notifications
+                if (!read && serverTimestamp > localTimestamp) {
+                    showNotificationToast(message);
+                }
+
+                return true; // Indicate that an update was made
+            }
+            return false; // No update needed
+        }
+    }
+
+    // Function to update the notification UI
+    function updateNotificationUI() {
+        // Clear existing notifications
+        notificationMessage.innerHTML = '';
+
+        // Sort notifications by timestamp (newest first)
+        const sortedNotifications = [...notifications].sort((a, b) =>
+            new Date(b.timestamp) - new Date(a.timestamp)
+        );
+
+        // Count unread notifications
+        const unreadCount = notifications.filter(n => !n.read).length;
+
+        // Update the unread count in the badge
+        notificationBadge.textContent = unreadCount > 0 ? unreadCount : '';
+        notificationBadge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+
+        // Display notifications in the dropdown
+        if (notifications.length === 0) {
+            const noNotifications = document.createElement('div');
+            noNotifications.className = 'text-center p-4 text-muted';
+            noNotifications.innerHTML = '<i class="bi bi-bell-slash fs-1 d-block mb-2"></i>Không có thông báo mới';
+            notificationMessage.appendChild(noNotifications);
+        } else {
+            // Show only the 10 most recent notifications
+            sortedNotifications.slice(0, 10).forEach((notification) => {
+                const notificationItem = document.createElement('div');
+                notificationItem.className = `notification-item ${!notification.read ? 'unread' : ''}`;
+
+                // Store the notification ID as a data attribute
+                notificationItem.setAttribute('data-notification-id', notification.id);
+
+                // Create notification content
+                notificationItem.innerHTML = `
+                    <div class="notification-content">
+                        <div class="notification-details">
+                            <div class="notification-message">${notification.message}</div>
+                            <div class="notification-time"><small>${formatTimeAgo(new Date(notification.timestamp))}</small></div>
+                        </div>
+                    </div>
+                `;
+
+                // Add click handler for the notification item
+                notificationItem.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Mark as read if not already read
+                    if (!notification.read) {
+                        markNotificationAsRead(notification.id);
+                    }
+
+                    // Close the dropdown
+                    notificationDropdown.classList.remove('show');
+                });
+
+                notificationMessage.appendChild(notificationItem);
+            });
+        }
+    }
+
+    // Helper function to format time as "time ago"
+    function formatTimeAgo(date) {
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+
+        const intervals = {
+            'năm': 31536000,
+            'tháng': 2592000,
+            'tuần': 604800,
+            'ngày': 86400,
+            'giờ': 3600,
+            'phút': 60,
+            'giây': 1
+        };
+
+        for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+            const interval = Math.floor(seconds / secondsInUnit);
+            if (interval >= 1) {
+                return `${interval} ${unit} trước`;
+            }
+        }
+
+        return 'Vừa xong';
+    }
+
+    // Function to mark notification as read
+    function markNotificationAsRead(id) {
+        if (!id || id === 'undefined') {
+            console.error('Invalid notification ID:', id);
+            return;
+        }
+
+        // Find the notification
+        const notification = notifications.find(n => n.id === id);
+        if (!notification) {
+            console.error('Notification not found:', id);
+            return;
+        }
+
+        // If already read, do nothing
+        if (notification.read) {
+            return;
+        }
+
+        // Mark as read in local state
+        notification.read = true;
+
+        // Update UI
+        updateNotificationUI();
+
+        // Save to localStorage
+        saveNotificationsToStorage();
+
+        // Send request to mark as read on the server
+        const csrftoken = getCookie('csrftoken');
+        fetch('/ticket/mark-notification-as-read/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ notification_id: id })
+        }).catch(error => {
+            console.error('Error marking notification as read:', error);
+        });
+    }
+
+    // Function to mark all notifications as read
+    function markAllNotificationsAsRead() {
+        let hasUpdates = false;
+        const now = new Date().toISOString();
+        
+        // Mark all as read in local storage
+        notifications.forEach(notification => {
+            if (!notification.read) {
+                notification.read = true;
+                notification.read_at = notification.read_at || now;
+                hasUpdates = true;
+            }
+        });
+        
+        if (hasUpdates) {
+            // Update UI
+            updateNotificationUI();
+            
+            // Save to local storage
+            saveNotificationsToStorage();
+            
+            // Update server
+            fetch('/ticket/mark-all-notifications-read/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    timestamp: now
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to mark all notifications as read');
+                }
+                return response.json();
+            })
+            .catch(error => {
+                console.error('Error marking all notifications as read:', error);
+                // Show error message to user
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Không thể đánh dấu tất cả thông báo là đã đọc. Vui lòng thử lại sau.');
+                }
+            });
+        }
+    }
+
+    // Function to show notification toast
+    function showNotificationToast(message) {
+        // Check if toastr is available
+        if (typeof toastr !== 'undefined') {
+            toastr.options = {
+                closeButton: true,
+                progressBar: true,
+                positionClass: 'toast-top-right',
+                timeOut: 5000,
+                extendedTimeOut: 2000,
+                preventDuplicates: true
+            };
+            
+            toastr.info(message, 'Thông báo mới');
+        }
+    }
+
+    // Function to set up event listeners
+    function setupEventListeners() {
+        // Mark all as read button click handler
+        if (markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                markAllNotificationsAsRead();
+            });
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (notificationDropdown && !notificationDropdown.contains(e.target) && 
+                notificationToggle && !notificationToggle.contains(e.target)) {
+                notificationDropdown.classList.remove('show');
+            }
+        });
+
+        // Prevent dropdown from closing when clicking inside it
+        if (notificationDropdown) {
+            notificationDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+    }
+    
+    
+</script>
+</body>
+</html>

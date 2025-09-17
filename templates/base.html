@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="vi">
+{% load static %}
+{% load widget_tweaks %}
+<head>
+{% load bootstrap_icons %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.2.1/font/bootstrap-icons.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.2.1/font/fonts/bootstrap-icons.woff?052ad648d829c462d284477c1ceb645d" as="font" type="font/woff" crossorigin="anonymous">
+
+<link rel="stylesheet" href="{% static 'bootstrap_icons/css/bootstrap_icons.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+<title>Ensipre Error</title>
+<link rel="icon" href="{% static '/images/Logo.jpg' %}">
+</head>
+<style>
+html, body{
+    height: 100%;
+    background-image: url('/static/media/pexels-eberhard-grossgasteiger-2310713.jpg/');
+    background-size:cover ;
+    background-position: relative;
+    background-repeat:repeat;
+    height: fit-content;
+    margin-bottom: auto;
+}
+.avatar {
+    max-width: 50px;
+    max-height: 35px;
+    width: 50px;
+    height: 35px;
+    border-radius: 10%; 
+}
+#notification-dropdown {
+    background-color: #fff; /* Màu nền của dropdown */
+    max-height: 300px; /* Độ cao tối đa của dropdown */
+    width: 300px;
+    overflow-y: auto; /* Hiển thị thanh cuộn nếu nội dung quá dài */
+    right: 50%;/* Đặt vị trí dropdown về bên trái */
+    left: 50%; /* Đảm bảo không có sự chồng chéo với left (nếu có) */
+    transform-origin: top center; /* Đặt nguồn gốc của transformation ở trên cùng bên phải */
+    transform: translateX(-50%); /* Di chuyển dropdown sang bên trái */
+}
+#notification-dropdown li {
+    margin-bottom: 5px; /* Giảm khoảng cách giữa các thông báo */
+    margin-left: 12px;
+    padding: 5px;
+}
+#notification-message a {
+    color: black; /* Chọn màu chữ mong muốn, ở đây là màu xanh dương */
+    text-decoration: none; /* Bỏ gạch chân */
+}
+
+#notification-message a:hover {
+    text-decoration: underline; /* Hiển thị gạch chân khi di chuột qua */
+}
+.notification-read {
+    background-color: #f3f3f3; /* Màu nền cho thông báo đã đọc */
+}
+#notification-badge {
+    background-color: red; /* Màu đỏ cho badge */
+    color: white; /* Màu chữ trắng để nổi bật */
+    border-radius: 30%;
+}
+#view-more-link {
+    display: block;
+    text-align: center;
+    color: #007bff; /* Màu của liên kết "Xem thêm" */
+    margin-top: 10px;
+    text-decoration: none;
+}
+#notification-container{
+    display: block;
+    margin-top: 5px;
+}
+
+#notification-header {
+    display: block;
+    margin: 10px 0;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Notification styles */
+#notification-container {
+    position: relative;
+    margin-right: 15px;
+}
+
+#notification-dropdown {
+    position: absolute;
+    width: 400px;
+    max-height: 80vh;
+    overflow: hidden;
+    padding: 0;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    right: 0;
+    left: auto;
+    margin-top: 8px;
+    transform: none !important;
+    top: 100% !important;
+    will-change: transform;
+    display: none;
+    background: #fff;
+    z-index: 1050;
+}
+
+#notification-container.show #notification-dropdown {
+    display: block;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Notification item styles */
+.notification-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background-color: #f8f9fa;
+}
+
+.notification-item.unread {
+    background-color: #f8f9ff;
+    border-left: 3px solid #0d6efd;
+}
+
+.notification-item .notification-content {
+    display: flex;
+    align-items: flex-start;
+}
+
+.notification-item .notification-icon {
+    margin-right: 12px;
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+.notification-item.unread .notification-icon {
+    color: #0d6efd;
+}
+
+.notification-item .notification-details {
+    flex: 1;
+}
+
+.notification-item .notification-message {
+    margin-bottom: 4px;
+    color: #212529;
+}
+
+.notification-item .notification-time {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+/* Badge styles */
+#notification-badge {
+    font-size: 0.6rem;
+    padding: 0.25em 0.5em;
+    min-width: 1.2em;
+    height: 1.2em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    top: 0;
+    right: 0;
+    transform: translate(25%, -25%);
+}
+
+#notification-dropdown .dropdown-header {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: #212529;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+#notification-dropdown .dropdown-header button {
+    font-size: 0.8rem;
+    padding: 0.125rem 0.5rem;
+}
+
+#notification-message {
+    padding: 0;
+    margin: 0;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-unread {
+    background-color: #f8f9fa;
+    font-weight: 500;
+    border-left: 3px solid #0d6efd;
+}
+
+.notification-unread:hover {
+    background-color: #e9ecef;
+    cursor: pointer;
+}
+
+#notification-message .dropdown-item {
+    white-space: normal;
+    word-wrap: break-word;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.15s ease-in-out;
+    color: #212529;
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: 0;
+}
+
+#notification-message .dropdown-item:last-child {
+    border-bottom: none;
+}
+
+#notification-message .dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #0d6efd;
+}
+
+#notification-message a {
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+#notification-message a:hover {
+    text-decoration: underline;
+}
+
+#view-more-link {
+    display: block;
+    text-align: center;
+    padding: 0.5rem 1rem;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: background-color 0.15s ease-in-out;
+}
+
+#view-more-link:hover {
+    background-color: #e9ecef;
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+/* Badge styles */
+#notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    padding: 0.25em 0.5em;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 10rem;
+    background-color: #dc3545;
+    color: white;
+    display: none;
+    min-width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+/* Notification timestamp */
+.notification-time {
+    display: block;
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+
+/* Notification item hover effect */
+.notification-item {
+    transition: transform 0.1s ease-in-out;
+}
+
+.notification-item:hover {
+    transform: translateX(2px);
+    background-color: #f8f9fa;
+}
+
+/* Scrollbar styling for notification dropdown */
+#notification-message::-webkit-scrollbar {
+    width: 6px;
+}
+
+#notification-message::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#notification-message::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+#notification-message::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Đường kẻ ngăn cách */
+.divider {
+    height: 1px;
+    margin: 8px 0;
+    overflow: hidden;
+    background-color: #e9ecef;
+}
+.navbar-collapse {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Khi màn hình nhỏ, đảm bảo các phần tử vẫn ở bên phải */
+@media (max-width: 991px) {
+.navbar-collapse {
+    flex-direction: column;
+    align-items: flex-end; /* căn lề các phần tử về bên phải */
+}
+
+.navbar-nav {
+    width: 100%;
+    justify-content: center; /* Căn giữa các item nếu bạn muốn */
+}
+
+.btn-group {
+    align-self: flex-end; /* Giữ cho btn-group ở phía bên phải */
+}
+}
+
+/* Điều chỉnh padding hoặc margin nếu cần */
+.navbar-nav, .btn-group {
+margin-right: 0;
+}
+.dropdown-item:hover {
+        background-color: #080a91;
+        color: #ffffff; /* Màu nền bạn muốn thay đổi khi di chuột qua */
+    }
+.dropdown-item.delete-item:hover {
+        background-color: #ffffff; /* Màu nền khi di chuột qua */
+        color: #ffffff; /* Màu chữ khi di chuột qua */
+    }
+</style>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top bg-dark">
+	<div class=" d-flex align-items-left">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/"></a>
+	<div class="d-flex align-items-center">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+            aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                
+                {% if request.user.is_customer %}
+		&emsp;<strong><h4><a class="nav-link active" aria-current="page" href="/" style="color: white;">Trang chủ</a></h4></strong>
+                &emsp;<div class="nav-item dropdown"><a class="nav-link active dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                    data-bs-toggle="dropdown" aria-expanded="false" style="color: white;">
+                        Phiếu
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <li><a class="btn dropdown-item" href="{% url 'create_ticket' %}">Tạo phiếu</a></li>
+                        <li><a class="btn dropdown-item" href="{% url 'customer_active_tickets' %}">Phiếu chờ xử lý</a></li>
+                        <li><a class="btn dropdown-item" href="{% url 'customer_resolved_tickets' %}">Phiếu đã xử lý</a></li>
+                        <li><a class="btn dropdown-item" href="{% url 'customer_view_tickets' %}">Tất cả phiếu</a></li>
+                    </ul>
+                    </div>
+                    {% elif request.user.is_engineer %}
+		    &emsp;<strong><h4><a class="nav-link active" aria-current="page" href="/" style="color: white;">Trang chủ</a></h4></strong>
+                    &emsp;<div class="nav-item dropdown"><a class="nav-link active dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false" style="color: white;">
+                            Phiếu
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li><a class="btn dropdown-item" href="{% url 'engineer_active_tickets' %}">Phiếu chờ xử lý</a></li>
+                            <li><a class="btn dropdown-item" href="{% url 'engineer_resolved_tickets' %}">Phiếu đã xử lý</a></li>
+                            <li><a class="btn dropdown-item" href="{% url 'engineer_view_tickets' %}">Tất cả phiếu</a></li>
+                        </ul>
+                        </div>
+                    {% endif %}
+                {% if request.user.is_superuser %}
+		&emsp;<strong><h4><a class="nav-link active" aria-current="page" href="/" style="color: white;">Trang chủ</a></h4></strong>
+                &emsp;<div class="nav-item dropdown"><a class="nav-link active dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                    data-bs-toggle="dropdown" aria-expanded="false" style="color: white;">
+                        Phiếu
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <li><a class="btn dropdown-item" href="{% url 'admin_create_ticket' %}">Tạo phiếu</a></li>
+                        <li><a class="btn dropdown-item" href="{% url 'admin_active_tickets' %}">Phiếu chờ xử lý</a></li>
+                        <li><a class="btn dropdown-item" href="{% url 'admin_resolved_tickets' %}">Phiếu đã xử lý</a></li>
+                        <li><a class="btn dropdown-item" href="{% url 'admin_view_tickets' %}">Tất cả phiếu</a></li>
+                    </ul>
+                    </div>
+                {% endif %}
+                 &emsp;<div class="nav-item dropdown"><a class="nav-link active dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                    data-bs-toggle="dropdown" aria-expanded="false" style="color: white;">
+                        Note
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <li><a class="btn dropdown-item" href="{% url 'create_todo_list' %}">Tạo check list</a></li>
+                        <li><a class="btn dropdown-item" href="{% url 'active_todo_list' %}">Công việc chưa xong</a></li>
+                        <li><a class="btn dropdown-item" href="{% url 'resolved_todo_list' %}">Công việc đã xong</a></li>
+                        <li><a class="btn dropdown-item" href="{% url 'view_todo_list' %}">Tất cả công việc</a></li>
+                    </ul>
+                </div>
+                    
+                 &emsp;<a class="nav-link active" aria-current="page" href="{% url 'view_department' %}" style="color: white;">Tài sản</a>
+            </div>
+        </div>
+</div>
+</div>
+		
+                <div class="ms-auto d-flex align-items-center" style="margin-right: 15px;">
+                    <div id="notification-container">
+                        <button class="btn btn-warning position-relative" id="bellIcon" onclick="toggleNotificationDropdown(event)" style="background: none; border: none; color: #6c757d; padding: 8px 12px;">
+                            <i class="bi bi-bell-fill fs-5"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notification-badge" style="display: none;">
+                                0
+                            </span>
+                        </button>
+                        <div id="notification-dropdown">
+                            <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                                <h6 class="mb-0 fw-bold">Thông báo</h6>
+                                <button id="mark-all-read-btn" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-check2-all me-1"></i> Đánh dấu tất cả đã đọc
+                                </button>
+                            </div>
+                            <div id="notification-message" style="max-height: 400px; overflow-y: auto;">
+                                <!-- Notifications will be inserted here by JavaScript -->
+                            </div>
+                            <div class="text-center p-2 border-top">
+                                <a href="#" id="view-more-link" class="text-decoration-none text-primary">
+                                    <small><i class="bi bi-arrow-right-circle me-1"></i> Xem tất cả thông báo</small>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                    <button type="button" class="btn btn-warning dropdown-toggle text-wrap-button" style='max-width:150px; max-height: 50px;' data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+                            <img src="{% if request.user.avatar %}{{ request.user.avatar.url }}{% else %}{% static 'media/avatars/avt.jpg' %}{% endif %}" class="avatar" alt="avatar">
+                            <span class="user-name">{{request.user.first_name}}</span>
+                        </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{% url 'view_profile' %}">Thông tin cá nhân</a></li>
+                        <li><a class="dropdown-item" href="{% url 'change_password' %}">Đổi mật khẩu</a></li>
+                        <li><a class="dropdown-item" href="{% url 'view_department' %}">Quản lý tài sản</a></li>
+			
+                        {% if request.user.is_superuser %}
+                        <li><a class="dropdown-item" href="{% url 'manage_users' %}">Cập nhật người hỗ trợ</a></li>
+                        
+                        {% endif %}
+			<li><a class="dropdown-item" href="{% url 'all_users' %}">Danh sách tài khoản</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item" type="button"><a href="{% url 'logout' %}" class="btn btn">Đăng xuất</a></div></button></li>
+                    </ul>
+			</div>
+                </div>
+        </div>
+    </nav>
+    
+<div class="container mt-5">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{message.tags}}" role="alert">
+        <b>{{message}}</b>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% block content %}
+    
+
+    {% endblock content %}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchNotifications();
+    
+        const websocketUrl = `ws://${window.location.host}/ws/notifications/`;
+        const notificationSocket = new WebSocket(websocketUrl);
+    
+        function setupWebSocketHandlers(socket) {
+            socket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                console.log('WebSocket message received:', data);
+                if (data.type === 'notification') {
+                    addNotification(data.id, data.message, false, data.timestamp);
+                }
+            };
+    
+            socket.onclose = function(e) {
+                console.log('WebSocket connection closed. Reconnecting...', e.reason);
+                setTimeout(function() {
+                    notificationSocket = new WebSocket(websocketUrl);
+                    setupWebSocketHandlers(notificationSocket);
+                }, 1000);
+            };
+    
+            socket.onerror = function(err) {
+                console.error('WebSocket encountered error: ', err);
+                socket.close();
+            };
+        }
+    
+        setupWebSocketHandlers(notificationSocket);
+    
+        notificationSocket.onopen = function() {
+            console.log('WebSocket connection established');
+        };
+    });
+
+    const notificationBadge = document.getElementById('notification-badge');
+    const notificationDropdown = document.getElementById('notification-dropdown');
+    const notificationMessage = document.getElementById('notification-message');
+    const viewMoreLink = document.getElementById('view-more-link');
+    
+    let notifications = [];
+    let isDropdownOpen = false;
+    
+    // Function to save notifications to localStorage
+    function saveNotificationsToStorage() {
+        try {
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+        } catch (e) {
+            console.error('Error saving notifications to localStorage:', e);
+        }
+    }
+
+    // Function to load notifications from localStorage
+    function loadNotificationsFromStorage() {
+        try {
+            const savedNotifications = localStorage.getItem('notifications');
+            if (savedNotifications) {
+                const parsed = JSON.parse(savedNotifications);
+                // Only use saved notifications if they exist and are an array
+                if (Array.isArray(parsed)) {
+                    notifications = parsed;
+                    updateNotificationUI();
+                }
+            }
+        } catch (e) {
+            console.error('Error loading notifications from localStorage:', e);
+        }
+    }
+
+    // Function to fetch notifications from the server
+    function fetchNotifications() {
+        fetch('/ticket/get-notifications/')
+            .then(response => response.json())
+            .then(serverNotifications => {
+                // Create a map of existing notifications for quick lookup
+                const existingNotifications = new Map(notifications.map(n => [n.id, n]));
+                let hasUpdates = false;
+                
+                // Process each notification from the server
+                serverNotifications.forEach(serverNotif => {
+                    const existingNotif = existingNotifications.get(serverNotif.id);
+                    
+                    // If notification doesn't exist or server has a newer version
+                    if (!existingNotif || 
+                        new Date(serverNotif.timestamp) > new Date(existingNotif.timestamp)) {
+                        // Update or add the notification
+                        addNotification(
+                            serverNotif.id, 
+                            serverNotif.message, 
+                            serverNotif.read, 
+                            serverNotif.timestamp
+                        );
+                        hasUpdates = true;
+                    }
+                });
+                
+                // If we have updates, save to localStorage and update UI
+                if (hasUpdates) {
+                    saveNotificationsToStorage();
+                    updateNotificationUI();
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching notifications:', error);
+                // If there's an error, use the existing notifications
+            });
+    }
+    
+    // Function to add or update a notification
+    function addNotification(id, message, read, timestamp) {
+        const notificationObject = {
+            id: id,
+            message: message,
+            read: read,
+            timestamp: timestamp
+        };
+        
+        // Check if notification already exists
+        const existingIndex = notifications.findIndex(n => n.id === id);
+        
+        if (existingIndex === -1) {
+            // Add new notification at the beginning of the array
+            notifications.unshift(notificationObject);
+            
+            // If we've reached the limit, remove the oldest notification
+            if (notifications.length > 200) {
+                notifications.pop();
+            }
+            
+            return true; // Indicate that an update was made
+        } else {
+            // Update existing notification if the server version is newer or if read status changed
+            const existingNotif = notifications[existingIndex];
+            const serverTimestamp = new Date(timestamp);
+            const localTimestamp = new Date(existingNotif.timestamp);
+            
+            if (serverTimestamp > localTimestamp || existingNotif.read !== read) {
+                // Keep the existing notification but update its properties
+                existingNotif.message = message;
+                existingNotif.read = read;
+                existingNotif.timestamp = timestamp;
+                return true; // Indicate that an update was made
+            }
+            return false; // No update needed
+        }
+    }
+    
+    // Function to update the notification UI
+    function updateNotificationUI() {
+        // Clear existing notifications
+        notificationMessage.innerHTML = '';
+        
+        // Sort notifications by timestamp (newest first)
+        const sortedNotifications = [...notifications].sort((a, b) => 
+            new Date(b.timestamp) - new Date(a.timestamp)
+        );
+        
+        // Count unread notifications
+        const unreadCount = notifications.filter(n => !n.read).length;
+        
+        // Update the unread count in the badge
+        notificationBadge.textContent = unreadCount > 0 ? unreadCount : '';
+        notificationBadge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+        
+        // Display notifications in the dropdown
+        if (notifications.length === 0) {
+            const noNotifications = document.createElement('div');
+            noNotifications.className = 'text-center p-4 text-muted';
+            noNotifications.innerHTML = '<i class="bi bi-bell-slash fs-1 d-block mb-2"></i>Không có thông báo mới';
+            notificationMessage.appendChild(noNotifications);
+        } else {
+            // Show only the 10 most recent notifications
+            notifications.slice(0, 10).forEach((notification) => {
+                const notificationItem = document.createElement('div');
+                notificationItem.className = `notification-item ${!notification.read ? 'unread' : ''}`;
+                
+                // Create notification content
+                notificationItem.innerHTML = `
+                    <div class="notification-content">
+                        <div class="notification-icon">
+                            <i class="bi ${!notification.read ? 'bi-bell-fill' : 'bi-bell'}"></i>
+                        </div>
+                        <div class="notification-details">
+                            <div class="notification-message">${notification.message}</div>
+                            <div class="notification-time">${formatTimeAgo(notification.timestamp)}</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Store the notification ID as a data attribute
+                notificationItem.setAttribute('data-notification-id', notification.id);
+                
+                // Add click handler to mark as read and follow link if present
+                notificationItem.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Get the notification ID from the data attribute
+                    const notificationId = this.getAttribute('data-notification-id');
+                    const clickedNotification = notifications.find(n => 
+                        n.id.toString() === notificationId.toString()
+                    );
+                    
+                    if (!clickedNotification) return;
+                    
+                    // Mark as read if not already read
+                    if (!clickedNotification.read) {
+                        markNotificationAsRead(notificationId);
+                    }
+                    
+                    // Follow the link in the notification if it contains one
+                    const link = this.querySelector('a');
+                    if (link && link.href) {
+                        window.location.href = link.href;
+                    } else {
+                        // If no link, just close the dropdown
+                        document.getElementById('notification-container').classList.remove('show');
+                    }
+                });
+                
+                notificationMessage.appendChild(notificationItem);
+            });
+        }
+        
+        // Show view more link if there are more than 10 notifications
+        viewMoreLink.style.display = notifications.length > 10 ? 'block' : 'none';
+        
+        // Update the mark all as read button state
+        const markAllReadBtn = document.getElementById('mark-all-read-btn');
+        if (markAllReadBtn) {
+            markAllReadBtn.disabled = unreadCount === 0;
+        }
+    }
+    
+    // Helper function to format timestamp as time ago
+    function formatTimeAgo(timestamp) {
+        if (!timestamp) return '';
+        
+        const date = new Date(timestamp);
+        if (isNaN(date.getTime())) return '';
+        
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+        
+        let interval = Math.floor(seconds / 31536000);
+        if (interval >= 1) return `${interval} năm trước`;
+        
+        interval = Math.floor(seconds / 2592000);
+        if (interval >= 1) return `${interval} tháng trước`;
+        
+        interval = Math.floor(seconds / 86400);
+        if (interval >= 1) return `${interval} ngày trước`;
+        
+        interval = Math.floor(seconds / 3600);
+        if (interval >= 1) return `${interval} giờ trước`;
+        
+        interval = Math.floor(seconds / 60);
+        if (interval >= 1) return `${interval} phút trước`;
+        
+        return 'Vừa xong';
+    }
+    
+    // Function to mark notification as read
+    function markNotificationAsRead(id) {
+        if (!id || id === 'undefined') {
+            console.error('Invalid notification ID:', id);
+            return;
+        }
+        
+        // Convert id to number if it's a string representation of a number
+        const notificationId = isNaN(id) ? id : parseInt(id, 10);
+        
+        // Find the notification in our local array
+        const notification = notifications.find(notif => 
+            notif.id === notificationId || 
+            notif.id.toString() === notificationId.toString()
+        );
+        
+        if (!notification) {
+            console.error('Notification not found with ID:', notificationId);
+            return;
+        }
+        
+        if (notification.read) return; // Already read, nothing to do
+        
+        // Optimistically update the UI
+        notification.read = true;
+        saveNotificationsToStorage();
+        
+        // Update the UI immediately for better UX
+        updateNotificationUI();
+        
+        // Send request to server to mark as read
+        fetch(`/ticket/mark-notification-as-read/${notificationId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status !== 'success') {
+                throw new Error(data.error || 'Unknown error');
+            }
+            // The server has confirmed the read status
+            // No need to update UI again as we did it optimistically
+        })
+        .catch(error => {
+            console.error('Error marking notification as read:', error);
+            // Revert the optimistic update on error
+            notification.read = false;
+            saveNotificationsToStorage();
+            updateNotificationUI();
+        });
+    }
+    
+    // Function to mark all notifications as read
+    function markAllNotificationsAsRead() {
+        // Get all unread notifications
+        const unreadNotifications = notifications.filter(n => !n.read);
+        if (unreadNotifications.length === 0) return;
+        
+        // Optimistically update the UI
+        unreadNotifications.forEach(notification => {
+            notification.read = true;
+        });
+        
+        // Save to localStorage and update UI immediately
+        saveNotificationsToStorage();
+        updateNotificationUI();
+        
+        // Send request to mark all as read on the server
+        fetch('/ticket/mark-all-notifications-read/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status !== 'success') {
+                throw new Error(data.error || 'Unknown error');
+            }
+            // The server has confirmed the read status
+            // No need to update UI again as we did it optimistically
+        })
+        .catch(error => {
+            console.error('Error marking all notifications as read:', error);
+            // Revert the optimistic update on error
+            unreadNotifications.forEach(notification => {
+                notification.read = false;
+            });
+            saveNotificationsToStorage();
+            updateNotificationUI();
+        });
+    }
+    
+    // Add event listener to load notifications when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load notifications from localStorage first for instant display
+        loadNotificationsFromStorage();
+        
+        // Then fetch fresh notifications from the server
+        fetchNotifications();
+        
+        // Set up click handler for the "Mark all as read" button
+        const markAllReadBtn = document.getElementById('mark-all-read-btn');
+        if (markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                markAllNotificationsAsRead();
+            });
+        }
+    });
+    
+    // Function to get CSRF token from cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // Function to toggle notification dropdown
+    function toggleNotificationDropdown(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const container = document.getElementById('notification-container');
+        container.classList.toggle('show');
+        
+        // Close when clicking outside
+        if (container.classList.contains('show')) {
+            document.addEventListener('click', closeNotificationsOnClickOutside);
+        } else {
+            document.removeEventListener('click', closeNotificationsOnClickOutside);
+        }
+    }
+    
+    // Close notifications when clicking outside
+    function closeNotificationsOnClickOutside(event) {
+        const container = document.getElementById('notification-container');
+        if (!container.contains(event.target) && event.target.id !== 'bellIcon') {
+            container.classList.remove('show');
+            document.removeEventListener('click', closeNotificationsOnClickOutside);
+        }
+    }
+    
+</script>
+</body>
+</html>
+<footer></footer>

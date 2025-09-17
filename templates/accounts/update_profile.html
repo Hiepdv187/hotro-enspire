@@ -1,0 +1,164 @@
+<title>Cập nhật tài khoản</title>
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block heading %}
+Thay đổi thông tin cá nhân
+{% endblock heading %}
+
+{% block content %}
+{% load static %}
+<style>
+    html, body{
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-image: url('{% static 'media/'%}pexels-gdtography-911738.jpg');
+        background-size: cover;
+        background-position: relative;
+        background-repeat: repeat;
+        height: fit-content;
+	width: 100%;
+    }
+#loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+.dropdown-item:hover {
+        background-color: #080a91;
+        color: #ffffff; /* Màu nền bạn muốn thay đổi khi di chuột qua */
+    }
+.dropdown-item.delete-item:hover {
+        background-color: #ffffff; /* Màu nền khi di chuột qua */
+        color: #ffffff; /* Màu chữ khi di chuột qua */
+    }
+    input.form-control[disabled] {
+        background-color: #6c757d; /* Bootstrap secondary color */
+        color: #ffffff; /* Optional: Set text color to white */
+        opacity: 1; /* Remove the default opacity */
+    }
+</style>
+<div id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+    <div id="content" style="display:none;">
+<center><div class="col-md-5">
+            <div class="card-body">
+                <div class="py-6">
+<form class="p-4 p-md-5 border rounded-5 bg-light"  method='POST' enctype="multipart/form-data">
+    {% csrf_token %}
+        {% render_field form.username class="form-control" type="hidden" %}
+        <div class="form-floating mb-3">
+            {% render_field form.email class="form-control" %}
+            <label for="floatingInput">Email</label>
+        </div>
+    <div class="form-floating mb-3">
+        {% render_field form.first_name class="form-control" %}
+        <label for="floatingInput">Tên</label>
+    </div>
+    <div class="form-floating mb-3">
+        {% render_field form.last_name class="form-control" %}
+        <label for="floatingInput">Họ</label>
+    </div>
+    <div class="form-floating mb-3">
+        {% render_field form.title class="form-control" %}
+        <label for="floatingInput">Chức Vụ</label>
+    </div>
+    <div class="form-floating mb-3">
+        <select name="work_place" class="form-select" id="id_work_place">
+            <option value="" selected disabled>Chọn phòng ban</option>
+            {% for dept in departments %}
+                <option value="{{ dept.name }}" 
+                    {% if form.work_place.value == dept.name %}selected{% endif %}>
+                    {{ dept.name }}
+                </option>
+            {% endfor %}
+        </select>
+        <label for="floatingInput">Phòng ban</label>
+    </div>
+    <div class="form-floating mb-3">
+        <input type="date" name="date_of_birth" class="form-control" id="id_date_of_birth" value="{{ form.date_of_birth.value }}">
+        <label for="id_date_of_birth">Ngày tháng năm sinh</label>
+    </div>
+    <div class="form-floating mb-3">
+        {% render_field form.phone class="form-control" %}
+        <label for="floatingInput">Số điện thoại liên hệ</label>
+    </div>
+    <div class="form-floating mb-3">
+        <select name="gender" class="form-select" id="id_gender">
+            <option value="" selected disabled>Chọn giới tính</option>
+            <option value="Nam" {% if form.gender.value == 'Nam' %}selected{% endif %}>Nam</option>
+            <option value="Nữ" {% if form.gender.value == 'Nữ' %}selected{% endif %}>Nữ</option>
+            <option value="Khác" {% if form.gender.value == 'Khác' %}selected{% endif %}>Khác</option>
+        </select>
+        <label for="id_gender">Giới tính</label>
+    </div>
+    <div class="form-floating mb-3">
+        {% render_field form.school class="form-control" %}
+        <label for="floatingInput">Nơi làm việc</label>
+    </div>
+    <div class="form-floating mb-3">
+        <input type="file" name="avatar" accept="image/*" class="form-control" id="id_avatar">
+        <label for="floatingInput">Avatar</label>
+    </div>
+
+    <button class="w-100 btn btn-lg btn-primary" type="submit">Cập nhật</button>
+</div>
+            </div>
+            </div>
+</center>
+</div>
+<script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var loadingScreen = document.getElementById("loading-screen");
+            var content = document.getElementById("content");
+
+            function checkLoadingProgress() {
+                var totalResources = document.images.length;
+                var loadedResources = 0;
+
+                for (var i = 0; i < totalResources; i++) {
+                    if (document.images[i].complete) {
+                        loadedResources++;
+                    }
+                }
+
+                var loadPercentage = (loadedResources / totalResources) * 100;
+
+                if (loadPercentage >= 95) {
+                    loadingScreen.style.display = "none";
+                    content.style.display = "block";
+
+                    // Khi loading screen ẩn, cho phép cuộn trang
+                    document.body.style.overflow = "auto";
+                    document.documentElement.style.overflow = "auto";
+                } else {
+                    window.requestAnimationFrame(checkLoadingProgress);
+                }
+            }
+
+            checkLoadingProgress();
+        });
+    </script>
+{% endblock content%}

@@ -1,0 +1,61 @@
+<!-- 404.html template -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lỗi</title>
+    <link>
+    <link rel="icon" href="{% static '/images/Logo.jpg' %}">
+    <!-- custom css -->
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: fit-content;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+        }
+
+        .emoji {
+            font-size: 8rem;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            font-size: 1.25rem;
+            padding: 10px 20px;
+            border: 1px solid #ccc;
+            text-decoration: none;
+            
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="emoji">🤡🤡🤡</div>
+        <h1>Đây là lỗi, không phải tính năng</h1>
+        <p>Lêu lêu</p>
+        <a class="btn btn-outline-primary" href="/">Trang chủ</a>
+        <a class="btn btn-outline-primary" href="{% url 'dashboard' %}">Trang ticket</a>
+        <a class="btn btn-outline-primary" href="{% url 'todo_dashboard' %}">Trang tạo checklist</a>
+    </div>
+</body>
+</html>

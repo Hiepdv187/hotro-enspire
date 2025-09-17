@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+
+
+{% block content %}
+<style>
+    html, body{
+        height: 100%;
+        background-image: url('/static/media/pexels-eberhard-grossgasteiger-2310713.jpg');
+        background-size: cover;
+        background-position: relative;
+        background-repeat: repeat;
+        height: fit-content;
+        margin-bottom: 100px;
+    }
+    .avatar {
+        max-width: 50px;
+        max-height: 35px;
+        width: 50px;
+        height: 35px;
+        border-radius: 10%; 
+    }
+</style>
+    <h2>Kết quả tìm kiếm cho "{{ query }}"</h2>
+
+    <div class="row row-cols-1 row-cols-md-4 g-4">
+        {% for ticket in tickets %}
+            <div class="col">
+                <div class="card h-100">
+                    <center><img src="{% static 'asset/hotro.png' %}" style="width: 10rem;" class="card-img-top" alt="hotro"></center>
+                    <div class="card-body">
+                        <center><h5 class="card-title">{{ ticket.ticket_title }}</h5>
+                        <h6>{{ ticket.school }}</h6></center>
+                        <p class="card-text">
+                            <b>#{{ ticket.ticket_id }}</b>
+                            <br>
+                            {% if ticket.status == 'Chờ xử lý' %}
+                                <span class="badge bg-warning"> Chờ xử lý</span>
+                            {% elif ticket.status == 'Đang xử lý' %}
+                                <span class="badge bg-success"> Đang xử lý</span>
+                            {% elif ticket.status == 'Đã xong' %}
+                                <span class="badge bg-danger"> Đã xong</span>
+                            {% endif %}
+                    </div>
+                    <a href="{% url 'ticket_details' ticket.ticket_id %}" class="btn btn-primary btn-sm">Xem chi tiết</a>
+                    <div class="card-footer">
+                        <small class="text-muted">Created on {{ ticket.created_on|naturaltime }}</small>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock content %}

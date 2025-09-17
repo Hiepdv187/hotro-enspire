@@ -1,0 +1,289 @@
+<title>Tất cả công việc</title>
+{% extends 'base.html' %}
+
+{% block content %}
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+<style>
+    html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-image: url('/static/media/pexels-eberhard-grossgasteiger-2310713.jpg');
+            background-size: cover;
+            background-repeat: repeat;
+            width: 100%;
+        }
+    .avatar {
+        max-width: 50px;
+        max-height: 35px;
+        width: 50px;
+        height: 35px;
+        border-radius: 10%; 
+    }
+    #search-bar {
+        width: 500px;
+        padding: 8px;
+        margin:  auto;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    /* Style the search button */
+    #search-button {
+        padding: 8px;
+        margin: 10px;
+        border: 1px solid #007BFF;
+        background-color: #007BFF;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .search-container {
+        position:relative;
+        display:flex;
+        margin-bottom: 30px;
+    }
+    #addNewButton {
+        position:fixed;
+        bottom: 70px;
+        right: 50px;
+    }
+.column1{
+	width:70%;
+}
+.column3{
+	width:20%;
+}
+#loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+</style>
+<div id="loading-screen">
+    <div class="spinner"></div>
+</div>
+<div id="content" style="display:none;">
+<div class = 'cover'>
+<center>
+<form method="GET" action="{% url 'view_todo_list' %}" class = "mb-3" >
+    <div class="search-container">
+        <input class="form-control" name="q" type="text" placeholder="Tìm kiếm" style=" height: 40px;"><button class="btn btn-primary" style="width: 100px; height: 40px;">Tìm</button>
+    </div>
+</form>
+</center>
+<div id="search-results"></div>
+    <div class="card">
+    <div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col" class="column1">Tiêu đề</th>
+                    <th scope="col" class="column2">Trạng thái</th>
+                    <th scope="col" class="column3">Ngày tạo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for todo_list in page_obj %}
+                <tr>
+		{% if todo_list.todo_list_status == 'Đã xong' %}
+		<td style="display: flex; justify-content: space-between; align-items: center;">
+            <b>
+                <a href="{% url 'todo_list_details' todo_list_id=todo_list.todo_list_id %}" style="text-decoration: none; word-wrap: break-word;">
+                    {{ todo_list.todo_list_title }}
+                </a>
+            </b>
+		<div class="ms-auto">
+		<button type="button" class="ms-auto btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ todo_list.todo_list_id }}" data-todo-list-id="{{ todo_list.todo_list_id }}" data-todo-list-name="{{ todo_list.todo_list_title }}">
+                	Xóa
+            	</button>
+		</div>
+		</td>
+		{% else %}
+		<td style="display: flex; justify-content: space-between; align-items: center;">
+            <b>
+                <a href="{% url 'todo_list_details' todo_list_id=todo_list.todo_list_id %}" style="text-decoration: none; word-wrap: break-word;">
+                    {{ todo_list.todo_list_title }}
+                </a>
+
+            </b>
+		<div class="ms-auto">
+	<button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{ todo_list.todo_list_id }}">
+        	Sửa tiêu đề
+   	</button>
+
+            <button type="button" class="ms-auto btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ todo_list.todo_list_id }}" data-todo-list-id="{{ todo_list.todo_list_id }}" data-todo-list-name="{{ todo_list.todo_list_title }}">
+                Xóa
+            </button>
+</div>
+        </td>
+	{% endif %}
+                    <td>
+                        {% if todo_list.todo_list_status == 'Đang làm' %}
+                            <span class="badge bg-success">Đang làm</span>
+                        {% elif todo_list.todo_list_status == 'Đã xong' %}
+                            <span class="badge bg-danger">Đã xong</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ todo_list.todo_list_create_time }}</td>
+                </tr>
+               
+                {% endfor %}
+            </tbody>
+        </table>
+<nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    </div>
+</div>
+</div>
+{% for todo_list in page_obj %}
+<div class="modal fade" id="deleteModal{{ todo_list.todo_list_id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ todo_list.todo_list_id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel{{ todo_list.todo_list_id }}">Xóa công việc <b>{{ todo_list.todo_list_title }}</b> ?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'delete_todo_list' todo_list.todo_list_id %}" class="mt-2">
+                    {% csrf_token %}
+                    <button class="btn btn-danger">Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Edit Modals -->
+{% for todo_list in page_obj %}
+<div class="modal fade" id="editModal{{ todo_list.todo_list_id }}" tabindex="-1" aria-labelledby="editModalLabel{{ todo_list.todo_list_id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel{{ todo_list.todo_list_id }}">Cập nhật</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'edit_todo_list' todo_list_id=todo_list.todo_list_id %}" class="mt-2">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="TenTodo{{ todo_list.todo_list_id }}">Chỉnh sửa</label>
+                        <input type="text" class="form-control" id="TenTodo{{ todo_list.todo_list_id }}" name="todo_list_title" value="{{ todo_list.todo_list_title }}" required>
+                    </div>
+                    <br>
+                    <button type="submit" class="btn btn-primary">Cập nhật</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+<a href="{% url 'create_todo_list' %}" style="text-align: center; display: block; ">
+<img src= "{% static 'images/pngwing.png' %}" id="addNewButton" class="btn btn" onclick="addNew()">
+</a>
+</div>
+<script>
+    $(document).ready(function () {
+        $("#myInput").on("input", filterDropdown);
+    });
+
+    function filterDropdown() {
+        var value = $(this).val().toLowerCase();
+        $(".table tbody tr").each(function () {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+        });
+    }
+	document.addEventListener("DOMContentLoaded", function() {
+            var loadingScreen = document.getElementById("loading-screen");
+            var content = document.getElementById("content");
+
+            function checkLoadingProgress() {
+                var totalResources = document.images.length;
+                var loadedResources = 0;
+
+                for (var i = 0; i < totalResources; i++) {
+                    if (document.images[i].complete) {
+                        loadedResources++;
+                    }
+                }
+
+                var loadPercentage = (loadedResources / totalResources) * 100;
+
+                if (loadPercentage >= 95) {
+                    loadingScreen.style.display = "none";
+                    content.style.display = "block";
+
+                    // Khi loading screen ẩn, cho phép cuộn trang
+                    document.body.style.overflow = "auto";
+                    document.documentElement.style.overflow = "auto";
+                } else {
+                    window.requestAnimationFrame(checkLoadingProgress);
+                }
+            }
+
+            checkLoadingProgress();
+        });
+</script>
+{% endblock %}
+<footer></footer>

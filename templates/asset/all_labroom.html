@@ -1,0 +1,175 @@
+<title>Tất cả phòng lab</title>
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% load humanize %}
+
+{% block content %}
+{% load static %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<style>
+    html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-image: url('/static/media/pexels-eberhard-grossgasteiger-2310713.jpg/');
+            background-size: cover;
+            background-repeat: repeat;
+            width: 100%;
+        }
+    .avatar {
+        max-width: 50px;
+        max-height: 35px;
+        width: 50px;
+        height: 35px;
+        border-radius: 10%; 
+    }
+    #search-bar {
+        width: 500px;
+        padding: 8px;
+        margin:  auto;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    /* Style the search button */
+    #search-button {
+        padding: 8px;
+        margin: 10px;
+        border: 1px solid #007BFF;
+        background-color: #007BFF;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .search-container {
+        position:relative;
+        display:flex;
+        margin-bottom: 30px;
+    }
+    input[type="checkbox"] {
+        transform: scale(2.0);
+    }
+    a.active_assets{
+        text-decoration: none;
+        color: darkgreen;
+    }
+    a.broken_assets{
+        text-decoration: none;
+        color: red;
+    }
+    a.all_assets{
+        text-decoration: none;
+        color:black;
+    }
+    #addNewButton {
+        position:fixed;
+        bottom: 70px;
+        right: 50px;
+        z-index: 99999;
+    }
+    #FallBack
+    {   
+        max-width: 100px;
+        position:fixed;
+        bottom: 70px;
+        left: 50px;
+        z-index: 9999;
+    }
+    .modal {
+        z-index: 1050;
+    }
+
+#loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+.dropdown-item:hover {
+        background-color: #080a91;
+        color: #ffffff; /* Màu nền bạn muốn thay đổi khi di chuột qua */
+    }
+.dropdown-item.delete-item:hover {
+        background-color: #ffffff; /* Màu nền khi di chuột qua */
+        color: #ffffff; /* Màu chữ khi di chuột qua */
+    }
+
+
+.column1{
+	width:50%;
+}
+.column2{
+	width:10%;
+}
+.column3{
+	width:10%;
+}
+.column4{
+	width:30%;
+}
+.wrap-text {
+    max-width: 30px; /* Giới hạn chiều rộng của dropdown menu */
+    white-space: normal; /* Cho phép text wrap */
+}
+.table-success {
+    background-color: #33CC99 !important; /* Màu tùy chỉnh cho trạng thái "Đang liên kết" */
+    color: white !important; /* Màu chữ */
+}
+
+.table-danger {
+    background-color: #FF3300 !important; /* Màu tùy chỉnh cho trạng thái "Ngưng liên kết" */
+    color: white !important; /* Màu chữ */
+}
+
+.table-warning {
+    background-color: #FF9900 !important; /* Màu tùy chỉnh cho các trạng thái khác */
+    color: black !important; /* Màu chữ */
+}
+.page-break {
+    page-break-before: always;
+    break-before: always;
+}
+</style>
+<div id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+    <div id="content" style="display:none;">
+<form method="GET" action="{% url 'all_asset' %}">
+    <div class="search-container">
+    <input class="form-control" name="q" type="text" placeholder="Tìm kiếm" {% if query %}value="{{ query }}"{% endif %} style="width: 1020px; height: 40px;" ><button class="btn btn-primary">Tìm kiếm</button>
+    </div>
+</form>
+</center>
+<a href="{% url 'view_department' %}" class="btn btn-success" >Quay lại trang trước</a>
+<p></p>
+ 

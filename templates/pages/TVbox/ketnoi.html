@@ -1,0 +1,208 @@
+<title>Hướng dẫn kết nối box</title>
+{% extends "pages/box.html" %}
+{% block content %}
+<!DOCTYPE html>
+{% load crispy_forms_tags %}
+<html lang="vi">
+<head>
+{% load static %}
+{% load bootstrap_icons %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.2.1/font/bootstrap-icons.css">
+<link rel="stylesheet" href="{% static 'bootstrap_icons/css/bootstrap_icons.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+<link rel="icon" href="{% static '/images/Logo.jpg' %}">
+<style>
+    html, body{
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow: hidden;
+    background-image: url('/static/media/ketnoi.png');
+    background-size:cover ;
+    background-position: relative;
+    background-repeat:repeat;
+    height: fit-content;
+}
+.container {
+    position: relative;
+    text-align: center;
+}
+.zoom-image {
+    display: block;
+    width: auto;
+    height: auto;
+    transition: transform 0.3s ease;
+}
+.image-container:hover .zoom-image {
+    transform: scale(1.1); /* Adjust the scale factor for zoom effect */
+}
+.row-images {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+}
+.centered-image {
+    display:flex;
+    margin: auto;
+}
+.centered-text {
+    position:absolute;
+    bottom: -1;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 50px;
+    color:darkblue; /* Change this to your desired text color */
+    padding: 0%;
+}
+.bg-custom {
+    background-color: #000066; /* Thay #yourCustomColor bằng mã màu bạn muốn */
+}
+#loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+.dropdown-item:hover {
+        background-color: #080a91;
+        color: #ffffff; /* Màu nền bạn muốn thay đổi khi di chuột qua */
+    }
+.dropdown-item.delete-item:hover {
+        background-color: #ffffff; /* Màu nền khi di chuột qua */
+        color: #ffffff; /* Màu chữ khi di chuột qua */
+    }
+</style>
+ <div id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+    <div id="content" style="display:none;">
+        <!-- Nội dung của bạn ở đây -->
+<div class="container-fluid" style="min-height: 95%;">
+    <div class="p-2 mb-4 bg-custom ">
+            <div class="row">
+                <center><div class="col-sm-10">
+    <table class="table table-responsive table-bordered border-primary">
+        <thead>
+            <tr>
+                <td><h4><center><strong>Các bước</strong></center></h4></td>
+                <td><h4><center><strong>Hướng dẫn chi tiết</strong></center></h4></td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><center><strong>Bước 1</strong>
+                    <p \n>Nhận biết các đầu kết nối</p></center>
+                </td>
+                <td>Đầu tiên, chúng ta phải nhận biết được các đầu kết nối của box: 
+                    <p \n>- Nguồn: Có đầu tròn, để cắm dây nguồn, cấp điện cho Box (Ký hiệu: DC hoặc DC-in). </p>
+                    <p \n>- Cổng mạng: Có hình rất đặc trưng, có hình hơi vuông, để cấp mạng cho box (Ký hiệu: internet).</p>
+                    <p \n>- Cổng xuất hình (Thường là đầu HDMI tiêu chuẩn): Có hình dẹt và bo lại 2 đầu, để lấy hình ảnh từ box chiếu lên TV (Ký hiệu: HD).</p>
+                    <p \n>- Cổng cắm loa: Có hình tròn nhỏ, thường được gọi là đầu 3.5mm, dùng để gắn thêm loa cho box nếu âm thanh bị nhỏ (Ký hiệu: AV).</p>
+                    <p \n>- Cổng USB: Là đầu cắm có hình chữ nhật thon dài, để kết nối các phụ kiện cho box, có thể là chuột, bàn phím,.... có đầu USB (Ký hiệu: USB).</p>
+                    <p \n>- Cổng Thẻ nhớ: Là đầu cắm dẹt, dùng để bổ sung bộ nhớ cho Box (ký hiệu: hình chữ nhật khuyết 1 góc).</p>
+                    <p \n></p>
+                    <center><img src="{% static 'images/box.png'%}"  class="img-fluid" >
+                    <img src="{% static 'images/box2.png' %}" class="img-fluid" ></center></div>
+                    <p \n></p>
+                    <p \n>- <strong>Khung cảm ứng:</strong> Thường đi kèm với Box, có đầu USB để kết nối (Đầu USB của khung cắm vào thiết bị nào, sẽ cảm ứng theo giao diện của thiết bị đó).</p>
+                    <center><img src="{% static 'images/khungcamung.png' %}" class="img-fluid"></div></center>
+                </td>
+            </tr>
+            <tr>
+                <td><center><strong>Bước 2</strong>
+                <p \n>Thực hiện kết nối Box</p></center>
+                </td>
+                <td>
+                    <p \n>- Đầu tiên, cắm dây nguồn vào cổng nguồn, kết nối với nguồn điện để cấp điện cho Box, khi nào màn hình của Box sáng là đã có điện.</p>
+                    <center><div class="image-container; "><img src="{% static 'images/lennguon.png' %}" class="centered-image-text img-fluid"/><p \n><strong>Box đã lên nguồn</strong></p></center></div></div>
+                    <p \n>- Tiếp theo, cắm dây HDMI, 1 đầu cắm vào box, đầu còn lại cắm vào TV để xuất hình ảnh của Box lên TV.</p>
+                    <p>Nhấn nút "input" trên điều khiển của TV <strong>(KHÔNG PHẢI ĐIỀU KHIỂN BOX)</strong>, và chọn các mục HDMI, đến khi thấy giao diện của Box thì kết nối đã thành công.</p>
+                    <center><div class="image-container; "><img src="{% static 'images/giaodien.png' %}" class="centered-image-text img-fluid"/><p \n><strong>Giao diện Box</strong></p></center></div></div>
+                    <p \n>- Sau đó, thực hiện kết nối khung cảm ứng vào Box qua cổng USB.</p>
+                    <p \n>- Kết nối dây mạng (nếu có) vào công mạng của Box.</p>
+                    <p \n>- Trong trường hợp không có dây mạng, thì có thể bắt wifi cho Box bằng cách: </p>
+                    <p> Vào phần Settings trên màn hình --> Wifi & Internet --> Bật wifi và kết nối. </p>
+                    <p \n>- Kết nối loa nếu cần thiết (Loa phải có dây kết nối đầu 3.5mm).</p>
+                    <p \n> Như vậy là đã kết nối xong TVbox và khung cảm ứng để có thể sử dụng.</p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <center><strong>Bước 3</strong>
+                    <p \n>Test</p></center>
+                </td>
+                <td>
+                    <p>- Sau khi thực hiện kết nối với Box, tiến hành test thử xem Box có hoạt động đúng chức năng hay không.</p>
+                    <p>- Test cảm ứng, âm thanh, loa, hình ảnh hiện trên TV.</p>
+                    <p>-<strong>Lưu ý!!!</strong> Đây là TVBox, tức là vốn dĩ là hệ thống TV, nên sẽ không có đầy đủ các chức năng của máy tính bảng hoặc màn tích hợp. </p>
+                    <p>Ví Dụ: Nếu muốn quay lại hoặc thoát các App, sẽ cần ấn nút quay lại hoặc nút thoát trên <strong> điều khiển của Box!!</strong></p>
+                    <center><div class="image-container; "><img src="{% static 'images/dieukhien2.png' %}" class="centered-image-text img-fluid"/></center></div></div>
+                    <p>- Nếu có chức năng nào hoạt động không đúng (cảm ứng không đúng, hình ảnh bị cắt xén, ....), có thể xem các bài viết khác để khắc phục, nếu lỗi không có trong các bài viết, hãy <a href="{% url 'dashboard' %}" target="_blank">liên hệ</a> nhờ hỗ trợ !</p>
+                </td>
+            </tr>
+        </tbody>
+    </table></center>
+</div>
+</body>
+<script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var loadingScreen = document.getElementById("loading-screen");
+            var content = document.getElementById("content");
+
+            function checkLoadingProgress() {
+                var totalResources = document.images.length;
+                var loadedResources = 0;
+
+                for (var i = 0; i < totalResources; i++) {
+                    if (document.images[i].complete) {
+                        loadedResources++;
+                    }
+                }
+
+                var loadPercentage = (loadedResources / totalResources) * 100;
+
+                if (loadPercentage >= 60) {
+                    loadingScreen.style.display = "none";
+                    content.style.display = "block";
+
+                    // Khi loading screen ẩn, cho phép cuộn trang
+                    document.body.style.overflow = "auto";
+                    document.documentElement.style.overflow = "auto";
+                } else {
+                    window.requestAnimationFrame(checkLoadingProgress);
+                }
+            }
+
+            checkLoadingProgress();
+        });
+    </script>
+
+
+{% endblock content%}
+

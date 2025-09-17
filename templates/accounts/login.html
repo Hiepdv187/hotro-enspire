@@ -1,0 +1,37 @@
+<title>Đăng nhập</title>
+{% extends "accounts/base.html" %}
+
+
+{% block heading %}
+Đăng nhập để tiếp tục
+{% endblock heading %}
+    
+
+{% block content %}
+{% load static %}
+<style>
+    html, body{
+        height: 100%;
+        background-image: url('/static/media/pexels-gdtography-911738.jpg');
+        background-size: cover;
+        background-position: relative;
+        background-repeat: repeat;
+        height: fit-content;
+    }
+
+</style>
+<form class="p-4 p-md-5 border rounded-3 bg-light" method='POST'>
+    {% csrf_token %}
+    <div class="form-floating mb-3">
+        <input type="email" name="email" class="form-control" id="floatingInput" required>
+        <label for="floatingInput">Email đăng nhập</label>
+    </div>
+    <div class="form-floating mb-3">
+        <input type="password" name="password" class="form-control" id="floatingPassword">
+        <label for="floatingPassword">Mật khẩu</label>
+    </div>
+    <button class="w-100 btn btn-lg btn-primary" type="submit">Đăng nhập</button>
+    <!-- <hr class="my-4">
+     <small class="text-muted">Chưa có tài khoản?<a href="{% url 'register_customer' %}"> Đăng ký</a></small> -->
+</form>
+{% endblock content %}

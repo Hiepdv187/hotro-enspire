@@ -1,0 +1,8 @@
+# vi.py trong tkt/formats
+DECIMAL_SEPARATOR = ','
+THOUSAND_SEPARATOR = '.'
+NUMBER_GROUPING = 5
+DATE_FORMAT = 'd/m/Y'
+TIME_FORMAT = 'H:i:s'
+DATETIME_FORMAT = 'd/m/Y H:i:s'
+USE_L10N = True

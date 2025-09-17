@@ -1,0 +1,203 @@
+<title>Phiếu đã xong</title>
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+{% load static %}
+<style>
+    html, body{
+        height: 100%;
+        background-image: url('/static/media/pexels-eberhard-grossgasteiger-2310713.jpg/');
+        background-size: cover;
+        background-position: relative;
+        background-repeat: repeat;
+        height: fit-content;
+        margin-bottom: 100px;
+    }
+    .avatar {
+        max-width: 50px;
+        max-height: 35px;
+        width: 50px;
+        height: 35px;
+        border-radius: 10%; 
+    }
+    .search-container {
+        position:relative;
+        display:flex;
+        margin-bottom: 30px;
+    }
+#loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+.egn_w_tickets{
+    text-decoration: none;
+    color: darkgreen;
+}
+.egn_d_tickets{
+    text-decoration: none;
+    color: red;
+}
+.egn_v_tickets{
+    text-decoration: none;
+    color: black;
+}
+.card-body {
+    display: flex;
+    flex-direction: column; /* Xếp các thành phần theo chiều dọc */
+    justify-content: space-between; /* Tạo khoảng cách đều giữa các phần tử */
+    height: 100%; /* Đảm bảo chiều cao của card-body chiếm toàn bộ */
+}
+.card-text {
+    margin-top: 1px;
+    text-align: bottom;
+}
+</style>
+<div id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+    <div id="content" style="display:none;">
+<p></p>
+<div class="row row-cols-1 row-cols-md-4 g-4">
+{% for ticket in tickets %}
+    <div class="col">
+        <div class="card h-100">
+            <center><img src="{% static 'asset/hotro.png' %}" style="width: 10rem;" class="card-img-top" alt="hotro"></center>
+            <div class="card-body">
+                <center><h5 class="card-title">{{ticket.ticket_title}}</h5>
+                <h6 >{{ticket.school}}</h6></center>
+                <p class="card-text">
+                    <b>#{{ticket.ticket_id}}</b>
+                    <br>
+                    {% if ticket.status == 'Chờ xử lý' %}
+                    <span class="badge bg-warning"> Chờ xử lý</span>
+                    {% elif ticket.status == 'Đang xử lý' %}
+                    <span class="badge bg-success"> Đang xử lý</span>
+                    {% elif ticket.status == 'Đã xong' %}
+                    <span class="badge bg-danger"> Đã xong</span>
+                    {% endif %}
+            </div>
+            <a href="{% url 'ticket_details' ticket.ticket_id %}" class="btn btn-primary btn-sm">Xem chi tiết</a>
+            <div class="card-footer">
+                <small class="text-muted">Created on {{ticket.created_on|naturaltime}}</small>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+</div>
+</div>
+<!-- Phân trang -->
+<div class="d-flex justify-content-center mt-4">
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if tickets.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ tickets.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in tickets.paginator.page_range %}
+                <li class="page-item {% if tickets.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endfor %}
+
+            {% if tickets.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ tickets.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+<center><div>
+        <div class="row">
+            <div class="col-sm-12 col-md-4">
+                <a href="{% url 'engineer_active_tickets' %}" class="egn_w_tickets">
+                <div class="p-5 mb-4 bg-light rounded-4">
+                    <div class="container-fluid py-10">
+                        <h3 class="display-10 fw-bold">Phiếu chờ<br></h3><br><h4>{{active_tickets}} phiếu</h4>
+                    </div>
+                </div>
+            </a>
+            </div>
+            <div class="col-sm-12 col-md-4">
+                <a href="#" class="egn_d_tickets">
+                    <div class="p-5 mb-4 bg-light rounded-4">
+                        <div class="container-fluid py-10">
+                            <h3 class="display-10 fw-bold">Phiếu đã xong</h3><br><h4>{{closed_tickets}} phiếu</h4>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-sm-12 col-md-4">
+                <a href="{% url 'engineer_view_tickets' %}" class="egn_v_tickets">
+                <div class="p-5 mb-4 bg-light rounded-4">
+                    <div class="container-fluid py-10">
+                        <h3 class="display-10 fw-bold">Tổng</h3><br><h4>{{tickets_count}} phiếu</h4>
+                    </div>
+                </div>
+                </a>
+        </div>
+        </div>
+    </div></center>
+</div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var loadingScreen = document.getElementById("loading-screen");
+            var content = document.getElementById("content");
+
+            function checkLoadingProgress() {
+                var totalResources = document.images.length;
+                var loadedResources = 0;
+
+                for (var i = 0; i < totalResources; i++) {
+                    if (document.images[i].complete) {
+                        loadedResources++;
+                    }
+                }
+
+                var loadPercentage = (loadedResources / totalResources) * 100;
+
+                if (loadPercentage >= 95) {
+                    loadingScreen.style.display = "none";
+                    content.style.display = "block";
+
+                    // Khi loading screen ẩn, cho phép cuộn trang
+                    document.body.style.overflow = "auto";
+                    document.documentElement.style.overflow = "auto";
+                } else {
+                    window.requestAnimationFrame(checkLoadingProgress);
+                }
+            }
+
+            checkLoadingProgress();
+        });
+    </script>
+{% endblock content %}
+<footer></footer>
