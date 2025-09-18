@@ -35,6 +35,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Ticket
 from .serializers import TicketSerializer
 from django.core.paginator import Paginator
+from django.conf import settings
 User = get_user_model()
 formatted_time = timezone.localtime(timezone.now())
 current_time = formats.date_format(formatted_time, format='DATETIME_FORMAT', use_l10n=True)
@@ -1164,7 +1165,7 @@ def assign_ticket_view(request,ticket_id):
         context = {'form': form, 'ticket':ticket}
         return render(request, 'ticket/assign_ticket.html', context)
     
-r = redis.Redis(host='127.0.0.1', port=6379, db=0)
+r = redis.from_url(settings.REDIS_URL)
 
 def get_notifications(request):
     user_id = request.user.id

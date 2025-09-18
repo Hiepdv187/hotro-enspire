@@ -14,9 +14,9 @@ import json
 from django.utils import timezone
 from django.contrib.humanize.templatetags.humanize import naturaltime
 from channels.generic.websocket import AsyncWebsocketConsumer
-
+from django.conf import settings
 channel_layer = get_channel_layer()
-r = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
+r = redis.from_url(settings.REDIS_URL)
 
 def user_directory_paths(instance, filename):
     unique_id = uuid.uuid4().hex

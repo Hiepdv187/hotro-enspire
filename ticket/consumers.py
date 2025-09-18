@@ -2,8 +2,8 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import async_to_sync, sync_to_async
 import redis
-
-r = redis.Redis(host='127.0.0.1', port=6379, db=0)
+from django.conf import settings
+r = redis.from_url(settings.REDIS_URL)
 
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
