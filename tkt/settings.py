@@ -176,13 +176,12 @@ REST_FRAMEWORK = {
 }
 CORS_ALLOW_ALL_ORIGINS = True
 CHANNELS_DEFAULT_HTTP_PROTOCOL = 'https' if DEBUG else 'http'
+REDIS_URL='redis://:iJuwEuyIQmk9jWX1gWqhnyzJYcwn6TFn@redis-14167.c89.us-east-1-3.ec2.redns.redis-cloud.com:14167/0'
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [
-                "redis://:iJuwEuyIQmk9jWX1gWqhnyzJYcwn6TFn@redis-14167.c89.us-east-1-3.ec2.redns.redis-cloud.com:14167/0"
-            ],
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [REDIS_URL],
         },
     },
 }
