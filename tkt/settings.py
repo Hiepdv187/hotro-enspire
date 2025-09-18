@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'asset',
     'babel',
     'corsheaders',
+    'django_crontab',
 ]
 
 MIDDLEWARE = [
@@ -185,3 +186,5 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+# Cấu hình APScheduler sẽ được xử lý trong signals.py

@@ -1,0 +1,1 @@
+# File khởi tạo ứng dụng
