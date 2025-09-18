@@ -139,7 +139,7 @@ def mark_notification_as_read(request, notification_id):
                 
                 # Cập nhật lại số thông báo chưa đọc trong Redis (nếu cần)
                 try:
-                    r = redis.Redis(host='localhost', port=6379, db=0)
+                    r = redis.from_url("redis://:iJuwEuyIQmk9jWX1gWqhnyzJYcwn6TFn@redis-14167.c89.us-east-1-3.ec2.redns.redis-cloud.com:14167/0")
                     unread_count = Notification.objects.filter(user=request.user, read=False).count()
                     r.set(f'user_{request.user.id}_unread_count', unread_count)
                 except Exception as e:
@@ -170,7 +170,7 @@ def mark_all_notifications_as_read(request):
             
             # Cập nhật lại số thông báo chưa đọc trong Redis
             try:
-                r = redis.Redis(host='localhost', port=6379, db=0)
+                r = redis.from_url("redis://:iJuwEuyIQmk9jWX1gWqhnyzJYcwn6TFn@redis-14167.c89.us-east-1-3.ec2.redns.redis-cloud.com:14167/0")
                 r.set(f'user_{request.user.id}_unread_count', 0)
             except Exception as e:
                 print(f"Error updating Redis unread count: {e}")

@@ -62,7 +62,6 @@ INSTALLED_APPS = [
     'asset',
     'babel',
     'corsheaders',
-    'django_crontab',
 ]
 
 MIDDLEWARE = [
