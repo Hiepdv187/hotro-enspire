@@ -54,7 +54,8 @@ class User(AbstractUser):
         ('Phòng R&D mầm non', 'Phòng R&D mầm non'),
         
     )
-    work_place = models.CharField(max_length=50, choices=PLACES_CHOICES, default='')
+    
+    work_place = models.CharField(max_length=50, default='', blank=True, null=True)
     date_of_birth = models.DateField(null=True, blank=True)
     phone_regex = RegexValidator (regex=r'^\+?1?\d{9,15}$', message="Lỗi, hãy nhập lại!")
     phone = models.CharField(validators=[phone_regex], max_length=10, blank=True)

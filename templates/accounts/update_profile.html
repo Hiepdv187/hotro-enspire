@@ -68,19 +68,30 @@ Thay đổi thông tin cá nhân
                 <div class="py-6">
 <form class="p-4 p-md-5 border rounded-5 bg-light"  method='POST' enctype="multipart/form-data">
     {% csrf_token %}
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <ul>
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                    <li><strong>{{ field }}:</strong> {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
         {% render_field form.username class="form-control" type="hidden" %}
         <div class="form-floating mb-3">
             {% render_field form.email class="form-control" %}
             <label for="floatingInput">Email</label>
         </div>
-    <div class="form-floating mb-3">
+    <!--<div class="form-floating mb-3">
         {% render_field form.first_name class="form-control" %}
         <label for="floatingInput">Tên</label>
     </div>
     <div class="form-floating mb-3">
         {% render_field form.last_name class="form-control" %}
         <label for="floatingInput">Họ</label>
-    </div>
+    </div>-->
     <div class="form-floating mb-3">
         {% render_field form.title class="form-control" %}
         <label for="floatingInput">Chức Vụ</label>

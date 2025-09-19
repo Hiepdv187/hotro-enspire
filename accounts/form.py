@@ -63,21 +63,48 @@ class UserProfileForm(UserChangeForm):
 class UserUpdateForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['username', 'email','phone', 'work_place', 'first_name','last_name', 'title', 'avatar', 'school', 'date_of_birth', 'gender']
+        fields = [
+            'username', 'email', 'phone', 'work_place', 
+            'title', 'avatar', 'school', 'date_of_birth', 'gender'
+        ]
         widgets = {
             'avatar': forms.FileInput(),
             'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
         }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # Email chỉ hiển thị, không cho sửa
         self.fields['email'].disabled = True
         self.fields['email'].widget.attrs['class'] = 'form-control text-secondary'
-        
-        # Nếu bạn muốn username không được gửi đi (POST) để tránh thay đổi giá trị
         self.fields['email'].required = False
 
+        # Merge PLACES_CHOICES trong model + dữ liệu từ Department
+        try:
+            from asset.models import Department
+            depts = Department.objects.all().order_by('name')
+            dept_choices = [(d.name, d.name) for d in depts]
+
+            # Lấy choices gốc từ model
+            base_choices = list(User.PLACES_CHOICES)
+
+            # Ghép lại: gốc + động (loại bỏ trùng)
+            all_choices = base_choices[:]
+            for choice in dept_choices:
+                if choice not in all_choices:
+                    all_choices.append(choice)
+
+            # Gán lại cho field work_place
+            self.fields['work_place'].choices = [('', 'Chọn phòng ban')] + all_choices
+            self.fields['work_place'].widget.attrs['class'] = 'form-select'
+        except Exception:
+            # Nếu không có Department thì giữ nguyên choices gốc
+            self.fields['work_place'].choices = [('', 'Chọn phòng ban')] + list(User.PLACES_CHOICES)
+            self.fields['work_place'].widget.attrs['class'] = 'form-select'
+
     def clean_username(self):
-        # Giữ lại giá trị username cũ
+        # Giữ lại username cũ (không cho đổi)
         return self.instance.email
         
 class CustomPasswordChangeForm(PasswordChangeForm):
