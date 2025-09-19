@@ -463,7 +463,7 @@ margin-right: 0;
                     </div>
                 </div>
 
-                    <button type="button" class="btn btn-warning dropdown-toggle text-wrap-button" style='max-width:150px; max-height: 50px;' data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+                    <button type="button" class="btn btn-warning dropdown-toggle text-wrap-button" style='max-width:150px; max-height: 50px; margin-right: 20px;' data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
                             <img src="{% if request.user.avatar %}{{ request.user.avatar.url }}{% else %}{% static 'media/avatars/avt.jpg' %}{% endif %}" class="avatar" alt="avatar">
                             <span class="user-name">{{request.user.first_name}}</span>
                         </button>

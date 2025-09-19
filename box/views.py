@@ -5,34 +5,34 @@ from django.contrib.auth.decorators import login_required
 # Create your views here.
 @login_required
 def tvbox(request):
-    return render(request, 'pages/Tvbox/tvbox.html')
+    return render(request, 'pages/TVbox/tvbox.html')
 @login_required
 def usbbox(request):
-    return render(request, 'pages/Tvbox/usbbox.html')
+    return render(request, 'pages/TVbox/usbbox.html')
 @login_required
 def sudungoff(request):
-    return render(request, 'pages/Tvbox/sudungoff.html')
+    return render(request, 'pages/TVbox/sudungoff.html')
 @login_required
 def roi(request):
-    return render(request, 'pages/Tvbox/roi.html')
+    return render(request, 'pages/TVbox/roi.html')
 @login_required
 def phukien(request):
     return render(request,'pages/TVbox/phukien.html')
 @login_required
 def nhieu(request):
-    return render(request, 'pages/Tvbox/nhieu.html')
+    return render(request, 'pages/TVbox/nhieu.html')
 @login_required
 def ngaytvbox(request):
-    return render(request, 'pages/Tvbox/ngaytvbox.html')
+    return render(request, 'pages/TVbox/ngaytvbox.html')
 @login_required
 def khonglen(request):
     return render(request, 'pages/TVbox/khonglen.html')
 @login_required
 def ketnoi(request):
-    return render(request, 'pages/Tvbox/ketnoi.html')
+    return render(request, 'pages/TVbox/ketnoi.html')
 @login_required
 def dophangiai(request):
-    return render(request, 'pages/Tvbox/dophangiai.html')
+    return render(request, 'pages/TVbox/dophangiai.html')
 @login_required
 def camung(request):
-    return render(request, 'pages/Tvbox/camung.html')
+    return render(request, 'pages/TVbox/camung.html')
