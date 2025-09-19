@@ -667,7 +667,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.addEventListener('DOMContentLoaded', function() {
         fetchNotifications();
     
-        const websocketUrl = `ws://${window.location.host}/ws/notifications/`;
+        const websocketUrl = `wss://${window.location.host}/ws/notifications/`;
         let notificationSocket = new WebSocket(websocketUrl);
     
         function setupWebSocketHandlers(socket) {
@@ -722,7 +722,7 @@ document.addEventListener("DOMContentLoaded", function() {
         // Set up WebSocket connection if supported
         if ('WebSocket' in window) {
             const notificationSocket = new WebSocket(
-                'ws://' + window.location.host + 
+                'wss://' + window.location.host + 
                 '/ws/notifications/' + '?token=' + getCookie('csrftoken')
             );
             
@@ -789,7 +789,7 @@ document.addEventListener("DOMContentLoaded", function() {
             if (event.code !== 1000) {
                 setTimeout(function() {
                     const newSocket = new WebSocket(
-                        'ws://' + window.location.host + 
+                        'wss://' + window.location.host + 
                         '/ws/notifications/' + '?token=' + getCookie('csrftoken')
                     );
                     setupWebSocketHandlers(newSocket);

@@ -330,7 +330,7 @@ $(document).ready(function(){
         fetchNotifications();
     
         // Set up WebSocket for real-time notifications
-        const websocketUrl = `ws://${window.location.host}/ws/notifications/`;
+        const websocketUrl = `wss://${window.location.host}/ws/notifications/`;
         let notificationSocket = new WebSocket(websocketUrl);
     
         function setupWebSocketHandlers(socket) {
