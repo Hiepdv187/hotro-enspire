@@ -695,51 +695,26 @@ margin-right: 0;
                     e.preventDefault();
                     e.stopPropagation();
                     
-                    try {
-                        // Get the notification ID from the data attribute
-                        const notificationId = this.getAttribute('data-notification-id');
-                        if (!notificationId) return;
-                        
-                        // Tìm thông báo tương ứng một cách an toàn
-                        const clickedNotification = notifications.find(n => 
-                            n && 
-                            n.id !== null && 
-                            n.id !== undefined && 
-                            n.id.toString() === notificationId.toString()
-                        );
-                        
-                        if (!clickedNotification) {
-                            console.warn('Không tìm thấy thông báo với ID:', notificationId);
-                            return;
-                        }
-                        
-                        // Mark as read if not already read
-                        if (clickedNotification.read === false) {
-                            markNotificationAsRead(notificationId);
-                            // Cập nhật trạng thái ngay lập tức để phản hồi nhanh
-                            clickedNotification.read = true;
-                            // Cập nhật giao diện
-                            this.classList.remove('unread');
-                            const icon = this.querySelector('.notification-icon i');
-                            if (icon) {
-                                icon.classList.remove('bi-bell-fill', 'text-primary');
-                                icon.classList.add('bi-bell');
-                            }
-                            const newBadge = this.querySelector('.badge');
-                            if (newBadge) newBadge.remove();
-                        }
-                        
-                        // Follow the link in the notification if it contains one
-                        const link = this.querySelector('a');
-                        if (link && link.href) {
-                            window.location.href = link.href;
-                        } else {
-                            // If no link, just close the dropdown
-                            const container = document.getElementById('notification-container');
-                            if (container) container.classList.remove('show');
-                        }
-                    } catch (error) {
-                        console.error('Lỗi khi xử lý click thông báo:', error);
+                    // Get the notification ID from the data attribute
+                    const notificationId = this.getAttribute('data-notification-id');
+                    const clickedNotification = notifications.find(n => 
+                        n.id.toString() === notificationId.toString()
+                    );
+                    
+                    if (!clickedNotification) return;
+                    
+                    // Mark as read if not already read
+                    if (!clickedNotification.read) {
+                        markNotificationAsRead(notificationId);
+                    }
+                    
+                    // Follow the link in the notification if it contains one
+                    const link = this.querySelector('a');
+                    if (link && link.href) {
+                        window.location.href = link.href;
+                    } else {
+                        // If no link, just close the dropdown
+                        document.getElementById('notification-container').classList.remove('show');
                     }
                 });
                 
@@ -819,8 +794,8 @@ margin-right: 0;
         fetch(`/ticket/mark-notification-as-read/${notificationId}/`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': getCookie('csrftoken') || '',
                 'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
                 'X-Requested-With': 'XMLHttpRequest'
             },
             credentials: 'same-origin'
@@ -833,30 +808,29 @@ margin-right: 0;
         })
         .then(data => {
             if (data.status !== 'success') {
-                throw new Error(data.error || 'Lỗi không xác định từ máy chủ');
+                throw new Error(data.error || 'Unknown error');
             }
-            console.log('Đã đánh dấu thông báo đã đọc:', id);
+            // The server has confirmed the read status
+            // No need to update UI again as we did it optimistically
         })
         .catch(error => {
-            console.error('Lỗi khi đánh dấu thông báo đã đọc:', error);
-            // Revert on error
+            console.error('Error marking notification as read:', error);
+            // Revert the optimistic update on error
             notification.read = false;
             saveNotificationsToStorage();
             updateNotificationUI();
-            // Re-throw the error so callers can handle it if needed
-            throw error;
         });
     }
     
     // Function to mark all notifications as read
     function markAllNotificationsAsRead() {
         // Get all unread notifications
-        const unreadNotifications = notifications.filter(n => n && !n.read);
-        if (unreadNotifications.length === 0) return Promise.resolve();
+        const unreadNotifications = notifications.filter(n => !n.read);
+        if (unreadNotifications.length === 0) return;
         
         // Optimistically update the UI
         unreadNotifications.forEach(notification => {
-            if (notification) notification.read = true;
+            notification.read = true;
         });
         
         // Save to localStorage and update UI immediately
@@ -864,11 +838,11 @@ margin-right: 0;
         updateNotificationUI();
         
         // Send request to mark all as read on the server
-        return fetch('/ticket/mark-all-notifications-read/', {
+        fetch('/ticket/mark-all-notifications-read/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken') || '',
+                'X-CSRFToken': getCookie('csrftoken'),
                 'X-Requested-With': 'XMLHttpRequest'
             },
             credentials: 'same-origin'
@@ -881,20 +855,19 @@ margin-right: 0;
         })
         .then(data => {
             if (data.status !== 'success') {
-                throw new Error(data.error || 'Lỗi không xác định từ máy chủ');
+                throw new Error(data.error || 'Unknown error');
             }
-            console.log('Đã đánh dấu tất cả thông báo đã đọc');
-            return true;
+            // The server has confirmed the read status
+            // No need to update UI again as we did it optimistically
         })
         .catch(error => {
-            console.error('Lỗi khi đánh dấu tất cả thông báo đã đọc:', error);
+            console.error('Error marking all notifications as read:', error);
             // Revert the optimistic update on error
             unreadNotifications.forEach(notification => {
-                if (notification) notification.read = false;
+                notification.read = false;
             });
             saveNotificationsToStorage();
             updateNotificationUI();
-            throw error;
         });
     }
     
@@ -912,31 +885,7 @@ margin-right: 0;
             markAllReadBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                
-                markAllNotificationsAsRead()
-                    .then(() => {
-                        // Cập nhật giao diện sau khi đánh dấu tất cả đã đọc
-                        const notificationItems = document.querySelectorAll('.notification-item');
-                        notificationItems.forEach(item => {
-                            item.classList.remove('unread');
-                            const icon = item.querySelector('.notification-icon i');
-                            if (icon) {
-                                icon.classList.remove('bi-bell-fill', 'text-primary');
-                                icon.classList.add('bi-bell');
-                            }
-                            const newBadge = item.querySelector('.badge');
-                            if (newBadge) newBadge.remove();
-                        });
-                        
-                        // Cập nhật badge
-                        if (notificationBadge) {
-                            notificationBadge.textContent = '';
-                            notificationBadge.style.display = 'none';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Lỗi khi đánh dấu tất cả đã đọc:', error);
-                    });
+                markAllNotificationsAsRead();
             });
         }
     });
@@ -975,10 +924,7 @@ margin-right: 0;
     // Close notifications when clicking outside
     function closeNotificationsOnClickOutside(event) {
         const container = document.getElementById('notification-container');
-        const bellIcon = document.getElementById('bellIcon');
-        
-        if (container && !container.contains(event.target) && 
-            (!bellIcon || !bellIcon.contains(event.target))) {
+        if (!container.contains(event.target) && event.target.id !== 'bellIcon') {
             container.classList.remove('show');
             document.removeEventListener('click', closeNotificationsOnClickOutside);
         }
