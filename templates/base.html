@@ -37,16 +37,7 @@ html, body{
     height: 35px;
     border-radius: 10%; 
 }
-#notification-dropdown {
-    background-color: #fff; /* Màu nền của dropdown */
-    max-height: 300px; /* Độ cao tối đa của dropdown */
-    width: 300px;
-    overflow-y: auto; /* Hiển thị thanh cuộn nếu nội dung quá dài */
-    right: 50%;/* Đặt vị trí dropdown về bên trái */
-    left: 50%; /* Đảm bảo không có sự chồng chéo với left (nếu có) */
-    transform-origin: top center; /* Đặt nguồn gốc của transformation ở trên cùng bên phải */
-    transform: translateX(-50%); /* Di chuyển dropdown sang bên trái */
-}
+
 #notification-dropdown li {
     margin-bottom: 5px; /* Giảm khoảng cách giữa các thông báo */
     margin-left: 12px;
@@ -96,6 +87,8 @@ html, body{
 #notification-dropdown {
     position: absolute;
     width: 400px;
+    top: 40px;
+    left: 50%; 
     max-height: 80vh;
     overflow: hidden;
     padding: 0;
@@ -105,7 +98,7 @@ html, body{
     right: 0;
     left: auto;
     margin-top: 8px;
-    transform: none !important;
+    transform: translateX(30%) !important;
     top: 100% !important;
     will-change: transform;
     display: none;
@@ -504,7 +497,7 @@ margin-right: 0;
         fetchNotifications();
     
         const websocketUrl = `wss://${window.location.host}/ws/notifications/`;
-        const notificationSocket = new WebSocket(websocketUrl);
+        let notificationSocket = new WebSocket(websocketUrl);
     
         function setupWebSocketHandlers(socket) {
             socket.onmessage = function(e) {
@@ -895,19 +888,19 @@ margin-right: 0;
     
     // Function to get CSRF token from cookie
     function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
             }
         }
-        return cookieValue;
     }
+    return cookieValue;
+}
     
     // Function to toggle notification dropdown
     function toggleNotificationDropdown(event) {

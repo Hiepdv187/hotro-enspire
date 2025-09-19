@@ -1168,22 +1168,35 @@ def assign_ticket_view(request,ticket_id):
 r = redis.from_url("redis://:iJuwEuyIQmk9jWX1gWqhnyzJYcwn6TFn@redis-14167.c89.us-east-1-3.ec2.redns.redis-cloud.com:14167/0")
 
 def get_notifications(request):
+    if not request.user.is_authenticated:
+        return JsonResponse([], safe=False)
+        
     user_id = request.user.id
+    if user_id is None:
+        return JsonResponse([], safe=False)
 
-    # Lấy thông báo chưa đọc từ cơ sở dữ liệu
-    notifications_db = Notification.objects.filter(user_id=user_id, read=False).order_by('-timestamp')
-    
-    # Lấy thông báo chưa đọc từ Redis nếu người dùng không online
-    notifications_redis = []
-    if not r.sismember("online_users", user_id):
-        notifications_key = f"notifications_{user_id}"
-        if r.exists(notifications_key):
-            notifications_redis = [json.loads(notification) for notification in r.lrange(notifications_key, 0, -1)]
-            # Xóa các thông báo đã lấy từ Redis để tránh lấy lại lần sau
-            r.delete(notifications_key)
-    
-    # Ghép danh sách thông báo từ cả cơ sở dữ liệu và Redis
-    notifications = list(notifications_db.values('message', 'timestamp'))
-    notifications.extend(notifications_redis)
+    try:
+        # Lấy thông báo chưa đọc từ cơ sở dữ liệu
+        notifications_db = Notification.objects.filter(user_id=user_id, read=False).order_by('-timestamp')
+        
+        # Lấy thông báo chưa đọc từ Redis nếu người dùng không online
+        notifications_redis = []
+        try:
+            if not r.sismember("online_users", str(user_id)):  # Chuyển user_id sang string
+                notifications_key = f"notifications_{user_id}"
+                if r.exists(notifications_key):
+                    notifications_redis = [json.loads(notification) for notification in r.lrange(notifications_key, 0, -1)]
+                    # Xóa các thông báo đã lấy từ Redis để tránh lấy lại lần sau
+                    r.delete(notifications_key)
+        except Exception as e:
+            print(f"Error getting notifications from Redis: {e}")
+            # Nếu có lỗi khi lấy từ Redis, vẫn trả về thông báo từ database
+            
+        # Ghép danh sách thông báo từ cả cơ sở dữ liệu và Redis
+        notifications = list(notifications_db.values('message', 'timestamp'))
+        notifications.extend(notifications_redis)
 
-    return JsonResponse(notifications, safe=False)
+        return JsonResponse(notifications, safe=False)
+    except Exception as e:
+        print(f"Error in get_notifications: {e}")
+        return JsonResponse([], safe=False)
