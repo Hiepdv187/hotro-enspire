@@ -322,39 +322,32 @@ $(document).ready(function(){
     });
     });
 });
-    document.addEventListener('DOMContentLoaded', function() {
-        // Load notifications from localStorage first for instant display
-        loadNotificationsFromStorage();
+
+   
         
-        // Then fetch fresh notifications from the server
-        fetchNotifications();
-    
-        // Set up WebSocket for real-time notifications
-        const websocketUrl = `wss://${window.location.host}/ws/notifications/`;
-        let notificationSocket = new WebSocket(websocketUrl);
+    // Set up WebSocket for real-time notifications
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const websocketUrl = `${wsProtocol}${window.location.host}/ws/notifications/`;
+    let notificationSocket = new WebSocket(websocketUrl);
     
         function setupWebSocketHandlers(socket) {
             socket.onmessage = function(e) {
-                const data = JSON.parse(e.data);
+                let data;
+                try {
+                    data = JSON.parse(e.data);
+                } catch (err) {
+                    console.warn('WebSocket message not JSON, ignoring:', e.data);
+                    return;
+                }
                 console.log('WebSocket message received:', data);
                 if (data.type === 'notification') {
-                    // Add the new notification
-                    const wasAdded = addNotification(
-                        data.id, 
-                        data.message, 
-                        false, 
-                        data.timestamp
-                    );
-                    
-                    // If this was a new notification, show a toast
+                    const timestamp = data.timestamp || new Date().toISOString();
+                    const id = data.id || timestamp || `temp-${Date.now()}`;
+                    const message = data.message || data.msg || '';
+                    const wasAdded = addNotification(id, message, data.read || false, timestamp);
                     if (wasAdded) {
-                        saveNotificationsToStorage();
-                        updateNotificationUI();
-                        
-                        // Only show toast if dropdown is closed
-                        if (!notificationDropdown.classList.contains('show')) {
-                            showToastNotification(data.message);
-                        }
+                        try { saveNotificationsToStorage(); } catch (err) { console.warn('Failed to save notifications:', err); }
+                        try { updateNotificationUI(); } catch (err) { console.warn('Failed to update notification UI:', err); }
                     }
                 }
             };
@@ -378,60 +371,142 @@ $(document).ready(function(){
         notificationSocket.onopen = function() {
             console.log('WebSocket connection established');
         };
-        
-        // Set up polling as a fallback for WebSocket
-        setInterval(fetchNotifications, 30000); // Check for updates every 30 seconds
-    });
     
-    // Function to show toast notification
-    function showToastNotification(message) {
-        // Check if the browser supports notifications
-        if (!('Notification' in window)) {
-            console.log('This browser does not support desktop notification');
-            return;
-        }
-        
-        // Check if notification permissions have already been granted
-        if (Notification.permission === 'granted') {
-            // If it's okay, create a notification
-            new Notification('Thông báo mới', {
-                body: message,
-                icon: '/static/images/Logo1.jpg'
-            });
-        }
-        // Otherwise, ask the user for permission
-        else if (Notification.permission !== 'denied') {
-            Notification.requestPermission().then(function(permission) {
-                // If the user accepts, create a notification
-                if (permission === 'granted') {
-                    new Notification('Thông báo mới', {
-                        body: message,
-                        icon: '/static/images/Logo1.jpg'
-                    });
-                }
-            });
-        }
-        
-        // Fallback to toastr if notifications are blocked
-        if (Notification.permission === 'denied') {
-            toastr.options = {
-                closeButton: true,
-                progressBar: true,
-                positionClass: 'toast-bottom-right',
-                timeOut: 5000,
-                extendedTimeOut: 2000,
-                preventDuplicates: true,
-                newestOnTop: true
-            };
-            toastr.info(message, 'Thông báo mới');
-        }
-    }
 
     // Global notification variables
     let notifications = [];
     const notificationBadge = document.getElementById('notification-badge');
-    const notificationDropdown = document.getElementById('notification-dropdown');
-    const notificationMessage = document.getElementById('notification-message');
+    const notificationDropdown = document.getElementById('notification-dropdown') || null;
+    const notificationMessage = document.getElementById('notification-message') || null;
+    const markAllReadBtn = document.getElementById('mark-all-read-btn');
+    const notificationToggle = document.getElementById('notificationDropdown');
+
+    // Initialize when the DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load notifications from localStorage first for instant display
+        loadNotificationsFromStorage();
+        
+        // Set up event listeners
+        setupEventListeners();
+        
+        // Initial fetch of notifications
+        fetchNotifications();
+        
+        // Set up WebSocket connection if supported
+        if ('WebSocket' in window) {
+            const notificationSocket = new WebSocket(
+                'wss://' + window.location.host + 
+                '/ws/notifications/' + '?token=' + getCookie('csrftoken')
+            );
+            
+            // Set up WebSocket handlers
+            setupWebSocketHandlers(notificationSocket);
+        } else {
+            console.warn('WebSocket is not supported in this browser');
+        }
+        
+        // Set up polling as a fallback for WebSocket
+        setInterval(fetchNotifications, 30000); // Check for updates every 30 seconds
+    });
+
+    // Function to set up WebSocket handlers
+    function setupWebSocketHandlers(socket) {
+        socket.onopen = function(e) {
+            console.log('WebSocket connection established');
+            // Send authentication token if available
+            const token = getCookie('csrftoken');
+            if (token) {
+                socket.send(JSON.stringify({
+                    'type': 'authenticate',
+                    'token': token
+                }));
+            }
+        };
+
+        // Listen for messages
+        socket.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'notification') {
+                    const notification = data.notification;
+                    const updated = addNotification(
+                        notification.id,
+                        notification.message,
+                        notification.read,
+                        notification.timestamp
+                    );
+                    
+                    if (updated) {
+                        saveNotificationsToStorage();
+                        updateNotificationUI();
+                        
+                        // Show toast for new unread notifications
+                        if (!notification.read) {
+                            showNotificationToast(notification.message);
+                        }
+                    }
+                } else if (data.type === 'ping') {
+                    // Respond to ping with pong
+                    socket.send(JSON.stringify({type: 'pong'}));
+                }
+            } catch (error) {
+                console.error('Error processing WebSocket message:', error);
+            }
+        };
+
+        // Connection closed
+        socket.onclose = function(event) {
+            console.log('WebSocket connection closed');
+            // Attempt to reconnect after a delay if this wasn't a clean close
+            if (event.code !== 1000) {
+                setTimeout(function() {
+                    const newSocket = new WebSocket(
+                        'wss://' + window.location.host + 
+                        '/ws/notifications/' + '?token=' + getCookie('csrftoken')
+                    );
+                    setupWebSocketHandlers(newSocket);
+                }, 5000);
+            }
+        };
+
+        // Connection error
+        socket.onerror = function(err) {
+            console.error('WebSocket error:', err);
+        };
+    }
+
+    // Function to get CSRF token from cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Function to toggle notification dropdown
+    function toggleNotificationDropdown(event) {
+        if (event) {
+            event.stopPropagation();
+        }
+        if (notificationDropdown) notificationDropdown.classList.toggle('show');
+        
+        // Mark all notifications as read when dropdown is opened
+        if (notificationDropdown && notificationDropdown.classList.contains('show')) {
+            const unreadNotifications = notifications.filter(n => !n.read);
+            if (unreadNotifications.length > 0) {
+                markAllNotificationsAsRead();
+            }
+        }
+    }
     
     // Function to save notifications to localStorage
     function saveNotificationsToStorage() {
@@ -441,7 +516,7 @@ $(document).ready(function(){
             console.error('Error saving notifications to localStorage:', e);
         }
     }
-    
+
     // Function to load notifications from localStorage
     function loadNotificationsFromStorage() {
         try {
@@ -457,6 +532,7 @@ $(document).ready(function(){
             console.error('Error loading notifications from localStorage:', e);
         }
     }
+
     // Function to fetch notifications from the server
     function fetchNotifications() {
         fetch('/ticket/get-notifications/')
@@ -465,25 +541,25 @@ $(document).ready(function(){
                 // Create a map of existing notifications for quick lookup
                 const existingNotifications = new Map(notifications.map(n => [n.id, n]));
                 let hasUpdates = false;
-                
+
                 // Process each notification from the server
                 serverNotifications.forEach(serverNotif => {
                     const existingNotif = existingNotifications.get(serverNotif.id);
-                    
+
                     // If notification doesn't exist or server has a newer version
-                    if (!existingNotif || 
+                    if (!existingNotif ||
                         new Date(serverNotif.timestamp) > new Date(existingNotif.timestamp)) {
                         // Update or add the notification
                         addNotification(
-                            serverNotif.id, 
-                            serverNotif.message, 
-                            serverNotif.read, 
+                            serverNotif.id,
+                            serverNotif.message,
+                            serverNotif.read,
                             serverNotif.timestamp
                         );
                         hasUpdates = true;
                     }
                 });
-                
+
                 // If we have updates, save to localStorage and update UI
                 if (hasUpdates) {
                     saveNotificationsToStorage();
@@ -503,42 +579,119 @@ $(document).ready(function(){
             read: read,
             timestamp: timestamp
         };
-        
+
         // Check if notification already exists
         const existingIndex = notifications.findIndex(n => n.id === id);
-        
+
         if (existingIndex === -1) {
             // Add new notification at the beginning of the array
             notifications.unshift(notificationObject);
-            
+
             // If we've reached the limit, remove the oldest notification
-            if (notifications.length > 50) {
+            if (notifications.length > 200) {
                 notifications.pop();
             }
-            
+
+            // Show toast for new unread notifications
+            if (!read) {
+                showNotificationToast(message);
+            }
+
             return true; // Indicate that an update was made
         } else {
             // Update existing notification if the server version is newer or if read status changed
             const existingNotif = notifications[existingIndex];
             const serverTimestamp = new Date(timestamp);
             const localTimestamp = new Date(existingNotif.timestamp);
-            
+
             if (serverTimestamp > localTimestamp || existingNotif.read !== read) {
                 // Keep the existing notification but update its properties
                 existingNotif.message = message;
                 existingNotif.read = read;
                 existingNotif.timestamp = timestamp;
+
+                // Show toast for updated unread notifications
+                if (!read && serverTimestamp > localTimestamp) {
+                    showNotificationToast(message);
+                }
+
                 return true; // Indicate that an update was made
             }
             return false; // No update needed
         }
     }
 
-    // Function to format time as "time ago"
+    // Function to update the notification UI
+    function updateNotificationUI() {
+        // Clear existing notifications
+        notificationMessage.innerHTML = '';
+
+        // Sort notifications by timestamp (newest first)
+        const sortedNotifications = [...notifications].sort((a, b) =>
+            new Date(b.timestamp) - new Date(a.timestamp)
+        );
+
+        // Count unread notifications
+        const unreadCount = notifications.filter(n => !n.read).length;
+
+        // Update the unread count in the badge
+        notificationBadge.textContent = unreadCount > 0 ? unreadCount : '';
+        notificationBadge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+
+        // Display notifications in the dropdown
+        if (notifications.length === 0) {
+            const noNotifications = document.createElement('div');
+            noNotifications.className = 'text-center p-4 text-muted';
+            noNotifications.innerHTML = '<i class="bi bi-bell-slash fs-1 d-block mb-2"></i>Không có thông báo mới';
+            notificationMessage.appendChild(noNotifications);
+        } else {
+            // Show only the 10 most recent notifications
+            sortedNotifications.slice(0, 10).forEach((notification) => {
+                const notificationItem = document.createElement('div');
+                notificationItem.className = `notification-item ${!notification.read ? 'unread' : ''}`;
+
+                // Store the notification ID as a data attribute
+                if (notification.id !== undefined && notification.id !== null) {
+                    notificationItem.setAttribute('data-notification-id', notification.id);
+                }
+
+                // Create notification content (with icon + details like other pages)
+                notificationItem.innerHTML = `
+                    <div class="notification-content">
+                        <div class="notification-icon">
+                            <i class="bi ${!notification.read ? 'bi-bell-fill' : 'bi-bell'}"></i>
+                        </div>
+                        <div class="notification-details">
+                            <div class="notification-message">${notification.message}</div>
+                            <div class="notification-time"><small>${formatTimeAgo(new Date(notification.timestamp))}</small></div>
+                        </div>
+                    </div>
+                `;
+
+                // Add click handler for the notification item
+                notificationItem.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Mark as read if not already read
+                    if (!notification.read) {
+                        markNotificationAsRead(notification.id);
+                    }
+
+                    // Close the dropdown
+                    notificationDropdown.classList.remove('show');
+                });
+
+                notificationMessage.appendChild(notificationItem);
+            });
+        }
+    }
+
+    // Helper function to format time as "time ago"
     function formatTimeAgo(date) {
         const now = new Date();
         const seconds = Math.floor((now - date) / 1000);
-        
+
         const intervals = {
             'năm': 31536000,
             'tháng': 2592000,
@@ -548,79 +701,15 @@ $(document).ready(function(){
             'phút': 60,
             'giây': 1
         };
-        
+
         for (const [unit, secondsInUnit] of Object.entries(intervals)) {
             const interval = Math.floor(seconds / secondsInUnit);
             if (interval >= 1) {
                 return `${interval} ${unit} trước`;
             }
         }
-        
-        return 'Vừa xong';
-    }
 
-    // Function to update the notification UI
-    function updateNotificationUI() {
-        // Clear existing notifications
-        notificationMessage.innerHTML = '';
-        
-        // Sort notifications by timestamp (newest first)
-        const sortedNotifications = [...notifications].sort((a, b) => 
-            new Date(b.timestamp) - new Date(a.timestamp)
-        );
-        
-        // Count unread notifications
-        const unreadCount = notifications.filter(n => !n.read).length;
-        
-        // Update the unread count in the badge
-        notificationBadge.textContent = unreadCount > 0 ? unreadCount : '';
-        notificationBadge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
-        
-        // Display notifications in the dropdown
-        if (notifications.length === 0) {
-            const noNotifications = document.createElement('div');
-            noNotifications.className = 'text-center p-4 text-muted';
-            noNotifications.innerHTML = '<i class="bi bi-bell-slash fs-1 d-block mb-2"></i><span>Không có thông báo mới</span>';
-            notificationMessage.appendChild(noNotifications);
-        } else {
-            // Show only the 10 most recent notifications
-            sortedNotifications.slice(0, 10).forEach((notification) => {
-                const notificationItem = document.createElement('div');
-                notificationItem.className = `notification-item ${!notification.read ? 'unread' : ''}`;
-                
-                // Store the notification ID as a data attribute
-                notificationItem.setAttribute('data-notification-id', notification.id);
-                
-                // Create notification content
-                notificationItem.innerHTML = `
-                    <div class="notification-content">
-                        <div class="notification-icon">
-                            <i class="bi ${!notification.read ? 'bi-bell-fill' : 'bi-bell'}"></i>
-                        </div>
-                        <div class="notification-details">
-                            <div class="notification-message">${notification.message}</div>
-                            <div class="notification-time">${formatTimeAgo(new Date(notification.timestamp))}</div>
-                        </div>
-                    </div>
-                `;
-                
-                // Add click handler for the notification item
-                notificationItem.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    // Mark as read if not already read
-                    if (!notification.read) {
-                        markNotificationAsRead(notification.id);
-                    }
-                    
-                    // Close the dropdown
-                    notificationDropdown.classList.remove('show');
-                });
-                
-                notificationMessage.appendChild(notificationItem);
-            });
-        }
+        return 'Vừa xong';
     }
 
     // Function to mark notification as read
@@ -630,171 +719,134 @@ $(document).ready(function(){
             return;
         }
 
-        // Convert id to number if it's a string representation of a number
-        const notificationId = isNaN(id) ? id : parseInt(id, 10);
-
-        // Find the notification in our local array
-        const notification = notifications.find(notif => 
-            notif.id === notificationId || 
-            notif.id.toString() === notificationId.toString()
-        );
-
+        // Find the notification
+        const notification = notifications.find(n => n.id === id);
         if (!notification) {
-            console.error('Notification not found with ID:', notificationId);
+            console.error('Notification not found:', id);
             return;
         }
 
-        if (notification.read) return; // Already read, nothing to do
+        // If already read, do nothing
+        if (notification.read) {
+            return;
+        }
 
-        // Optimistically update the UI
+        // Mark as read in local state
         notification.read = true;
-        saveNotificationsToStorage();
 
-        // Update the UI immediately for better UX
+        // Update UI
         updateNotificationUI();
 
-        // Send request to server to mark as read
-        fetch(`/ticket/mark-notification-as-read/${notificationId}/`, {
+        // Save to localStorage
+        saveNotificationsToStorage();
+
+        // Send request to mark as read on the server
+        const csrftoken = getCookie('csrftoken');
+        fetch('/ticket/mark-notification-as-read/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken'),
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-CSRFToken': csrftoken
             },
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.status !== 'success') {
-                throw new Error(data.error || 'Unknown error');
-            }
-            // The server has confirmed the read status
-            // No need to update UI again as we did it optimistically
-        })
-        .catch(error => {
+            body: JSON.stringify({ notification_id: id })
+        }).catch(error => {
             console.error('Error marking notification as read:', error);
-            // Revert the optimistic update on error
-            notification.read = false;
-            saveNotificationsToStorage();
-            updateNotificationUI();
         });
     }
-    
+
     // Function to mark all notifications as read
     function markAllNotificationsAsRead() {
-        // Get all unread notifications
-        const unreadNotifications = notifications.filter(n => !n.read);
-        if (unreadNotifications.length === 0) return;
+        let hasUpdates = false;
+        const now = new Date().toISOString();
         
-        // Optimistically update the UI
-        unreadNotifications.forEach(notification => {
-            notification.read = true;
+        // Mark all as read in local storage
+        notifications.forEach(notification => {
+            if (!notification.read) {
+                notification.read = true;
+                notification.read_at = notification.read_at || now;
+                hasUpdates = true;
+            }
         });
         
-        // Save to localStorage and update UI immediately
-        saveNotificationsToStorage();
-        updateNotificationUI();
-        
-        // Send request to mark all as read on the server
-        fetch('/ticket/mark-all-notifications-read/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken'),
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.status !== 'success') {
-                throw new Error(data.error || 'Unknown error');
-            }
-            // The server has confirmed the read status
-            // No need to update UI again as we did it optimistically
-        })
-        .catch(error => {
-            console.error('Error marking all notifications as read:', error);
-            // Revert the optimistic update on error
-            unreadNotifications.forEach(notification => {
-                notification.read = false;
-            });
-            saveNotificationsToStorage();
+        if (hasUpdates) {
+            // Update UI
             updateNotificationUI();
-        });
-    }
-    
-    // Function to get CSRF token from cookie
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    
-    // Function to toggle notification dropdown
-    function toggleNotificationDropdown(event) {
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-        
-        const isShowing = notificationDropdown.classList.contains('show');
-        
-        // Close all other dropdowns first
-        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-            if (menu !== notificationDropdown) {
-                menu.classList.remove('show');
-            }
-        });
-        
-        // Toggle this dropdown
-        if (!isShowing) {
-            notificationDropdown.classList.add('show');
             
-            // Mark all notifications as read when dropdown is opened
-            setTimeout(() => {
-                const unreadNotifications = notifications.filter(n => !n.read);
-                if (unreadNotifications.length > 0) {
-                    markAllNotificationsAsRead();
-                }
-            }, 100);
+            // Save to local storage
+            saveNotificationsToStorage();
             
-            // Add click outside handler
-            const clickHandler = function(e) {
-                if (!notificationDropdown.contains(e.target) && 
-                    !document.getElementById('bellIcon').contains(e.target)) {
-                    notificationDropdown.classList.remove('show');
-                    document.removeEventListener('click', clickHandler);
+            // Update server
+            fetch('/ticket/mark-all-notifications-read/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    timestamp: now
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to mark all notifications as read');
                 }
+                return response.json();
+            })
+            .catch(error => {
+                console.error('Error marking all notifications as read:', error);
+                // Show error message to user
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Không thể đánh dấu tất cả thông báo là đã đọc. Vui lòng thử lại sau.');
+                }
+            });
+        }
+    }
+
+    // Function to show notification toast
+    function showNotificationToast(message) {
+        // Check if toastr is available
+        if (typeof toastr !== 'undefined') {
+            toastr.options = {
+                closeButton: true,
+                progressBar: true,
+                positionClass: 'toast-top-right',
+                timeOut: 5000,
+                extendedTimeOut: 2000,
+                preventDuplicates: true
             };
             
-            // Add a small delay to prevent the click from immediately closing the dropdown
-            setTimeout(() => {
-                document.addEventListener('click', clickHandler);
-            }, 10);
-        } else {
-            notificationDropdown.classList.remove('show');
+            toastr.info(message, 'Thông báo mới');
         }
     }
+
+    // Function to set up event listeners
+    function setupEventListeners() {
+        // Mark all as read button click handler
+        if (markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                markAllNotificationsAsRead();
+            });
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (notificationDropdown && !notificationDropdown.contains(e.target) && 
+                notificationToggle && !notificationToggle.contains(e.target)) {
+                notificationDropdown.classList.remove('show');
+            }
+        });
+
+        // Prevent dropdown from closing when clicking inside it
+        if (notificationDropdown) {
+            notificationDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+    }
+    
     
 </script>
 </body>

@@ -496,15 +496,29 @@ margin-right: 0;
     document.addEventListener('DOMContentLoaded', function() {
         fetchNotifications();
     
-        const websocketUrl = `wss://${window.location.host}/ws/notifications/`;
-        let notificationSocket = new WebSocket(websocketUrl);
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const websocketUrl = `${wsProtocol}${window.location.host}/ws/notifications/`;
+    let notificationSocket = new WebSocket(websocketUrl);
     
         function setupWebSocketHandlers(socket) {
             socket.onmessage = function(e) {
-                const data = JSON.parse(e.data);
+                let data;
+                try {
+                    data = JSON.parse(e.data);
+                } catch (err) {
+                    console.warn('WebSocket message not JSON, ignoring:', e.data);
+                    return;
+                }
                 console.log('WebSocket message received:', data);
                 if (data.type === 'notification') {
-                    addNotification(data.id, data.message, false, data.timestamp);
+                    const timestamp = data.timestamp || new Date().toISOString();
+                    const id = data.id || timestamp || `temp-${Date.now()}`;
+                    const message = data.message || data.msg || '';
+                    const wasAdded = addNotification(id, message, data.read || false, timestamp);
+                    if (wasAdded) {
+                        try { saveNotificationsToStorage(); } catch (err) { console.warn('Failed to save notifications:', err); }
+                        try { updateNotificationUI(); } catch (err) { console.warn('Failed to update notification UI:', err); }
+                    }
                 }
             };
     
@@ -529,10 +543,11 @@ margin-right: 0;
         };
     });
 
-    const notificationBadge = document.getElementById('notification-badge');
-    const notificationDropdown = document.getElementById('notification-dropdown');
-    const notificationMessage = document.getElementById('notification-message');
-    const viewMoreLink = document.getElementById('view-more-link');
+    // DOM elements may not exist on every page; guard their lookup
+    const notificationBadge = document.getElementById('notification-badge') || null;
+    const notificationDropdown = document.getElementById('notification-dropdown') || null;
+    const notificationMessage = document.getElementById('notification-message') || null;
+    const viewMoreLink = document.getElementById('view-more-link') || null;
     
     let notifications = [];
     let isDropdownOpen = false;
@@ -647,22 +662,28 @@ margin-right: 0;
     
     // Function to update the notification UI
     function updateNotificationUI() {
-        // Clear existing notifications
-        notificationMessage.innerHTML = '';
-        
-        // Sort notifications by timestamp (newest first)
+        // If notificationMessage is missing, still update the badge and return early for list rendering
+        // This allows pages without the full dropdown to still show unread counts.
         const sortedNotifications = [...notifications].sort((a, b) => 
             new Date(b.timestamp) - new Date(a.timestamp)
         );
-        
+
         // Count unread notifications
         const unreadCount = notifications.filter(n => !n.read).length;
-        
-        // Update the unread count in the badge
-        notificationBadge.textContent = unreadCount > 0 ? unreadCount : '';
-        notificationBadge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
-        
-        // Display notifications in the dropdown
+
+        // Update the unread count in the badge (if exists)
+        if (notificationBadge) {
+            notificationBadge.textContent = unreadCount > 0 ? unreadCount : '';
+            notificationBadge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+        }
+
+        // If there's no dropdown container on this page, stop here
+        if (!notificationMessage) return;
+
+        // Clear existing notifications
+        notificationMessage.innerHTML = '';
+
+        // Display notifications in the dropdown (notificationMessage exists thanks to earlier check)
         if (notifications.length === 0) {
             const noNotifications = document.createElement('div');
             noNotifications.className = 'text-center p-4 text-muted';
@@ -673,7 +694,7 @@ margin-right: 0;
             notifications.slice(0, 10).forEach((notification) => {
                 const notificationItem = document.createElement('div');
                 notificationItem.className = `notification-item ${!notification.read ? 'unread' : ''}`;
-                
+
                 // Create notification content
                 notificationItem.innerHTML = `
                     <div class="notification-content">
@@ -686,45 +707,51 @@ margin-right: 0;
                         </div>
                     </div>
                 `;
-                
+
                 // Store the notification ID as a data attribute
-                notificationItem.setAttribute('data-notification-id', notification.id);
-                
+                if (notification.id !== undefined && notification.id !== null) {
+                    notificationItem.setAttribute('data-notification-id', notification.id);
+                }
+
                 // Add click handler to mark as read and follow link if present
                 notificationItem.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    
+
                     // Get the notification ID from the data attribute
                     const notificationId = this.getAttribute('data-notification-id');
-                    const clickedNotification = notifications.find(n => 
-                        n.id.toString() === notificationId.toString()
-                    );
-                    
+                    const clickedNotification = notifications.find(n => {
+                        if (!n || !n.id) return false;
+                        return n.id.toString() === notificationId.toString();
+                    });
+
                     if (!clickedNotification) return;
-                    
+
                     // Mark as read if not already read
                     if (!clickedNotification.read) {
                         markNotificationAsRead(notificationId);
                     }
-                    
+
                     // Follow the link in the notification if it contains one
                     const link = this.querySelector('a');
                     if (link && link.href) {
                         window.location.href = link.href;
                     } else {
-                        // If no link, just close the dropdown
-                        document.getElementById('notification-container').classList.remove('show');
+                        // If no link, just close the dropdown if container exists
+                        const container = document.getElementById('notification-container');
+                        if (container) container.classList.remove('show');
                     }
                 });
-                
+
                 notificationMessage.appendChild(notificationItem);
             });
         }
-        
+
         // Show view more link if there are more than 10 notifications
-        viewMoreLink.style.display = notifications.length > 10 ? 'block' : 'none';
-        
+        if (viewMoreLink) {
+            viewMoreLink.style.display = notifications.length > 10 ? 'block' : 'none';
+        }
+
         // Update the mark all as read button state
         const markAllReadBtn = document.getElementById('mark-all-read-btn');
         if (markAllReadBtn) {

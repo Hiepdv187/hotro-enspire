@@ -104,15 +104,61 @@ html, body{
     height: 35px;
     border-radius: 10%; /* Làm tròn góc */
 }
+/* Notification item styles (match box.html) */
+.notification-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.notification-item:hover {
+    background-color: #f8f9fa;
+}
+
+.notification-item.unread {
+    background-color: #f8f9ff;
+    border-left: 3px solid #0d6efd;
+}
+
+.notification-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.notification-icon {
+    font-size: 1.25rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+
+.notification-item.unread .notification-icon {
+    color: #0d6efd;
+}
+
+.notification-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-message {
+    color: #212529;
+    margin-bottom: 0.25rem;
+    word-break: break-word;
+}
+
+.notification-time {
+    color: #6c757d;
+    font-size: 0.85rem;
+}
 #notification-dropdown {
     background-color: #fff; /* Màu nền của dropdown */
-    max-height: 300px; /* Độ cao tối đa của dropdown */
-    width: 300px;
-    overflow-y: auto; /* Hiển thị thanh cuộn nếu nội dung quá dài */
-    right: 50%;/* Đặt vị trí dropdown về bên trái */
-    left: 50%; /* Đảm bảo không có sự chồng chéo với left (nếu có) */
-    transform-origin: top center; /* Đặt nguồn gốc của transformation ở trên cùng bên phải */
-    transform: translateX(-80%); /* Di chuyển dropdown sang bên trái */
+    max-height: 500px; /* Độ cao tối đa của dropdown */
+    width: 350px;
+    overflow-y: auto;
+    transform-origin: top center;
+    transform: translateX(-80%) /* Hiển thị thanh cuộn nếu nội dung quá dài */
 }
 #notification-dropdown li {
     margin-bottom: 5px; /* Giảm khoảng cách giữa các thông báo */
@@ -126,6 +172,23 @@ html, body{
 
 #notification-message a:hover {
     text-decoration: underline; /* Hiển thị gạch chân khi di chuột qua */
+}
+/* Scrollbar styling (match box.html) */
+#notification-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+#notification-dropdown::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+#notification-dropdown::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+#notification-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 .notification-read {
     background-color: #f3f3f3; /* Màu nền cho thông báo đã đọc */
@@ -667,15 +730,29 @@ document.addEventListener("DOMContentLoaded", function() {
         document.addEventListener('DOMContentLoaded', function() {
         fetchNotifications();
     
-        const websocketUrl = `wss://${window.location.host}/ws/notifications/`;
-        let notificationSocket = new WebSocket(websocketUrl);
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const websocketUrl = `${wsProtocol}${window.location.host}/ws/notifications/`;
+    let notificationSocket = new WebSocket(websocketUrl);
     
         function setupWebSocketHandlers(socket) {
             socket.onmessage = function(e) {
-                const data = JSON.parse(e.data);
+                let data;
+                try {
+                    data = JSON.parse(e.data);
+                } catch (err) {
+                    console.warn('WebSocket message not JSON, ignoring:', e.data);
+                    return;
+                }
                 console.log('WebSocket message received:', data);
                 if (data.type === 'notification') {
-                    addNotification(data.id, data.message, false, data.timestamp);
+                    const timestamp = data.timestamp || new Date().toISOString();
+                    const id = data.id || timestamp || `temp-${Date.now()}`;
+                    const message = data.message || data.msg || '';
+                    const wasAdded = addNotification(id, message, data.read || false, timestamp);
+                    if (wasAdded) {
+                        try { saveNotificationsToStorage(); } catch (err) { console.warn('Failed to save notifications:', err); }
+                        try { updateNotificationUI(); } catch (err) { console.warn('Failed to update notification UI:', err); }
+                    }
                 }
             };
     
@@ -703,8 +780,8 @@ document.addEventListener("DOMContentLoaded", function() {
     // Global notification variables
     let notifications = [];
     const notificationBadge = document.getElementById('notification-badge');
-    const notificationDropdown = document.getElementById('notification-dropdown');
-    const notificationMessage = document.getElementById('notification-message');
+    const notificationDropdown = document.getElementById('notification-dropdown') || null;
+    const notificationMessage = document.getElementById('notification-message') || null;
     const markAllReadBtn = document.getElementById('mark-all-read-btn');
     const notificationToggle = document.getElementById('notificationDropdown');
 
@@ -824,10 +901,10 @@ document.addEventListener("DOMContentLoaded", function() {
         if (event) {
             event.stopPropagation();
         }
-        notificationDropdown.classList.toggle('show');
+        if (notificationDropdown) notificationDropdown.classList.toggle('show');
         
         // Mark all notifications as read when dropdown is opened
-        if (notificationDropdown.classList.contains('show')) {
+        if (notificationDropdown && notificationDropdown.classList.contains('show')) {
             const unreadNotifications = notifications.filter(n => !n.read);
             if (unreadNotifications.length > 0) {
                 markAllNotificationsAsRead();
@@ -978,11 +1055,16 @@ document.addEventListener("DOMContentLoaded", function() {
                 notificationItem.className = `notification-item ${!notification.read ? 'unread' : ''}`;
 
                 // Store the notification ID as a data attribute
-                notificationItem.setAttribute('data-notification-id', notification.id);
+                if (notification.id !== undefined && notification.id !== null) {
+                    notificationItem.setAttribute('data-notification-id', notification.id);
+                }
 
-                // Create notification content
+                // Create notification content (with icon + details like other pages)
                 notificationItem.innerHTML = `
                     <div class="notification-content">
+                        <div class="notification-icon">
+                            <i class="bi ${!notification.read ? 'bi-bell-fill' : 'bi-bell'}"></i>
+                        </div>
                         <div class="notification-details">
                             <div class="notification-message">${notification.message}</div>
                             <div class="notification-time"><small>${formatTimeAgo(new Date(notification.timestamp))}</small></div>

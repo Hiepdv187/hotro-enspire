@@ -1176,25 +1176,48 @@ def get_notifications(request):
         return JsonResponse([], safe=False)
 
     try:
-        # Lấy thông báo chưa đọc từ cơ sở dữ liệu
-        notifications_db = Notification.objects.filter(user_id=user_id, read=False).order_by('-timestamp')
-        
-        # Lấy thông báo chưa đọc từ Redis nếu người dùng không online
+        # Lấy tất cả thông báo từ cơ sở dữ liệu (bao gồm đã đọc và chưa đọc)
+        notifications_db = Notification.objects.filter(user_id=user_id).order_by('-timestamp')
+
+        notifications = []
+        for n in notifications_db:
+            notifications.append({
+                'id': n.id,
+                'message': n.message,
+                'read': n.read,
+                'timestamp': n.timestamp.isoformat() if hasattr(n, 'timestamp') else timezone.localtime(n.timestamp).isoformat()
+            })
+
+        # Lấy thông báo từ Redis nếu có
         notifications_redis = []
         try:
-            if not r.sismember("online_users", str(user_id)):  # Chuyển user_id sang string
+            # Use string for sismember check
+            if not r.sismember("online_users", str(user_id)):
                 notifications_key = f"notifications_{user_id}"
                 if r.exists(notifications_key):
-                    notifications_redis = [json.loads(notification) for notification in r.lrange(notifications_key, 0, -1)]
-                    # Xóa các thông báo đã lấy từ Redis để tránh lấy lại lần sau
+                    notifications_redis = []
+                    raw = r.lrange(notifications_key, 0, -1)
+                    for item in raw:
+                        try:
+                            obj = json.loads(item)
+                            # ensure keys id/read/timestamp exist if possible
+                            if 'timestamp' in obj:
+                                # normalize timestamp
+                                pass
+                            notifications_redis.append(obj)
+                        except Exception:
+                            # skip malformed entries
+                            continue
+                    # Xóa các thông báo đã lấy khỏi Redis
                     r.delete(notifications_key)
         except Exception as e:
             print(f"Error getting notifications from Redis: {e}")
-            # Nếu có lỗi khi lấy từ Redis, vẫn trả về thông báo từ database
-            
-        # Ghép danh sách thông báo từ cả cơ sở dữ liệu và Redis
-        notifications = list(notifications_db.values('message', 'timestamp'))
+
+        # Combine and sort
         notifications.extend(notifications_redis)
+        notifications.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        # Limit
+        notifications = notifications[:200]
 
         return JsonResponse(notifications, safe=False)
     except Exception as e:

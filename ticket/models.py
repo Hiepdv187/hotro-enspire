@@ -46,17 +46,29 @@ def send_notification_to_engineer(instance, user_id, message):
     )
 
     # Lưu thông báo trong Redis nếu người dùng không online
-    if not r.sismember("online_users", user_id):
+    # Use string form for redis membership checks for consistency
+    if not r.sismember("online_users", str(user_id)):
+        # Push a structured notification so the frontend can render it
         r.rpush(f"notifications_{user_id}", json.dumps({
             "type": "notification",
-            "message": message
+            "id": notification.id,
+            "message": message,
+            "read": notification.read,
+            "timestamp": notification.timestamp.isoformat()
         }))
     else:
+        # Send structured payload to connected consumers so they get id/timestamp/read
         async_to_sync(channel_layer.group_send)(
             group_name,
             {
                 "type": "send_notification_to_client",
-                "message": message,
+                "payload": {
+                    "type": "notification",
+                    "id": notification.id,
+                    "message": notification.message,
+                    "read": notification.read,
+                    "timestamp": notification.timestamp.isoformat()
+                }
             }
         )
 
