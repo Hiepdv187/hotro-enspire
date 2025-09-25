@@ -13,7 +13,7 @@ def cleanup_old_attachments():
     Hàm dọn dẹp file đính kèm cũ
     """
     logger = logging.getLogger(__name__)
-    three_months_ago = timezone.now() - timedelta(days=90)
+    three_months_ago = timezone.now() - timedelta(days=30)
     
     try:
         # Xóa file đính kèm trong Ticket
