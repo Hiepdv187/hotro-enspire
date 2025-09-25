@@ -10,7 +10,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Calculate the date 3 months ago
-        three_months_ago = timezone.now() - timedelta(days=90)
+        three_months_ago = timezone.now() - timedelta(days=30)
         
         # Clean up Ticket attachments
         tickets = Ticket.objects.filter(created_on__lt=three_months_ago)
