@@ -79,6 +79,17 @@ def login_user(request):
                         username = email
                         user = User.objects.create_user(username=username, email=email, password=default_password)
                         user.is_customer = True
+                        
+                        # Cập nhật thông tin profile từ API ngay khi tạo user
+                        if 'first_name' in user_data:
+                            user.first_name = user_data['first_name']
+                        if 'last_name' in user_data:
+                            user.last_name = user_data['last_name']
+                        if 'phone' in user_data:
+                            user.phone = user_data['phone']
+                        if 'title' in user_data:
+                            user.title = user_data['title']
+                        
                         user.save()
 
                         # Xác thực và đăng nhập người dùng mới
