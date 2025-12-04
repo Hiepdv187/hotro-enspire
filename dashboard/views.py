@@ -33,7 +33,6 @@ def dashboard(request):
         }
         return render(request, 'dashboard/admin_dashboard.html', context)
     
-@login_required
 def todo_dashboard(request):
     todo_lists=TodoList.objects.filter(user=request.user).count()
     active_todo_list= TodoList.objects.filter(user=request.user, todo_list_is_resolved=False).count
