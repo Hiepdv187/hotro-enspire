@@ -18,6 +18,10 @@ from django.core.paginator import Paginator
 from babel.dates import format_datetime
 from django.utils import timezone
 from django.contrib.humanize.templatetags.humanize import naturaltime
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+import json
+
 formatted_time = timezone.localtime(timezone.now())
 current_time = format_datetime(formatted_time, "H:mm, d MMMM YYYY ", locale='vi')
 
@@ -455,13 +459,8 @@ def view_department(request):
     except Department.DoesNotExist:
         ban_lanh_dao = None
     
-    # Custom order for other departments
-    custom_order = [2, 3, 17, 4, 5, 6, 16, 7, 8, 9, 11, 12, 14, 15]
-    
-    # Sử dụng `Case`  và `When`  để sắp xếp theo thứ tự trong `custom_order` 
-    # Bắt đầu đếm từ 1 để đảm bảo thứ tự chính xác
-    preserved_order = Case(*[When(id=id, then=pos) for pos, id in enumerate(custom_order, 1)])
-    departments = Department.objects.all().order_by(preserved_order)
+    # Sắp xếp theo trường order trong model
+    departments = Department.objects.all().order_by('order', 'id')
     
     
     total_asset_count = 0
@@ -2300,3 +2299,24 @@ class UpdateAssetsDistrictView(View):
                     messages.error(request, f"Error in the {field} field - {error}")
         
         return redirect('HaNoienspire', department_id=department_id, district_id=district_id)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+@login_required
+def update_department_order(request):
+    """API endpoint để cập nhật thứ tự phòng ban"""
+    try:
+        data = json.loads(request.body)
+        department_orders = data.get('department_orders', [])
+        
+        for item in department_orders:
+            department_id = item.get('id')
+            new_order = item.get('order')
+            
+            if department_id and new_order is not None:
+                Department.objects.filter(id=department_id).update(order=new_order)
+        
+        return JsonResponse({'success': True, 'message': 'Cập nhật thứ tự thành công'})
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)

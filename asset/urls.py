@@ -40,5 +40,6 @@ urlpatterns = [
     path('department_all_asset/<int:department_id>/', views.department_all_asset, name ='department_all_asset'),
     path('department_all_asset/<int:department_id>/', views.department_all_asset, name ='department_all_asset'),
     path('district_all_asset/<int:department_id>/<int:district_id>/', views.district_all_asset, name ='district_all_asset'),
+    path('update_department_order/', views.update_department_order, name='update_department_order'),
 ]
 

@@ -95,7 +95,7 @@ def get_notifications(request):
     user_id = request.user.id
     
     # Lấy thông báo từ cơ sở dữ liệu
-    notifications_db = Notification.objects.filter(user_id=user_id).order_by('-created_at')
+    notifications_db = Notification.objects.filter(user_id=user_id).order_by('-timestamp')
     
     # Chuyển đổi QuerySet thành danh sách từ điển
     notifications_list = []
@@ -104,7 +104,7 @@ def get_notifications(request):
             'id': notification.id,
             'message': notification.message,
             'read': notification.read,
-            'timestamp': notification.created_at.strftime('%Y-%m-%dT%H:%M:%S')  # Định dạng datetime thành chuỗi
+            'timestamp': notification.timestamp.strftime('%Y-%m-%dT%H:%M:%S')  # Định dạng datetime thành chuỗi
         })
     
     # Lấy thông báo pending từ Supabase nếu user không online

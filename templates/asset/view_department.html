@@ -171,6 +171,33 @@ a.all_assets{
         background-color: #ffffff; /* Màu nền khi di chuột qua */
         color: #ffffff; /* Màu chữ khi di chuột qua */
     }
+
+/* Drag and Drop Styles */
+.department-row {
+    cursor: move;
+    transition: background-color 0.2s;
+}
+
+.department-row:hover {
+    background-color: #f8f9fa;
+}
+
+.department-row.dragging {
+    opacity: 0.5;
+    background-color: #e3f2fd;
+}
+
+.department-row.drag-over {
+    border-top: 3px solid #007bff;
+}
+
+.drag-handle {
+    cursor: grab;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
 </style>
 <div id="loading-screen">
         <div class="spinner"></div>
@@ -199,10 +226,10 @@ a.all_assets{
                     <th class="column5" scope = "col"><center>Số lượng phòng lab</center></th>
                 </tr>
             </thead>
-        <tbody>
+        <tbody id="department-tbody">
             {% for department in departments %}
-                <tr>
-                <td>{{ forloop.counter }}</td>
+                <tr draggable="true" data-id="{{ department.id }}" class="department-row">
+                <td class="drag-handle">{{ forloop.counter }}</td>
                 <td>{% if department.name == 'Ban lãnh đạo' %}
                     <b><a href="{% url 'department_detail' department.id %}"><center>{{ department.name }}</center></a></b>
                     {% else %}
@@ -505,6 +532,122 @@ document.addEventListener("DOMContentLoaded", function() {
 
             checkLoadingProgress();
         });
+
+    // Drag and Drop functionality
+    let draggedElement = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const tbody = document.getElementById('department-tbody');
+        const rows = tbody.querySelectorAll('.department-row');
+
+        rows.forEach(row => {
+            row.addEventListener('dragstart', handleDragStart);
+            row.addEventListener('dragover', handleDragOver);
+            row.addEventListener('drop', handleDrop);
+            row.addEventListener('dragend', handleDragEnd);
+            row.addEventListener('dragenter', handleDragEnter);
+            row.addEventListener('dragleave', handleDragLeave);
+        });
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            if (this !== draggedElement) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            if (draggedElement !== this) {
+                const draggedIndex = Array.from(tbody.children).indexOf(draggedElement);
+                const targetIndex = Array.from(tbody.children).indexOf(this);
+
+                if (draggedIndex < targetIndex) {
+                    this.parentNode.insertBefore(draggedElement, this.nextSibling);
+                } else {
+                    this.parentNode.insertBefore(draggedElement, this);
+                }
+
+                updateRowNumbers();
+                saveDepartmentOrder();
+            }
+
+            this.classList.remove('drag-over');
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            
+            rows.forEach(row => {
+                row.classList.remove('drag-over');
+            });
+        }
+
+        function updateRowNumbers() {
+            const rows = tbody.querySelectorAll('.department-row');
+            rows.forEach((row, index) => {
+                const sttCell = row.querySelector('.drag-handle');
+                sttCell.textContent = index + 1;
+            });
+        }
+
+        function saveDepartmentOrder() {
+            const rows = tbody.querySelectorAll('.department-row');
+            const departmentOrders = [];
+
+            rows.forEach((row, index) => {
+                departmentOrders.push({
+                    id: parseInt(row.getAttribute('data-id')),
+                    order: index + 1
+                });
+            });
+
+            // Gửi dữ liệu lên server
+            fetch('{% url "update_department_order" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    department_orders: departmentOrders
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Cập nhật thứ tự thành công');
+                } else {
+                    console.error('Lỗi cập nhật thứ tự:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi:', error);
+            });
+        }
+    });
 
 </script>
 {% endblock %}

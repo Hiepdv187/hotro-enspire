@@ -4,6 +4,10 @@ from django.utils import timezone
 
 class Department(models.Model):
     name = models.CharField(max_length=50, unique=True)
+    order = models.PositiveIntegerField(default=0, help_text="Thứ tự hiển thị")
+
+    class Meta:
+        ordering = ['order', 'id']
 
     def __str__(self):
         return self.name
