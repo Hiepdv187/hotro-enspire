@@ -34,7 +34,7 @@ SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [
-    "https://hotro-enspire.onrender.com",
+    "https://enspire-hotro.onrender.com",
 ]
 
 # Application definition

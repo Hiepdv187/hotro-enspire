@@ -22,8 +22,8 @@ from asgiref.sync import async_to_sync
 from .untils import send_notification
 from django.http import JsonResponse
 import json
-import redis
 from .models import Notification
+from tkt.supabase_client import set_unread_count, is_user_online, get_pending_notifications, clear_pending_notifications
 from django.urls import reverse
 from django.utils import timezone, formats
 from django.contrib.humanize.templatetags.humanize import naturaltime
@@ -107,15 +107,22 @@ def get_notifications(request):
             'timestamp': notification.created_at.strftime('%Y-%m-%dT%H:%M:%S')  # Định dạng datetime thành chuỗi
         })
     
-    # Lấy thông báo chưa đọc từ Redis nếu người dùng không online
-    if not r.sismember("online_users", user_id):
-        notifications_key = f"notifications_{user_id}"
-        if r.exists(notifications_key):
-            notifications_redis = [json.loads(notification) for notification in r.lrange(notifications_key, 0, -1)]
-            # Thêm thông báo từ Redis vào danh sách
-            notifications_list.extend(notifications_redis)
-            # Xóa các thông báo đã lấy từ Redis để tránh lấy lại lần sau
-            r.delete(notifications_key)
+    # Lấy thông báo pending từ Supabase nếu user không online
+    try:
+        if not is_user_online(user_id):
+            pending_notifications = get_pending_notifications(user_id)
+            for item in pending_notifications:
+                notifications_list.append({
+                    'id': item.get('notification_id'),
+                    'message': item.get('message', ''),
+                    'read': item.get('read', False),
+                    'timestamp': item.get('timestamp', '')
+                })
+            # Xóa các thông báo pending đã lấy
+            if pending_notifications:
+                clear_pending_notifications(user_id)
+    except Exception as e:
+        print(f"Error getting notifications from Supabase: {e}")
     
     # Sắp xếp lại danh sách thông báo theo thời gian mới nhất
     notifications_list.sort(key=lambda x: x['timestamp'], reverse=True)
@@ -137,13 +144,12 @@ def mark_notification_as_read(request, notification_id):
                 notification.read = True
                 notification.save()
                 
-                # Cập nhật lại số thông báo chưa đọc trong Redis (nếu cần)
+                # Cập nhật lại số thông báo chưa đọc trong Supabase
                 try:
-                    r = redis.from_url("redis://:iJuwEuyIQmk9jWX1gWqhnyzJYcwn6TFn@redis-14167.c89.us-east-1-3.ec2.redns.redis-cloud.com:14167/0")
                     unread_count = Notification.objects.filter(user=request.user, read=False).count()
-                    r.set(f'user_{request.user.id}_unread_count', unread_count)
+                    set_unread_count(request.user.id, unread_count)
                 except Exception as e:
-                    print(f"Error updating Redis unread count: {e}")
+                    print(f"Error updating Supabase unread count: {e}")
             
             return JsonResponse({
                 'status': 'success',
@@ -168,12 +174,11 @@ def mark_all_notifications_as_read(request):
                 read=False
             ).update(read=True)
             
-            # Cập nhật lại số thông báo chưa đọc trong Redis
+            # Cập nhật lại số thông báo chưa đọc trong Supabase
             try:
-                r = redis.from_url("redis://:iJuwEuyIQmk9jWX1gWqhnyzJYcwn6TFn@redis-14167.c89.us-east-1-3.ec2.redns.redis-cloud.com:14167/0")
-                r.set(f'user_{request.user.id}_unread_count', 0)
+                set_unread_count(request.user.id, 0)
             except Exception as e:
-                print(f"Error updating Redis unread count: {e}")
+                print(f"Error updating Supabase unread count: {e}")
             
             return JsonResponse({
                 'status': 'success',
@@ -1164,62 +1169,3 @@ def assign_ticket_view(request,ticket_id):
         form.fields['engineer'].queryset = User.objects.filter(is_engineer = True)
         context = {'form': form, 'ticket':ticket}
         return render(request, 'ticket/assign_ticket.html', context)
-    
-r = redis.from_url("redis://:iJuwEuyIQmk9jWX1gWqhnyzJYcwn6TFn@redis-14167.c89.us-east-1-3.ec2.redns.redis-cloud.com:14167/0")
-
-def get_notifications(request):
-    if not request.user.is_authenticated:
-        return JsonResponse([], safe=False)
-        
-    user_id = request.user.id
-    if user_id is None:
-        return JsonResponse([], safe=False)
-
-    try:
-        # Lấy tất cả thông báo từ cơ sở dữ liệu (bao gồm đã đọc và chưa đọc)
-        notifications_db = Notification.objects.filter(user_id=user_id).order_by('-timestamp')
-
-        notifications = []
-        for n in notifications_db:
-            notifications.append({
-                'id': n.id,
-                'message': n.message,
-                'read': n.read,
-                'timestamp': n.timestamp.isoformat() if hasattr(n, 'timestamp') else timezone.localtime(n.timestamp).isoformat()
-            })
-
-        # Lấy thông báo từ Redis nếu có
-        notifications_redis = []
-        try:
-            # Use string for sismember check
-            if not r.sismember("online_users", str(user_id)):
-                notifications_key = f"notifications_{user_id}"
-                if r.exists(notifications_key):
-                    notifications_redis = []
-                    raw = r.lrange(notifications_key, 0, -1)
-                    for item in raw:
-                        try:
-                            obj = json.loads(item)
-                            # ensure keys id/read/timestamp exist if possible
-                            if 'timestamp' in obj:
-                                # normalize timestamp
-                                pass
-                            notifications_redis.append(obj)
-                        except Exception:
-                            # skip malformed entries
-                            continue
-                    # Xóa các thông báo đã lấy khỏi Redis
-                    r.delete(notifications_key)
-        except Exception as e:
-            print(f"Error getting notifications from Redis: {e}")
-
-        # Combine and sort
-        notifications.extend(notifications_redis)
-        notifications.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
-        # Limit
-        notifications = notifications[:200]
-
-        return JsonResponse(notifications, safe=False)
-    except Exception as e:
-        print(f"Error in get_notifications: {e}")
-        return JsonResponse([], safe=False)

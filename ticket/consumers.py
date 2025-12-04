@@ -1,10 +1,17 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import async_to_sync, sync_to_async
-import redis
 from django.utils import timezone
+from tkt.supabase_client import (
+    add_online_user, 
+    remove_online_user, 
+    is_user_online,
+    store_pending_notification,
+    get_pending_notifications,
+    clear_pending_notifications
+)
 
-r = redis.from_url("redis://:iJuwEuyIQmk9jWX1gWqhnyzJYcwn6TFn@redis-14167.c89.us-east-1-3.ec2.redns.redis-cloud.com:14167/0")
+
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.user = self.scope['user']
@@ -17,11 +24,11 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                 self.channel_name
             )
 
-            # Thêm người dùng vào danh sách online
-            await sync_to_async(r.sadd)("online_users", self.user.id)
+            # Thêm người dùng vào danh sách online (Supabase)
+            await sync_to_async(add_online_user)(self.user.id)
             await self.accept()
 
-            # Gửi các thông báo chưa đọc từ Redis
+            # Gửi các thông báo chưa đọc từ Supabase
             await self.send_stored_notifications()
 
     async def disconnect(self, close_code):
@@ -32,8 +39,8 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                 self.channel_name
             )
 
-            # Xóa người dùng khỏi danh sách online
-            await sync_to_async(r.srem)("online_users", self.user.id)
+            # Xóa người dùng khỏi danh sách online (Supabase)
+            await sync_to_async(remove_online_user)(self.user.id)
 
     async def receive(self, text_data):
         try:
@@ -60,15 +67,11 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
     async def send_notification(self, message):
         if self.user.is_authenticated:
-            notification_data = {
-                'type': 'notification',
-                'message': message
-            }
-
-            # Lưu thông báo trong Redis nếu người dùng không online
-            # use string user id for consistency
-            if not await sync_to_async(r.sismember)("online_users", str(self.user.id)):
-                # Try to create a DB notification first to get an id/timestamp
+            # Kiểm tra user online qua Supabase
+            user_online = await sync_to_async(is_user_online)(self.user.id)
+            
+            if not user_online:
+                # Lưu thông báo vào DB và Supabase nếu người dùng không online
                 try:
                     from .models import Notification
                     notif = await sync_to_async(Notification.objects.create)(
@@ -83,14 +86,10 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                         'read': notif.read,
                         'timestamp': notif.timestamp.isoformat()
                     }
-                    await sync_to_async(r.rpush)(f"notifications_{self.user.id}", json.dumps(notification_payload))
-                except Exception:
-                    # fallback to minimal payload
-                    await sync_to_async(r.rpush)(f"notifications_{self.user.id}", json.dumps({
-                        'type': 'notification',
-                        'message': message,
-                        'timestamp': timezone.now().isoformat()
-                    }))
+                    # Lưu vào Supabase pending notifications
+                    await sync_to_async(store_pending_notification)(self.user.id, notification_payload)
+                except Exception as e:
+                    print(f"Error storing notification: {e}")
             else:
                 await self.channel_layer.group_send(
                     self.room_group_name,
@@ -115,14 +114,19 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         }))
 
     async def send_stored_notifications(self):
-        # Lấy thông báo từ Redis và gửi cho người dùng
-        notifications = await sync_to_async(r.lrange)(f"notifications_{self.user.id}", 0, -1)
-        for notification in reversed(notifications):
-            try:
-                notification_data = json.loads(notification)
-            except Exception:
-                # if it's not JSON, wrap it
-                notification_data = {'type': 'notification', 'message': str(notification), 'timestamp': timezone.now().isoformat()}
+        # Lấy thông báo pending từ Supabase và gửi cho người dùng
+        pending = await sync_to_async(get_pending_notifications)(self.user.id)
+        
+        for notification in pending:
+            notification_data = {
+                'type': 'notification',
+                'id': notification.get('notification_id'),
+                'message': notification.get('message', ''),
+                'read': notification.get('read', False),
+                'timestamp': notification.get('timestamp', timezone.now().isoformat())
+            }
             await self.send(text_data=json.dumps(notification_data))
-        # Xóa các thông báo đã gửi khỏi Redis
-        await sync_to_async(r.delete)(f"notifications_{self.user.id}")
+        
+        # Xóa các thông báo đã gửi khỏi Supabase
+        if pending:
+            await sync_to_async(clear_pending_notifications)(self.user.id)

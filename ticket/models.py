@@ -9,14 +9,13 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync, sync_to_async
 from django.db.models import Q
 import uuid
-import redis
 import json
 from django.utils import timezone
 from django.contrib.humanize.templatetags.humanize import naturaltime
 from channels.generic.websocket import AsyncWebsocketConsumer
+from tkt.supabase_client import is_user_online, store_pending_notification
 
 channel_layer = get_channel_layer()
-r = redis.from_url("redis://:iJuwEuyIQmk9jWX1gWqhnyzJYcwn6TFn@redis-14167.c89.us-east-1-3.ec2.redns.redis-cloud.com:14167/0")
 
 def user_directory_paths(instance, filename):
     unique_id = uuid.uuid4().hex
@@ -38,37 +37,32 @@ class Notification(models.Model):
 def send_notification_to_engineer(instance, user_id, message):
     group_name = f"user_{user_id}"
 
-    # Lưu thông báo vào cơ sở dữ liệu
+    # Lưu thông báo vào cơ sở dữ liệu Django (PostgreSQL/Supabase)
     notification = Notification.objects.create(
         user_id=user_id,
         message=message,
         timestamp=timezone.now()
     )
 
-    # Lưu thông báo trong Redis nếu người dùng không online
-    # Use string form for redis membership checks for consistency
-    if not r.sismember("online_users", str(user_id)):
-        # Push a structured notification so the frontend can render it
-        r.rpush(f"notifications_{user_id}", json.dumps({
-            "type": "notification",
-            "id": notification.id,
-            "message": message,
-            "read": notification.read,
-            "timestamp": notification.timestamp.isoformat()
-        }))
+    notification_payload = {
+        "type": "notification",
+        "id": notification.id,
+        "message": message,
+        "read": notification.read,
+        "timestamp": notification.timestamp.isoformat()
+    }
+
+    # Kiểm tra user online qua Supabase, nếu offline thì lưu pending notification
+    if not is_user_online(user_id):
+        # Lưu thông báo pending vào Supabase để gửi khi user online
+        store_pending_notification(user_id, notification_payload)
     else:
         # Send structured payload to connected consumers so they get id/timestamp/read
         async_to_sync(channel_layer.group_send)(
             group_name,
             {
                 "type": "send_notification_to_client",
-                "payload": {
-                    "type": "notification",
-                    "id": notification.id,
-                    "message": notification.message,
-                    "read": notification.read,
-                    "timestamp": notification.timestamp.isoformat()
-                }
+                "payload": notification_payload
             }
         )
 
