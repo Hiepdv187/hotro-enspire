@@ -360,8 +360,64 @@ margin-right: 0;
         background-color: #ffffff; /* Màu nền khi di chuột qua */
         color: #ffffff; /* Màu chữ khi di chuột qua */
     }
+
+/* Loading Overlay Styles */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(2px);
+}
+
+.loading-overlay.show {
+    display: flex;
+}
+
+.loading-content {
+    background: white;
+    padding: 30px 50px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #0d6efd;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: #333;
+    font-size: 16px;
+    font-weight: 500;
+}
 </style>
 <body>
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Đang xử lý...</div>
+    </div>
+</div>
+
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top bg-dark">
 	<div class=" d-flex align-items-left">
         <div class="container-fluid">
@@ -957,7 +1013,57 @@ margin-right: 0;
         }
     }
     
+    // Loading Overlay Functions
+    function showLoading(message = 'Đang xử lý...') {
+        const overlay = document.getElementById('loading-overlay');
+        const loadingText = overlay.querySelector('.loading-text');
+        if (loadingText) loadingText.textContent = message;
+        overlay.classList.add('show');
+    }
+    
+    function hideLoading() {
+        const overlay = document.getElementById('loading-overlay');
+        overlay.classList.remove('show');
+    }
+    
+    // Auto attach loading to all forms with method POST
+    document.addEventListener('DOMContentLoaded', function() {
+        const forms = document.querySelectorAll('form[method="post"], form[method="POST"]');
+        forms.forEach(function(form) {
+            // Skip forms that have data-no-loading attribute
+            if (form.hasAttribute('data-no-loading')) return;
+            
+            form.addEventListener('submit', function(e) {
+                // Check if form is valid (HTML5 validation)
+                if (form.checkValidity()) {
+                    // Get custom loading message from data attribute or use default
+                    const message = form.getAttribute('data-loading-message') || 'Đang xử lý...';
+                    showLoading(message);
+                }
+            });
+        });
+        
+        // Also attach to buttons with type="submit" that might be outside forms
+        const submitButtons = document.querySelectorAll('button[type="submit"], input[type="submit"]');
+        submitButtons.forEach(function(button) {
+            if (button.hasAttribute('data-no-loading')) return;
+            
+            button.addEventListener('click', function(e) {
+                const form = button.closest('form');
+                if (form && form.checkValidity() && !form.hasAttribute('data-no-loading')) {
+                    const message = form.getAttribute('data-loading-message') || button.getAttribute('data-loading-message') || 'Đang xử lý...';
+                    setTimeout(function() {
+                        showLoading(message);
+                    }, 10);
+                }
+            });
+        });
+    });
+    
+    // Hide loading on page show (for back/forward navigation)
+    window.addEventListener('pageshow', function(event) {
+        hideLoading();
+    });
 </script>
 </body>
 </html>
-<footer></footer>

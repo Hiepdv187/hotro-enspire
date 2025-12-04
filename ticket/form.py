@@ -85,6 +85,7 @@ class AdminCreateTicketForm(forms.ModelForm):
     class Meta:
         model = Ticket
         fields = ['ticket_title','work_as','engineer','ticket_description', 'image','up_video', 'school', 'phone_number']
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
@@ -94,3 +95,7 @@ class AdminCreateTicketForm(forms.ModelForm):
         # Sử dụng label_from_instance để hiển thị tên thay vì username
         self.fields['engineer'].queryset = engineers
         self.fields['engineer'].label_from_instance = lambda obj: f"{obj.last_name} {obj.first_name}"
+        
+        # Bắt buộc phải chọn engineer
+        self.fields['engineer'].required = True
+        self.fields['engineer'].empty_label = "-- Chọn người xử lý --"

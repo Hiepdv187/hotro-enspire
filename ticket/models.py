@@ -89,11 +89,8 @@ class Ticket(models.Model):
     work_as = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='ws', null=True, blank=True, default = '')
     work_place = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='work_place_tickets', null=True, blank=True, default = '')
     
-@receiver(post_save, sender=Ticket)
-def ticket_status_changed(sender, instance, **kwargs):
-    if instance.is_assigned_to_engineer and instance.engineer:
-        message = f"Ticket {instance.ticket_id} đã được chuyển cho bạn."
-        send_notification_to_engineer(instance, instance.engineer.id, message)
+# Signal này đã được xử lý trong views.py khi tạo/assign ticket
+# Không cần gửi thông báo ở đây nữa để tránh duplicate
 
 def user_directory_path(instance, filename):
     return f'avatars/{filename}'

@@ -41,6 +41,39 @@ formatted_time = timezone.localtime(timezone.now())
 current_time = formats.date_format(formatted_time, format='DATETIME_FORMAT', use_l10n=True)
 print(formatted_time)
 
+def auto_assign_engineer():
+    """
+    Tự động phân ticket cho engineer.
+    Ưu tiên engineer có ít phiếu đang xử lý nhất.
+    Nếu số phiếu bằng nhau thì random.
+    """
+    from django.db.models import Count
+    
+    # Lấy tất cả engineers đang hoạt động
+    engineers = User.objects.filter(is_engineer=True, is_active=True)
+    
+    if not engineers.exists():
+        return None
+    
+    # Đếm số ticket đang xử lý (chưa resolved) của mỗi engineer
+    engineers_with_count = engineers.annotate(
+        active_ticket_count=Count(
+            'engineer',
+            filter=Q(engineer__is_resolved=False)
+        )
+    ).order_by('active_ticket_count')
+    
+    # Lấy số ticket ít nhất
+    min_count = engineers_with_count.first().active_ticket_count
+    
+    # Lọc các engineers có cùng số ticket ít nhất
+    engineers_with_min = [e for e in engineers_with_count if e.active_ticket_count == min_count]
+    
+    # Random chọn 1 engineer từ danh sách
+    selected_engineer = random.choice(engineers_with_min)
+    
+    return selected_engineer
+
 def send_notification_to_user(user_id, message):
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
@@ -206,6 +239,14 @@ def create_ticket(request):
             var = form.save(commit=False)
             var.customer = request.user
             
+            # Tự động phân ticket cho engineer nếu chưa có assignee
+            if not var.engineer_id:
+                assigned_engineer = auto_assign_engineer()
+                if assigned_engineer:
+                    var.engineer = assigned_engineer
+                    var.is_assigned_to_engineer = True
+                    var.status = 'Đang xử lý'
+            
             while not var.ticket_id:
                 id = ''.join(random.choices(string.digits, k=6))
                 try:
@@ -238,6 +279,18 @@ def create_ticket(request):
                         send_notification(
                             superuser.id,
                             f'<a href="{ticket_url}">{var.customer.get_full_name()} đã tạo phiếu yêu cầu mới #{var.ticket_id}. <small>{ticket_created_on}</small></a>'
+                        )
+                    
+                    # Gửi thông báo cho engineer được phân công
+                    if var.engineer:
+                        engineer_notification = Notification.objects.create(
+                            user=var.engineer,
+                            message=f'<a href="{ticket_url}">Phiếu yêu cầu #{var.ticket_id} đã được tự động phân cho bạn</a>',
+                            read=False
+                        )
+                        send_notification(
+                            var.engineer.id,
+                            f'<a href="{ticket_url}">Phiếu yêu cầu #{var.ticket_id} đã được tự động phân cho bạn. <small>{ticket_created_on}</small></a>'
                         )
                     
                     break
