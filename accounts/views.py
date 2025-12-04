@@ -174,7 +174,7 @@ def view_profile(request):
     return render(request, 'accounts/view_profile.html', {'user': user})
 
 # đổi mk - trong app
-@login_required
+
 def change_password(request):
     if request.method == 'POST':
         form = CustomPasswordChangeForm(request.user, request.POST)
@@ -248,7 +248,6 @@ def update_user_permissions(request):
                 send_notification(user.id, message)
 
     return redirect(request.META.get('HTTP_REFERER', '/fallback-url'))
-
 @login_required
 def all_users(request):
     query = request.GET.get('q', '')
@@ -289,9 +288,8 @@ def all_users(request):
                 user.update({
                     'school': local_user.school,
                     'work_place': local_user.work_place,
-                    'avatar': local_user.avatar,
+                    'avatar': local_user.avatar.url if local_user.avatar else None,
                     'local_id': local_user.id,
-                    'avatar_medium': local_user.avatar_medium,
                     'user_type': 'both'  # Đánh dấu là có cả trong API và local
                 })
             else:
@@ -313,9 +311,8 @@ def all_users(request):
                 'work_place': local_user.work_place,
                 'title': local_user.title,
                 'school': local_user.school,
-                'avatar': local_user.avatar,
+                'avatar': local_user.avatar.url if local_user.avatar else None,
                 'local_id': local_user.id,
-                'avatar_medium': local_user.avatar_medium,
                 'user_type': 'local_only'  # Đánh dấu là chỉ có trong local
             })
 
