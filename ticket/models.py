@@ -13,6 +13,7 @@ from django.utils import timezone
 from django.contrib.humanize.templatetags.humanize import naturaltime
 from channels.generic.websocket import AsyncWebsocketConsumer
 from tkt.supabase_client import is_user_online, store_pending_notification
+from cloudinary.models import CloudinaryField
 
 channel_layer = get_channel_layer()
 
@@ -85,8 +86,8 @@ class Ticket(models.Model):
     resolution_steps = models.TextField(blank=True, null = True)
     phone_regex = RegexValidator (regex=r'^\+?1?\d{9,15}$', message="Lỗi, chỉ nhận ký tự là số!")
     phone_number = models.CharField(validators=[phone_regex], max_length=10, blank=True)
-    image = models.ImageField (upload_to=user_directory_paths, default=None, blank=True, null=True)
-    up_video = models.FileField(upload_to=user_directory_paths, default=None, null=True, blank=True)
+    image = CloudinaryField('image', folder='tickets', blank=True, null=True)
+    up_video = CloudinaryField('video', resource_type='video', folder='tickets', blank=True, null=True)
     work_as = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='ws', null=True, blank=True, default = '')
     work_place = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='work_place_tickets', null=True, blank=True, default = '')
     
@@ -116,7 +117,7 @@ class Comments(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null = True, blank= True)
     created_at = models.DateTimeField(auto_now_add=True)
     parent_comment = models.ForeignKey('self', null=True, blank=True, related_name='replies', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to=user_directory_paths, blank=True, null=True)
+    image = CloudinaryField('image', folder='comments', blank=True, null=True)
     def __str__(self):
         return f'Comment by {self.author.name} on {self.ticket.ticket_id}'
 
@@ -126,7 +127,7 @@ class Reply(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     body = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    image = models.ImageField(upload_to=user_directory_paths, blank=True, null=True)
+    image = CloudinaryField('image', folder='replies', blank=True, null=True)
     def __str__(self):
         return f'Reply by {self.author.username} on {self.comment.id}'
     
