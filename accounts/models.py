@@ -63,24 +63,7 @@ class User(AbstractUser):
         except User.DoesNotExist:
             return None
 
-@receiver(post_save, sender=User)
-def resize_avatar(sender, instance, **kwargs):
-    """Resize avatar sau khi save"""
-    if instance.avatar:
-        try:
-            avatar_path = instance.avatar.path
-            if os.path.exists(avatar_path):
-                img = Image.open(avatar_path)
-                
-                # Resize to 500x500
-                if img.width > 500 or img.height > 500:
-                    img.thumbnail((500, 500), Image.Resampling.LANCZOS)
-                    
-                    # Giữ nguyên mode ảnh gốc
-                    if img.mode == 'RGBA':
-                        img.save(avatar_path, 'PNG', quality=90)
-                    else:
-                        img = img.convert('RGB')
-                        img.save(avatar_path, 'JPEG', quality=90)
-        except Exception as e:
-            print(f"Error resizing avatar: {e}")
+# Signal resize_avatar bị vô hiệu hóa vì không hoạt động với Cloudinary
+# Cloudinary tự động xử lý optimization ảnh thông qua transformations
+# Ví dụ: {{ user.avatar.url }}?w=500&h=500&c=fill&q=auto
+# Nếu cần resize, sử dụng Cloudinary URL transformations thay vì signal

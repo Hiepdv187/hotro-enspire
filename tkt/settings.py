@@ -14,11 +14,41 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 import dj_database_url
+import cloudinary
 
 # Load environment variables from .env file
 load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Cloudinary configuration - MUST be before other settings
+CLOUDINARY_URL = os.getenv('CLOUDINARY_URL')
+CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
+CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
+CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
+
+CLOUDINARY_CONFIGURED = False
+CLOUDINARY_CLOUD_NAME_RESOLVED = None
+
+if CLOUDINARY_URL:
+    cloudinary.config(cloudinary_url=CLOUDINARY_URL, secure=True)
+    CLOUDINARY_CONFIGURED = True
+    # Parse cloud_name from CLOUDINARY_URL
+    # Format: cloudinary://api_key:api_secret@cloud_name
+    if '@' in CLOUDINARY_URL:
+        CLOUDINARY_CLOUD_NAME_RESOLVED = CLOUDINARY_URL.split('@')[-1]
+    else:
+        CLOUDINARY_CLOUD_NAME_RESOLVED = cloudinary.config().cloud_name
+elif CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+        secure=True,
+    )
+    CLOUDINARY_CLOUD_NAME_RESOLVED = CLOUDINARY_CLOUD_NAME
+    CLOUDINARY_CONFIGURED = True
 
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 # Quick-start development settings - unsuitable for production
@@ -45,9 +75,12 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'cloudinary_storage',
     'daphne',
     'django.contrib.staticfiles',
+    'cloudinary',
     'django.contrib.humanize',
+    'tkt',  # Project app (contains templatetags)
     'eeror',
     'django_bootstrap_icons',
     'accounts',
@@ -172,6 +205,16 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+if CLOUDINARY_CONFIGURED and CLOUDINARY_CLOUD_NAME_RESOLVED:
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': CLOUDINARY_CLOUD_NAME_RESOLVED,
+        'API_KEY': cloudinary.config().api_key,
+        'API_SECRET': cloudinary.config().api_secret,
+    }
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    # Keep MEDIA_URL as /media/ for local file serving of old uploads
+    # New files will be served via Cloudinary through the storage backend
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 LOGIN_API_URL = 'http://hotro.enspire.vn/accounts/login/'

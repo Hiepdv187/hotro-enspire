@@ -3,6 +3,7 @@
 <head>
 {% load static %}
 {% load bootstrap_icons %}
+{% load image_filters %}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -370,7 +371,7 @@ margin-right: 0;
                         </div>
 
                     &emsp;<button type="button" class="btn btn-warning dropdown-toggle text-wrap-button" style='max-width:150px; max-height: 50px;' data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
-                            <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}{% static 'media/avatars/avt.jpg' %}{% endif %}" class="avatar" alt="avatar">
+                            <img src="{% if request.user.avatar %}{{ request.user.avatar|cloudinary_image_url:'w_50,h_50,c_fill,q_auto,f_auto' }}{% else %}{% static 'media/avatars/avt.jpg' %}{% endif %}" class="avatar" alt="avatar" onerror="this.src='{% static 'media/avatars/avt.jpg' %}'">
                             <span class="user-name">{{request.user.first_name}}</span>
                         </button>
                     <ul class="dropdown-menu dropdown-menu-end">

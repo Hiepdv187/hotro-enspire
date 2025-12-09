@@ -7,13 +7,15 @@ from django.conf import settings
 from .models import Ticket, Comments, Reply
 import logging
 from apscheduler.schedulers.background import BackgroundScheduler
+from tkt.cloudinary_utils import CloudinaryImageHandler
 
 def cleanup_old_attachments():
     """
-    Hàm dọn dẹp file đính kèm cũ
+    Hàm dọn dẹp file đính kèm cũ (local và Cloudinary)
     """
     logger = logging.getLogger(__name__)
     three_months_ago = timezone.now() - timedelta(days=30)
+    cloudinary_handler = CloudinaryImageHandler()
     
     try:
         # Xóa file đính kèm trong Ticket
@@ -21,19 +23,27 @@ def cleanup_old_attachments():
         for ticket in tickets:
             if ticket.image:
                 try:
+                    # Xóa từ Cloudinary (nếu có)
+                    cloudinary_handler.delete_from_cloudinary(ticket.image)
+                    
+                    # Xóa file local (nếu có)
                     file_path = os.path.join(settings.MEDIA_ROOT, str(ticket.image))
                     if os.path.exists(file_path):
                         os.remove(file_path)
-                        logger.info(f'Đã xóa ảnh ticket: {file_path}')
+                        logger.info(f'Đã xóa ảnh ticket local: {file_path}')
                 except Exception as e:
                     logger.error(f'Lỗi khi xóa ảnh ticket {ticket.image}: {str(e)}')
             
             if ticket.up_video:
                 try:
+                    # Xóa từ Cloudinary (nếu có)
+                    cloudinary_handler.delete_from_cloudinary(ticket.up_video)
+                    
+                    # Xóa file local (nếu có)
                     file_path = os.path.join(settings.MEDIA_ROOT, str(ticket.up_video))
                     if os.path.exists(file_path):
                         os.remove(file_path)
-                        logger.info(f'Đã xóa video ticket: {file_path}')
+                        logger.info(f'Đã xóa video ticket local: {file_path}')
                 except Exception as e:
                     logger.error(f'Lỗi khi xóa video ticket {ticket.up_video}: {str(e)}')
         
@@ -42,10 +52,14 @@ def cleanup_old_attachments():
         for comment in comments:
             if comment.image:
                 try:
+                    # Xóa từ Cloudinary (nếu có)
+                    cloudinary_handler.delete_from_cloudinary(comment.image)
+                    
+                    # Xóa file local (nếu có)
                     file_path = os.path.join(settings.MEDIA_ROOT, str(comment.image))
                     if os.path.exists(file_path):
                         os.remove(file_path)
-                        logger.info(f'Đã xóa ảnh bình luận: {file_path}')
+                        logger.info(f'Đã xóa ảnh bình luận local: {file_path}')
                 except Exception as e:
                     logger.error(f'Lỗi khi xóa ảnh bình luận {comment.image}: {str(e)}')
         
@@ -54,10 +68,14 @@ def cleanup_old_attachments():
         for reply in replies:
             if reply.image:
                 try:
+                    # Xóa từ Cloudinary (nếu có)
+                    cloudinary_handler.delete_from_cloudinary(reply.image)
+                    
+                    # Xóa file local (nếu có)
                     file_path = os.path.join(settings.MEDIA_ROOT, str(reply.image))
                     if os.path.exists(file_path):
                         os.remove(file_path)
-                        logger.info(f'Đã xóa ảnh phản hồi: {file_path}')
+                        logger.info(f'Đã xóa ảnh phản hồi local: {file_path}')
                 except Exception as e:
                     logger.error(f'Lỗi khi xóa ảnh phản hồi {reply.image}: {str(e)}')
         

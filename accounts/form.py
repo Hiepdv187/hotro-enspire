@@ -40,16 +40,27 @@ class CustomUserForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['avatar']
-
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        width = 50  # Đặt kích thước bạn muốn
-        height = 50
-        self.instance.resize_avatar(width, height)
+    
+    def clean_avatar(self):
+        """Validate avatar file"""
+        avatar = self.cleaned_data.get('avatar')
         
-    def value_from_datadict(self, data, files, name):
-        return files.get(name)
+        if avatar:
+            # Kiểm tra kích thước file (max 5MB)
+            if avatar.size > 5 * 1024 * 1024:  # 5MB
+                raise forms.ValidationError('Kích thước ảnh không được vượt quá 5MB')
+            
+            # Kiểm tra định dạng file
+            allowed_formats = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+            if avatar.content_type not in allowed_formats:
+                raise forms.ValidationError('Chỉ chấp nhận định dạng: JPG, PNG, GIF, WebP')
+        
+        return avatar
+    
+    def save(self, *args, **kwargs):
+        # Cloudinary sẽ tự động xử lý optimization
+        # Không cần resize thủ công như trước
+        super().save(*args, **kwargs)
 
 class UserProfileForm(UserChangeForm):
     class Meta:
@@ -106,6 +117,22 @@ class UserUpdateForm(forms.ModelForm):
     def clean_username(self):
         # Giữ lại username cũ (không cho đổi)
         return self.instance.email
+    
+    def clean_avatar(self):
+        """Validate avatar file trước khi upload lên Cloudinary"""
+        avatar = self.cleaned_data.get('avatar')
+        
+        if avatar:
+            # Kiểm tra kích thước file (max 5MB)
+            if avatar.size > 5 * 1024 * 1024:  # 5MB
+                raise forms.ValidationError('Kích thước ảnh không được vượt quá 5MB')
+            
+            # Kiểm tra định dạng file
+            allowed_formats = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+            if avatar.content_type not in allowed_formats:
+                raise forms.ValidationError('Chỉ chấp nhận định dạng: JPG, PNG, GIF, WebP')
+        
+        return avatar
         
 class CustomPasswordChangeForm(PasswordChangeForm):
     new_password1 = forms.CharField(

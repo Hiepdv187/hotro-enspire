@@ -1,6 +1,7 @@
 <title>Thông tin phiếu</title>
 {% extends "base.html" %}
 {% load widget_tweaks %}
+{% load image_filters %}
 {% block content %}
 {% load humanize %}
 {% load static %}
@@ -207,7 +208,7 @@
     {% if ticket.image %}
     <div class="image-item">
         <a data-fancybox="group" href="{{ ticket.image.url }}" class="description_image">
-            <img src="{{ ticket.image.url }}" alt="Image" class="description_image">
+            <img src="{{ ticket.image|cloudinary_image_url:'w_800,h_600,c_limit,q_auto,f_auto' }}" alt="Image" class="description_image" onerror="this.style.display='none'">
         </a>
     </div>
     {% endif %}
@@ -215,7 +216,7 @@
     {% if ticket.up_video %}
     <div class="video-item">
         <video id="videoPlayer" class="up_video" controls>
-            <source src="{{ ticket.up_video.url }}" alt="up_video" type="video/mp4" data-quality="1080p" label="1080p">
+            <source src="{{ ticket.up_video|cloudinary_video_url:'q_auto,f_auto' }}" alt="up_video" type="video/mp4" data-quality="1080p" label="1080p">
         </video>
     </div>
     {% endif %}
@@ -307,14 +308,14 @@
 
             {% for comment in comments.all %}
             <div class="comment">
-                <img src="{{ comment.user.avatar.url }}" alt="{{ comment.author.name }} Avatar", class="comment-avatar">
+                <img src="{% if comment.user.avatar %}{{ comment.user.avatar|cloudinary_image_url:'w_40,h_40,c_fill,q_auto,f_auto' }}{% else %}{% static 'media/avatars/avt.jpg' %}{% endif %}" alt="{{ comment.author.name }} Avatar" class="comment-avatar" onerror="this.src='{% static 'media/avatars/avt.jpg' %}'">
                 <strong>{{ comment.author.user.last_name}} {{ comment.author.user.first_name}}</strong>
                 <div class="row p-1 mb-4 rounded-5"  style = "background-image: url('/static/images/comm.jpg');">
                     <p  style="word-wrap: break-word;">{{ comment.body }}</p>
                     {% if user.is_authenticated and comment.user == user %}
                     {% if comment.image %}
                     <a data-fancybox="group" href="{{comment.image.url }}" class="Comment_Image">
-                    <img src="{{ comment.image.url }}" alt="Comment_Image" class="Comment_Image">
+                    <img src="{% if comment.image %}{{ comment.image|cloudinary_image_url:'w_300,h_300,c_limit,q_auto,f_auto' }}{% endif %}" alt="Comment_Image" class="Comment_Image" onerror="this.style.display='none'">
                     </a>
                     {% endif %}
                     <p><small class="form-text text-muted">{{ comment.created_at|naturaltime }}</small></p>
@@ -354,12 +355,12 @@
             
                     {% for reply in comment.comment_replies.all %}
                         &emsp; &emsp;<div class="reply">
-                            <img src="{{ reply.author.avatar.url }}" alt="{{ reply.author }} Avatar" class="avatar-reply">
+                            <img src="{% if reply.author.avatar %}{{ reply.author.avatar|cloudinary_image_url:'w_40,h_40,c_fill,q_auto,f_auto' }}{% else %}{% static 'media/avatars/avt.jpg' %}{% endif %}" alt="{{ reply.author }} Avatar" class="avatar-reply" onerror="this.src='{% static 'media/avatars/avt.jpg' %}'">
                             <strong>{{ reply.author.last_name }} {{ reply.author.first_name }}</strong>
                             <div class="row p-1 mb-4 rounded-5" style="background-color: whitesmoke;">
                             {% if reply.image  %}
                                 <a data-fancybox="group" href="{{reply.image.url }}" class="image-reply">
-                                <img src="{{ reply.image.url }}" alt="image-reply" class="image-reply">
+                                <img src="{{ reply.image|cloudinary_image_url:'w_300,h_300,c_limit,q_auto,f_auto' }}" alt="image-reply" class="image-reply" onerror="this.style.display='none'">
                                 </a>
                             {% endif %}
                             <p  style="word-wrap: break-word;">{{ reply.body }}</p>

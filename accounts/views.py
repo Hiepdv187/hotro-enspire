@@ -42,71 +42,115 @@ def register_customer(request):
         return render(request, 'accounts/register_customer.html', context)
     
 def login_user(request):
+    """
+    Login function hỗ trợ cả API authentication và local authentication
+    """
     if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        default_password = "abc123"
-        # Kiểm tra xem người dùng đã tồn tại trong cơ sở dữ liệu hay chưa
-        if User.objects.filter(email=email).exists():
-            # Xác thực người dùng từ cơ sở dữ liệu
-            user = User.objects.get(email=email)
-            user = authenticate(request, username=user.username, password=password)
-
-            if user is not None:
-                login(request, user)
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
+        
+        if not email or not password:
+            messages.warning(request, 'Vui lòng nhập email và mật khẩu.')
+            return redirect('login')
+        
+        # Bước 1: Kiểm tra user đã tồn tại trong local DB
+        user = User.objects.filter(email=email).first()
+        
+        if user:
+            # User tồn tại trong DB, xác thực với password local
+            authenticated_user = authenticate(request, username=user.username, password=password)
+            
+            if authenticated_user:
+                login(request, authenticated_user)
+                messages.success(request, f'Chào mừng {authenticated_user.first_name or authenticated_user.email}!')
                 return redirect('/')
             else:
-                messages.warning(request, 'Sai mật khẩu. Vui lòng thử lại.')
+                messages.warning(request, 'Email hoặc mật khẩu không chính xác.')
                 return redirect('login')
-        else:
-            # Nếu người dùng không tồn tại, tạo người dùng mới dựa trên thông tin từ API
-            login_api_url = settings.LOGIN_API_URL
-            users_api_url = settings.USERS_API_URL
-            token = settings.API_TOKEN
         
-
-            try:
-                # Gọi API danh sách người dùng để lấy thông tin người dùng
-                session = requests.Session()
-                users_response = session.post(users_api_url, data={'access_token': token})
-
-                if users_response.status_code == 200:
-                    users = users_response.json().get('users', [])
-                    user_data = next((user for user in users if user['email'] == email), None)
-
-                    if user_data:
-                        # Tạo người dùng mới trong cơ sở dữ liệu với email làm username
-                        username = email
-                        user = User.objects.create_user(username=username, email=email, password=default_password)
-                        user.is_customer = True
-                        
-                        # Cập nhật thông tin profile từ API ngay khi tạo user
-                        if 'first_name' in user_data:
-                            user.first_name = user_data['first_name']
-                        if 'last_name' in user_data:
-                            user.last_name = user_data['last_name']
-                        if 'phone' in user_data:
-                            user.phone = user_data['phone']
-                        if 'title' in user_data:
-                            user.title = user_data['title']
-                        
-                        user.save()
-
-                        # Xác thực và đăng nhập người dùng mới
-                        user = authenticate(request, username=username, password=default_password)
-                        if user is not None:
-                            login(request, user)
-                            return redirect('/')
-                    else:
-                        messages.warning(request, 'Không tìm thấy thông tin người dùng.')
-                else:
-                    messages.warning(request, f'Không thể lấy danh sách người dùng: {users_response.status_code}')
-            except requests.exceptions.RequestException as e:
-                messages.error(request, f'Lỗi khi kết nối đến API: {e}')
-
-        return redirect('login')
-    else:
-        return render(request, 'accounts/login.html')
+        # Bước 2: User không tồn tại local, kiểm tra trong API
+        users_api_url = getattr(settings, 'USERS_API_URL', None)
+        api_token = getattr(settings, 'API_TOKEN', None)
+        
+        if not users_api_url or not api_token:
+            messages.error(request, 'Cấu hình API không hợp lệ. Vui lòng liên hệ admin.')
+            return redirect('login')
+        
+        try:
+            # Gọi API để lấy danh sách users
+            session = requests.Session()
+            users_response = session.post(
+                users_api_url, 
+                data={'access_token': api_token},
+                timeout=10
+            )
+            
+            if users_response.status_code != 200:
+                messages.error(request, f'Không thể kết nối API: {users_response.status_code}')
+                return redirect('login')
+            
+            # Tìm user trong API response
+            api_users = users_response.json().get('users', [])
+            user_data = next((u for u in api_users if u.get('email', '').lower() == email.lower()), None)
+            
+            if not user_data:
+                messages.warning(request, 'Email hoặc mật khẩu không chính xác.')
+                return redirect('login')
+            
+            # Kiểm tra password từ API
+            # LƯU Ý: API có thể không cấp cấp mật khẩu, trong trường hợp này tạo user với password default
+            api_password = user_data.get('password', '')
+            
+            if api_password and api_password != password:
+                # Nếu API trả về password và không khớp
+                messages.warning(request, 'Email hoặc mật khẩu không chính xác.')
+                return redirect('login')
+            
+            # Tạo user mới trong DB từ thông tin API
+            new_user = User.objects.create_user(
+                username=email,
+                email=email,
+                password=password  # Lưu password thật từ user input
+            )
+            new_user.is_customer = user_data.get('is_customer', True)
+            new_user.is_engineer = user_data.get('is_engineer', False)
+            
+            # Cập nhật thông tin profile từ API
+            if 'first_name' in user_data and user_data['first_name']:
+                new_user.first_name = user_data['first_name']
+            if 'last_name' in user_data and user_data['last_name']:
+                new_user.last_name = user_data['last_name']
+            if 'phone' in user_data and user_data['phone']:
+                new_user.phone = user_data['phone']
+            if 'title' in user_data and user_data['title']:
+                new_user.title = user_data['title']
+            if 'school' in user_data and user_data['school']:
+                new_user.school = user_data['school']
+            
+            new_user.save()
+            
+            # Xác thực và đăng nhập user vừa tạo
+            authenticated_user = authenticate(request, username=email, password=password)
+            if authenticated_user:
+                login(request, authenticated_user)
+                messages.success(request, f'Chào mừng {authenticated_user.first_name or authenticated_user.email}!')
+                return redirect('/')
+            else:
+                messages.error(request, 'Lỗi khi đăng nhập. Vui lòng thử lại.')
+                return redirect('login')
+        
+        except requests.exceptions.Timeout:
+            messages.error(request, 'Kết nối API timeout. Vui lòng thử lại.')
+            return redirect('login')
+        except requests.exceptions.RequestException as e:
+            messages.error(request, f'Lỗi kết nối: {str(e)}')
+            return redirect('login')
+        except Exception as e:
+            messages.error(request, f'Lỗi không xác định: {str(e)}')
+            return redirect('login')
+    
+    # GET request - render login page
+    return render(request, 'accounts/login.html')
     
 def logout_user(request):
     logout(request)

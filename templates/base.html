@@ -2,6 +2,7 @@
 <html lang="vi">
 {% load static %}
 {% load widget_tweaks %}
+{% load image_filters %}
 <head>
 {% load bootstrap_icons %}
 <meta charset="utf-8">
@@ -513,7 +514,7 @@ margin-right: 0;
                 </div>
 
                     <button type="button" class="btn btn-warning dropdown-toggle text-wrap-button" style='max-width:150px; max-height: 50px; margin-right: 20px;' data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
-                            <img src="{% if request.user.avatar %}{{ request.user.avatar.url }}{% else %}{% static 'media/avatars/avt.jpg' %}{% endif %}" class="avatar" alt="avatar">
+                            <img src="{% if request.user.avatar %}{{ request.user.avatar|cloudinary_image_url:'w_50,h_50,c_fill,q_auto,f_auto' }}{% else %}{% static 'media/avatars/avt.jpg' %}{% endif %}" class="avatar" alt="avatar" onerror="this.src='{% static 'media/avatars/avt.jpg' %}'">
                             <span class="user-name">{{request.user.first_name}}</span>
                         </button>
                     <ul class="dropdown-menu dropdown-menu-end">

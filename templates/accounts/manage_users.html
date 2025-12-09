@@ -155,8 +155,8 @@ Thay đổi quyền nhân viên
                                     {% for user in page_obj %}
                                     <tr>
                                         <td class = "wrap-text">
-                                            <a href="{% if user.avatar_medium %}{{ user.avatar_medium.url }}{% else %}{% static 'media/avatars/avt.jpg' %}{% endif %}" data-lightbox="profile-image" data-title="{{ user.last_name }} {{ user.first_name }}">
-                        <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}{% static 'media/avatars/avt.jpg' %}{% endif %}" class="avatar" class="profile-image img-fluid" alt="avatar"></a>&emsp;
+                                            <a href="{% if user.avatar %}{{ user.avatar.url }}{% else %}{% static 'media/avatars/avt.jpg' %}{% endif %}" data-lightbox="profile-image" data-title="{{ user.last_name }} {{ user.first_name }}">
+                        <img src="{% if user.avatar %}{{ user.avatar|cloudinary_image_url:'w_50,h_50,c_fill,q_auto,f_auto' }}{% else %}{% static 'media/avatars/avt.jpg' %}{% endif %}" class="avatar profile-image img-fluid" alt="avatar" onerror="this.src='{% static 'media/avatars/avt.jpg' %}'"></a>&emsp;
 					{% if user.email == request_user %}
 						<a href='{% url 'view_profile' %}' style='text-decoration: none;'><b>{{ user.email }}</b></a>
 					{% else %}
